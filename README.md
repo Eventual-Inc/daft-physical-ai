@@ -22,8 +22,9 @@ import daft
 from daft.datasets import lerobot
 from daft_physical_ai.hands import track_hands
 
-# one row per frame; the camera key is decoded into an image column
-df = lerobot.read("your-org/your-robot-dataset", load_video_frames="observation.image")
+# one row per frame; the camera key is decoded into an image column.
+# egodex-test is a tiny EgoDex sample (3 episodes / 632 frames) in LeRobot v3 format.
+df = lerobot.read("pepijn223/egodex-test", load_video_frames="observation.image")
 
 # wilor -> GPU, 3D MANO keypoints, both hands (MANO weights user-supplied)
 df = df.with_column("hands", track_hands(df["observation.image"], method="wilor", mano_path="MANO_RIGHT.pkl"))
