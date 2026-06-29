@@ -3,17 +3,18 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 [project]
-name = "daft-ext-template"  # Choose a name for the package!
-description = "..."  # Add a description for the package
+name = "daft-physical-ai"
+description = "Physical-AI data annotation on Daft, starting with hand tracking."
 dependencies = ["daft>=0.7.5"]  # Add additional dependencies here
 dynamic = ["version"]
 license = "Apache-2.0"
-authors = []  # Add authors, especially if it differs from maintainers
-maintainers = []  # Add maintainers
+authors = [{name = "Eventual"}]
+maintainers = [{name = "Eventual"}]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
 [project.urls]
+Repository = "https://github.com/Eventual-Inc/daft-physical-ai"
 
 [dependency-groups]
 dev = [
@@ -27,7 +28,7 @@ dev = [
 source = "vcs"
 
 [tool.mypy]
-files = ["daft_ext_template/**/*.py", "tests/**/*.py"]
+files = ["daft_physical_ai/**/*.py", "tests/**/*.py"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
