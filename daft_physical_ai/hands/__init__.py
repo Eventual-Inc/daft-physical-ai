@@ -23,6 +23,7 @@ def track_hands(
     method: str,
     mano_path: str | None = None,
     wilor_root: str | None = None,
+    device: str = "cuda",
     model_path: str | None = None,
     num_hands: int = 2,
     min_confidence: float = 0.3,
@@ -35,6 +36,7 @@ def track_hands(
         mano_path: path to MANO weights, required by ``"wilor"`` (research-gated, not bundled).
         wilor_root: where the WiLoR repo + weights live (``"wilor"`` only; defaults to
             ``$DAFT_PHYSICAL_AI_WILOR_ROOT`` or ``/WiLoR``, fetched on first use).
+        device: torch device for ``"wilor"`` (default ``"cuda"``; ``"cpu"`` is slow).
         model_path: override the MediaPipe model path (defaults to a local cache).
         num_hands: max hands to detect per frame.
         min_confidence: minimum detection confidence.
@@ -54,7 +56,7 @@ def track_hands(
             raise ValueError("method='wilor' requires mano_path (MANO_RIGHT.pkl; research-gated).")
         from ._wilor import WiLoRHands
 
-        wilor_tracker = WiLoRHands(mano_path=mano_path, wilor_root=wilor_root)
+        wilor_tracker = WiLoRHands(mano_path=mano_path, wilor_root=wilor_root, device=device)
         return cast(Expression, wilor_tracker.track(images))
 
     raise ValueError(f"unknown method {method!r}; expected 'mediapipe' or 'wilor'")

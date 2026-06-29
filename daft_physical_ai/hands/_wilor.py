@@ -65,15 +65,15 @@ def ensure_assets(wilor_root: str | None = None, mano_path: str | None = None) -
 class WiLoRHands:
     """Detect hands per frame with WiLoR; returns the shared hands schema (with kp3d)."""
 
-    def __init__(self, mano_path: str, wilor_root: str | None = None):
+    def __init__(self, mano_path: str, wilor_root: str | None = None, device: str = "cuda"):
         import sys
 
         try:
             import torch
         except ImportError as err:
             raise ImportError(
-                "method='wilor' requires torch + the WiLoR repo. Install with "
-                "`pip install daft-physical-ai[wilor]` and set up assets via ensure_assets()."
+                "method='wilor' requires torch (a CUDA build for GPU). Install the WiLoR "
+                "extras with `pip install daft-physical-ai[wilor]`."
             ) from err
 
         root = ensure_assets(wilor_root, mano_path)
@@ -106,15 +106,23 @@ class WiLoRHands:
         st.__getattr__ = lambda n: (_ for _ in ()).throw(AttributeError(n)) if n.startswith("__") else _Any  # type: ignore[method-assign]
         sys.modules["pyrender"] = st
 
-        from ultralytics import YOLO
-        from wilor.datasets.vitdet_dataset import ViTDetDataset
-        from wilor.models import load_wilor
-        from wilor.utils import recursive_to
+        try:
+            from ultralytics import YOLO
+            from wilor.datasets.vitdet_dataset import ViTDetDataset
+            from wilor.models import load_wilor
+            from wilor.utils import recursive_to
+        except ImportError as err:
+            raise ImportError(
+                f"Could not import the WiLoR stack ({err}). It needs the WiLoR repo on the path "
+                f"(fetched by ensure_assets into {root!r}) plus the [wilor] extras AND chumpy from git "
+                "(`pip install 'chumpy @ git+https://github.com/mattloper/chumpy'`), which is omitted "
+                "from the extra because PyPI metadata can't carry direct references."
+            ) from err
 
         self.torch = torch
         self.recursive_to = recursive_to
         self.ViTDetDataset = ViTDetDataset
-        self.device = torch.device("cuda")
+        self.device = torch.device(device)
         self.model, self.cfg = load_wilor(
             checkpoint_path="./pretrained_models/wilor_final.ckpt",
             cfg_path="./pretrained_models/model_config.yaml",
