@@ -15,11 +15,41 @@
    but not yet in a released version (latest is v0.7.16):
    `uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai -U daft`
 
-# TODO
+# Roadmap
+
+Working implementations to port from: multibase `src/post7_hand_tracking/egodex_daft/`
+(`mediapipe_egodex_daft.py`, `wilor_egodex_daft.py`), already on the native
+`daft.datasets.lerobot` reader. Package design: multibase
+[#527](https://github.com/Eventual-Inc/multibase/pull/527).
+
+## Now
+
+- [ ] **Implement `hands/` - MediaPipe first** (easiest: CPU, permissive license,
+  no weights to supply). `_mediapipe.py` `@daft.cls` + the `track_hands(method="mediapipe")`
+  facade, returning the shared output schema.
+- [ ] **Implement WiLoR** (`method="wilor"`): GPU, 3D MANO keypoints, user-supplied
+  `mano_path`. Port the `@daft.cls` from multibase.
+- [ ] **Test both thoroughly and document how** (a `TESTING.md`): capture the
+  commands + observed hand counts. MediaPipe locally on CPU; WiLoR on Modal (see
+  Testing & GPU below).
+- [ ] **Add tests + align with the template**: real `tests/` (replace the
+  placeholder `greet`), confirm `track_hands` returns a Daft expression, lock the
+  output schema.
+- [ ] **CLI + demo**: the `daft-physical-ai` console script + demo notebook/script
+  per the design doc.
+
+## Later
 
 - [ ] Switch off the Daft nightly once `daft.datasets.lerobot` ships in a release
   (> v0.7.16): bump the `daft` floor in `pyproject.toml`, drop the nightly
   install step above, and re-run `uv lock`.
+
+# Testing & GPU
+
+- **MediaPipe runs on CPU** - testable locally and in CI.
+- **WiLoR requires CUDA.** There is no local NVIDIA GPU (dev box is Apple Silicon /
+  Metal only), so test WiLoR on **Modal**. CI can't run it - mark WiLoR tests as
+  integration / Modal-gated, not part of the default CPU test run.
 
 # PR Conventions
 
