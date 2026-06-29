@@ -5,13 +5,17 @@ build-backend = "hatchling.build"
 [project]
 name = "daft-physical-ai"
 description = "Physical-AI data annotation on Daft, starting with hand tracking."
-dependencies = ["daft>=0.7.5"]  # Add additional dependencies here
+dependencies = ["daft>=0.7.5", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
 maintainers = [{name = "Eventual"}]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
+
+[project.optional-dependencies]
+# MediaPipe wheels are not published for Python 3.13 yet.
+mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
 
 [project.urls]
 Repository = "https://github.com/Eventual-Inc/daft-physical-ai"
