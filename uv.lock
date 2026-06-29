@@ -65,7 +65,7 @@ wheels = [
 ]
 
 [[package]]
-name = "daft-ext-template"
+name = "daft-physical-ai"
 source = { editable = "." }
 dependencies = [
     { name = "daft" },

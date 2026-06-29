@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import daft
 
-from daft_ext_template import greet
+from daft_physical_ai import greet
 
 
 def test_greet() -> None:
