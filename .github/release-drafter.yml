@@ -1,0 +1,77 @@
+name-template: v$NEXT_PATCH_VERSION
+tag-template: v$NEXT_PATCH_VERSION
+
+categories:
+- title: '💥 Breaking Changes'
+  labels:
+  - 'breaking change'
+  - 'breaking'
+
+- title: '✨ Features'
+  labels:
+  - 'feat'
+  - 'feature'
+  - 'enhancement'
+
+- title: '🐛 Bug Fixes'
+  labels:
+  - 'fix'
+  - 'bug'
+
+- title: '🚀 Performance'
+  labels:
+  - 'perf'
+  - 'performance'
+
+- title: '♻️ Refactor'
+  labels:
+  - 'refactor'
+
+- title: '📖 Documentation'
+  labels:
+  - 'docs'
+  - 'documentation'
+
+- title: '✅ Tests'
+  labels:
+  - 'test'
+  - 'testing'
+
+- title: '👷 CI'
+  labels:
+  - 'ci'
+
+- title: '🔧 Maintenance'
+  labels:
+  - 'chore'
+
+- title: '⏪ Reverts'
+  labels:
+  - 'revert'
+
+- title: '⬆️ Dependencies'
+  collapse-after: 3
+  labels:
+  - 'dependencies'
+  - 'deps'
+
+version-resolver:
+  major:
+    labels:
+    - 'breaking'
+  minor:
+    labels:
+    - 'feat'
+    - 'feature'
+    - 'enhancement'
+  default: patch
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&' # Escapes to prevent mentions and markdown formatting
+
+template: |
+  ## What's Changed 🚀
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$NEXT_PATCH_VERSION

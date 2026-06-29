@@ -1,0 +1,47 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  # General file hygiene and linting
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v5.0.0
+  hooks:
+  - id: trailing-whitespace            # Strip trailing whitespace from all files
+  - id: end-of-file-fixer              # Ensure files end with a newline
+  - id: check-yaml                     # Validate YAML syntax
+  - id: check-toml                     # Validate TOML syntax (pyproject.toml)
+  - id: check-added-large-files        # Prevent accidental commit of large files
+    exclude: uv.lock
+  - id: check-merge-conflict           # Check for remaining merge conflicts
+  - id: detect-private-key             # Block commits containing private keys
+
+  # TOML and YAML formatting
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.15.0
+  hooks:
+  - id: pretty-format-toml
+    args: [--autofix, --no-sort]
+    exclude: uv.lock
+  - id: pretty-format-yaml
+    args: [--autofix, --preserve-quotes]
+
+  # Python linting and formatting
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.20
+  hooks:
+  - id: ruff-check                     # Lint Python files and auto-fix safe issues
+    args: [--fix, --exit-non-zero-on-fix, --show-fixes]
+  - id: ruff-format                    # Format Python files
+    name: Python code Formatting
+
+  # Python type checking
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v2.1.0
+  hooks:
+  - id: mypy                           # Static type checker for Python
+    additional_dependencies: [daft>=0.7.5]
+
+  # Check that uv.lock is up to date with pyproject.toml
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.11.2
+  hooks:
+  - id: uv-lock

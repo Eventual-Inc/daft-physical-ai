@@ -1,0 +1,37 @@
+name: Publish Package
+
+on:
+  push:
+    tags:
+    - v*
+
+  workflow_dispatch:
+    inputs:
+      test-pypi:
+        description: Publish to TestPyPI instead of PyPI
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'workflow_dispatch' && inputs.test-pypi && 'testpypi' || 'pypi' }}
+    permissions:
+      id-token: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: astral-sh/setup-uv@v7
+    - name: Build wheel and sdist
+      run: uv build --sdist --wheel
+
+    - name: Publish to TestPyPI
+      if: github.event_name == 'workflow_dispatch' && inputs.test-pypi
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+
+    - name: Publish to PyPI
+      if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.test-pypi)
+      uses: pypa/gh-action-pypi-publish@release/v1

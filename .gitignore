@@ -1,0 +1,29 @@
+# Python
+**/__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+*.so
+*.dylib
+*.pyd
+.python-version
+**/.ipynb_checkpoints/
+.mypy_cache
+.ruff_cache
+.coverage
+.env
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+
+# Agent Prompting Templates
+CLAUDE.local.md
+.claude/**/*.md
+.claude/worktrees/
