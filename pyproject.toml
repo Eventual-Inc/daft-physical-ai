@@ -8,8 +8,8 @@ description = "Physical-AI data annotation on Daft, starting with hand tracking.
 dependencies = ["daft>=0.7.5"]  # Add additional dependencies here
 dynamic = ["version"]
 license = "Apache-2.0"
-authors = [{ name = "Eventual" }]
-maintainers = [{ name = "Eventual" }]
+authors = [{name = "Eventual"}]
+maintainers = [{name = "Eventual"}]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
