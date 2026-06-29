@@ -7,8 +7,9 @@ needs two things set up in the environment:
     ``$DAFT_PHYSICAL_AI_WILOR_ROOT``). Call :func:`ensure_assets` once to fetch them.
   - ``MANO_RIGHT.pkl`` supplied via ``mano_path`` (you must accept the MANO license).
 
-It runs on CUDA. There is no local-GPU path on Apple Silicon, so this is exercised
-on Modal (see the project roadmap / TESTING notes).
+It runs on any CUDA GPU and is runtime-agnostic (local, Ray, Modal, ...). The package
+itself has no Modal dependency; we just happen to test it on Modal because there's no
+local NVIDIA GPU here (see TESTING).
 """
 
 from __future__ import annotations

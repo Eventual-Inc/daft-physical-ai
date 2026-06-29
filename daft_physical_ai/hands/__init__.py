@@ -54,6 +54,16 @@ def track_hands(
     if method == "wilor":
         if not mano_path:
             raise ValueError("method='wilor' requires mano_path (MANO_RIGHT.pkl; research-gated).")
+        # Import torch here, in the caller's process, BEFORE Daft lazily runs the class-UDF
+        # on a worker. Importing torch/CUDA for the first time inside the worker segfaults;
+        # loading it in the main process first makes the worker's import a safe no-op. This is
+        # a Daft+torch interaction, not environment-specific (applies to local GPU, Ray, etc.).
+        try:
+            import torch
+        except ImportError as err:
+            raise ImportError(
+                "method='wilor' requires the WiLoR extras: `pip install daft-physical-ai[wilor]`."
+            ) from err
         from ._wilor import WiLoRHands
 
         wilor_tracker = WiLoRHands(mano_path=mano_path, wilor_root=wilor_root, device=device)

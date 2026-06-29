@@ -20,7 +20,10 @@ def test_wilor_requires_mano_path() -> None:
 
 
 def test_wilor_expression_has_shared_schema() -> None:
-    # No execution -> no torch, no asset download, no GPU.
+    # track_hands(method="wilor") imports torch in the caller's process (so Daft's
+    # worker import is a safe no-op), so this needs torch present - but still no
+    # execution, no asset download, no GPU.
+    pytest.importorskip("torch")
     df = daft.from_pydict({"image": [1]})
     df = df.with_column("hands", track_hands(df["image"], method="wilor", mano_path="/fake/MANO_RIGHT.pkl"))
     field = next(f for f in df.schema() if f.name == "hands")
