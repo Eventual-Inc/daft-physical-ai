@@ -1,35 +1,54 @@
-# daft-ext-py-template
+# daft-physical-ai
 
-A template for creating a Python-only Daft extension. If you're looking to create a Python + Rust Daft extension, see the [daft-ext-rust-template](https://github.com/Eventual-Inc/daft-ext-rust-template) instead.
+Physical-AI data annotation on [Daft](https://docs.daft.ai), starting with hand
+tracking. The annotation methods run as Daft UDFs, so they slot into any Daft
+pipeline and execute lazily, batched, and distributed.
 
-## Usage
+> **Status:** early scaffold. The API below is the planned design (see
+> [design doc](https://github.com/Eventual-Inc/multibase/pull/527)); the
+> `hands/` implementation is not built yet.
 
-1. Clone this repository: `git clone https://github.com/Eventual-Inc/daft-ext-python-template.git`
-2. Rename the `daft_ext_template/` package directory and update `name` in `pyproject.toml`
-3. Fill in the remaining blanks in `pyproject.toml` (description, authors, repository URL, etc.)
-4. Install dependencies: `uv sync`
-5. Install pre-commit hooks: `uv run pre-commit install`
-6. Run the example test suite: `uv run pytest tests/ -v`
-7. Start developing!
+## Planned API
 
-## Example
-
-This template ships a minimal `greet` function in `daft_ext_template/__init__.py`:
+The package operates on an image column and returns a hand-pose column - it
+doesn't know about LeRobot, EgoDex, or Modal, so it composes with any Daft
+DataFrame:
 
 ```python
 import daft
-from daft_ext_template import greet
+from daft_physical_ai.hands import track_hands
 
-df = daft.from_pydict({"name": ["Ada", "Grace"]})
-df.select(greet(df["name"]).alias("greet")).show()
+df = daft.read_parquet("frames.parquet")   # any df with an image column
+
+# wilor -> GPU, 3D MANO keypoints, both hands (MANO weights user-supplied)
+df = df.with_column("hands", track_hands(df["image"], method="wilor", mano_path="MANO_RIGHT.pkl"))
+
+# mediapipe -> CPU, 2D only, permissive license, no weights to supply
+df = df.with_column("hands", track_hands(df["image"], method="mediapipe"))
+
+df.write_parquet("annotated/")
 ```
 
-See the [Extensions overview](https://docs.daft.ai/en/stable/extensions/overview/) and [UDF API docs](https://docs.daft.ai/en/stable/api/udf/) for patterns like batch UDFs, class UDFs, and custom aggregations.
+One unified output schema regardless of method
+(`kp3d` is null for MediaPipe):
+`list[struct{ handedness, confidence, kp2d, kp3d? }]`.
+
+## Development
+
+```bash
+uv sync                      # set up env + install deps
+uv run pre-commit install    # install lint/format hooks
+uv run pytest tests/ -v      # run the test suite
+```
 
 ## Versioning
 
-Versions are derived from git tags via `hatch-vcs`. Tag releases as `v0.1.0`, `v0.2.0`, etc.
+Versions are derived from git tags via `hatch-vcs`. Tag releases as `v0.1.0`,
+`v0.2.0`, etc.
 
 ## Publishing
 
-Publishing a GitHub release triggers `.github/workflows/publish-package.yml`, which builds a wheel and sdist with `uv build` and uploads both to PyPI via [trusted publishing](https://docs.pypi.org/trusted-publishers/). Configure the trusted publisher on PyPI for this repository before your first release.
+Publishing a GitHub release triggers `.github/workflows/publish-package.yml`,
+which builds a wheel and sdist with `uv build` and uploads both to PyPI via
+[trusted publishing](https://docs.pypi.org/trusted-publishers/). Configure the
+trusted publisher on PyPI for this repository before the first release.
