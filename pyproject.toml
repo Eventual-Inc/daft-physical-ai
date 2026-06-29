@@ -16,6 +16,31 @@ requires-python = ">=3.10,<3.14"
 [project.optional-dependencies]
 # MediaPipe wheels are not published for Python 3.13 yet.
 mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
+# WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
+# ensure_assets). Install the matching torch/torchvision for your CUDA first.
+# Also needs chumpy from git (`pip install "chumpy @ git+https://github.com/mattloper/chumpy"`),
+# omitted here because direct references can't ship in published metadata. The
+# proven environment is the Modal image used to test it.
+wilor = [
+  "torch",
+  "torchvision",
+  "ultralytics==8.1.34",
+  "smplx==0.1.28",
+  "pytorch-lightning==2.1.3",
+  "scikit-image",
+  "opencv-python-headless",
+  "numpy<2",
+  "yacs",
+  "timm",
+  "einops",
+  "xtcocotools",
+  "pandas",
+  "hydra-core",
+  "hydra-colorlog",
+  "pyrootutils",
+  "rich",
+  "webdataset"
+]
 
 [project.urls]
 Repository = "https://github.com/Eventual-Inc/daft-physical-ai"
