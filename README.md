@@ -34,7 +34,7 @@ Install the method you need as an extra: `pip install daft-physical-ai[mediapipe
 `torch` build and `chumpy` from git
 (`pip install 'chumpy @ git+https://github.com/mattloper/chumpy'`, omitted from the
 extra because PyPI metadata can't carry direct references), plus a user-supplied
-`MANO_RIGHT.pkl` (research-gated).
+`MANO_RIGHT.pkl` ([research-gated](docs/mano.md)).
 
 > **Note:** `daft.datasets.lerobot` is merged but not yet in a published Daft
 > release (latest is v0.7.16; the reader lands in the next one). Until then it's
