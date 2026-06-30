@@ -1,16 +1,12 @@
-"""Example Python-only Daft extension."""
+"""Hand tracking for Daft DataFrames.
+
+`track_hands(images, method=...)` takes an image column (a Daft expression) and
+returns a hand-pose column, so it composes with any Daft pipeline. Every method
+returns the same output schema - see `HANDS_DTYPE`.
+"""
 
 from __future__ import annotations
 
-import daft
+from .hands import HAND_DTYPE, HANDS_DTYPE, track_hands
 
-
-@daft.func
-def greet(name: str | None) -> str | None:
-    """Greet someone by name."""
-    if name is None:
-        return None
-    return f"Hello, {name}!"
-
-
-__all__ = ["greet"]
+__all__ = ["HANDS_DTYPE", "HAND_DTYPE", "track_hands"]

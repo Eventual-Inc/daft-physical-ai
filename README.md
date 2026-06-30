@@ -4,11 +4,11 @@ Physical-AI data annotation on [Daft](https://docs.daft.ai), starting with hand
 tracking. The annotation methods run as Daft UDFs, so they slot into any Daft
 pipeline and execute lazily, batched, and distributed.
 
-> **Status:** early scaffold. The API below is the planned design (see
-> [design doc](https://github.com/Eventual-Inc/multibase/pull/527)); the
-> `hands/` implementation is not built yet.
+> **Status:** `track_hands` is implemented for both methods - MediaPipe (CPU, 2D)
+> and WiLoR (GPU, 3D); CLI + demo are next. How each method was verified is in
+> [TESTING.md](TESTING.md).
 
-## Planned API
+## API
 
 The package operates on an image column and returns a hand-pose column - it
 doesn't know about LeRobot, EgoDex, or Modal, so it composes with any Daft
@@ -35,8 +35,16 @@ df = df.with_column("hands", track_hands(df["observation.image"], method="mediap
 df.write_parquet("annotated/")
 ```
 
-Any image column works (`daft.read_parquet(...)["image"]`, etc.) - the LeRobot
+`track_hands` is also exported at the top level
+(`from daft_physical_ai import track_hands`). Any image column works - the LeRobot
 reader is just the most convenient source for robot data.
+
+Install the method you need as an extra: `pip install daft-physical-ai[mediapipe]`
+(CPU, 2D) or `pip install daft-physical-ai[wilor]` (GPU, 3D). WiLoR also needs a
+CUDA `torch` build and `chumpy` from git
+(`pip install 'chumpy @ git+https://github.com/mattloper/chumpy'`, omitted from
+the extra because PyPI metadata can't carry direct references), plus a
+user-supplied `MANO_RIGHT.pkl` (research-gated). See [TESTING.md](TESTING.md).
 
 > **Note:** `daft.datasets.lerobot` is merged but not yet in a published Daft
 > release (latest is v0.7.16; the reader lands in the next one). Until then it's
