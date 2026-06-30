@@ -40,7 +40,7 @@ from pathlib import Path
 
 # import the package's renderers (run from the repo root)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from daft_physical_ai._render import (  # noqa: E402
+from daft_physical_ai._render import (
     DemoConfig,
     render_markdown,
     render_notebook,
@@ -75,18 +75,18 @@ def _cell_text(td_html: str) -> str:
 
 def _show_table_to_markdown(html_text: str) -> str:
     """Convert a Daft `.show()` HTML table into a GitHub-flavored markdown table."""
-    head = re.search(r"<thead>(.*?)</thead>", html_text, flags=re.S)
-    body = re.search(r"<tbody>(.*?)</tbody>", html_text, flags=re.S)
+    head = re.search(r"<thead>(.*?)</thead>", html_text, flags=re.DOTALL)
+    body = re.search(r"<tbody>(.*?)</tbody>", html_text, flags=re.DOTALL)
     if not head or not body:
         return ""
     # header cells carry "name<br/>Type"; keep just the column name
     headers = [
         _html.unescape(re.sub(r"<[^>]+>", "", re.split(r"<br\s*/?>", th)[0])).strip()
-        for th in re.findall(r"<th[^>]*>(.*?)</th>", head.group(1), flags=re.S)
+        for th in re.findall(r"<th[^>]*>(.*?)</th>", head.group(1), flags=re.DOTALL)
     ]
     rows = []
-    for tr in re.findall(r"<tr>(.*?)</tr>", body.group(1), flags=re.S):
-        cells = [_cell_text(td) for td in re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.S)]
+    for tr in re.findall(r"<tr>(.*?)</tr>", body.group(1), flags=re.DOTALL):
+        cells = [_cell_text(td) for td in re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.DOTALL)]
         if cells:
             # wrap structured values (lists/structs) in backticks so they read as code
             rows.append([f"`{c}`" if c[:1] in "[{" else c for c in cells])
