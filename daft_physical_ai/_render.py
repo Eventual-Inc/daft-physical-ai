@@ -466,8 +466,10 @@ def render_markdown(config: DemoConfig, outputs: list[str] | None = None) -> str
         block = f"```python\n{text}\n```"
         captured = next(out_iter, "")  # one slot per code cell, in cell order
         if captured.strip():
-            # a markdown image link (![...](...)) is appended as-is; anything else is fenced text
-            extra = captured.rstrip() if captured.lstrip().startswith("![") else f"```\n{captured.rstrip()}\n```"
+            # raw markdown (an image link `![...]` or a `|`-delimited table) is appended
+            # as-is; anything else is fenced as plain text
+            is_markdown = captured.lstrip().startswith(("![", "|"))
+            extra = captured.rstrip() if is_markdown else f"```\n{captured.rstrip()}\n```"
             block += f"\n\n{extra}"
         parts.append(block)
     return "\n\n".join(parts) + "\n"

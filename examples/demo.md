@@ -46,6 +46,17 @@ df = df.with_column("hands", track_hands(df[IMAGE_COLUMN], method="mediapipe"))
 df.select("episode_index", "frame_index", "hands").show()
 ```
 
+| episode_index | frame_index | hands |
+| --- | --- | --- |
+| 0 | 0 | `[{handedness: right, confidence: 0.9794173, kp2d: [[1412.1072, 1111.0558], ...], kp3d: None, }, {handedness: right, confidence: 0.8413756, kp2d: [[955.5483, 1071.1882], ...], kp3d: None, }]` |
+| 0 | 1 | `[{handedness: right, confidence: 0.96713614, kp2d: [[1393.3395, 1109.6255], ...], kp3d: None, }, {handedness: right, confidence: 0.7439953, kp2d: [[952.22327, 1074.6909], ...], kp3d: None, }]` |
+| 0 | 2 | `[{handedness: right, confidence: 0.9736023, kp2d: [[1411.5774, 1108.3651], ...], kp3d: None, }, {handedness: right, confidence: 0.76208746, kp2d: [[956.03107, 1069.1648], ...], kp3d: None, }]` |
+| 0 | 3 | `[{handedness: right, confidence: 0.9738133, kp2d: [[1403.5613, 1107.4369], ...], kp3d: None, }, {handedness: right, confidence: 0.5332148, kp2d: [[948.6791, 1082.8441], ...], kp3d: None, }]` |
+| 0 | 4 | `[{handedness: right, confidence: 0.98164684, kp2d: [[1413.5198, 1104.5078], ...], kp3d: None, }, {handedness: right, confidence: 0.8021451, kp2d: [[950.51074, 1076.3153], ...], kp3d: None, }]` |
+| 0 | 5 | `[{handedness: right, confidence: 0.9751354, kp2d: [[1413.4867, 1107.4175], ...], kp3d: None, }, {handedness: right, confidence: 0.8183788, kp2d: [[952.788, 1074.0789], ...], kp3d: None, }]` |
+| 0 | 6 | `[{handedness: right, confidence: 0.9711388, kp2d: [[1407.5654, 1110.9731], ...], kp3d: None, }, {handedness: right, confidence: 0.77054256, kp2d: [[949.3927, 1073.0958], ...], kp3d: None, }]` |
+| 0 | 7 | `[{handedness: right, confidence: 0.96578354, kp2d: [[1408.082, 1110.9341], ...], kp3d: None, }, {handedness: right, confidence: 0.7804233, kp2d: [[950.721, 1073.3601], ...], kp3d: None, }]` |
+
 ## Evaluate against ground truth
 
 EgoDex ships per-frame GT hand poses, so we can score the predictions: project both GT hands, match the predicted hands to them, and report detect% + PCK. The matching runs as a Daft UDF (`score`); the summary is computed from the collected results.
