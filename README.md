@@ -92,7 +92,7 @@ it's published to PyPI, run it from a clone instead:
 ```bash
 uv sync                                 # installs the daft-physical-ai console script
 uv run daft-physical-ai                 # prefix the commands above with `uv run`
-uv run --with jupyterlab jupyter lab my-demo/demo.ipynb   # open a generated notebook
+uv run --with jupyterlab jupyter lab hand-tracking-demo/demo.ipynb   # open a generated notebook
 ```
 
 Once published: `pip install daft-physical-ai`, then use `daft-physical-ai` directly.
