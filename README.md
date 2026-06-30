@@ -42,15 +42,19 @@ extra because PyPI metadata can't carry direct references), plus a user-supplied
 
 ## Output schema
 
-One unified output schema regardless of method - a column of
-`list[struct{...}]`, one list per frame holding 0-2 detected hands:
+One unified output schema regardless of method: each frame yields a list of
+0-2 detected hands. A single hand value (MediaPipe):
 
-| field | type | description |
-| --- | --- | --- |
-| `handedness` | `string` | `"left"`, `"right"`, or `"unknown"` |
-| `confidence` | `float32` | detection confidence |
-| `kp2d` | `list[list[float32]]` | 21 image-space keypoints, `[[x, y], ...]` |
-| `kp3d` | `list[list[float32]]` | 21 3D keypoints, `[[x, y, z], ...]`; null for 2D-only methods (e.g. MediaPipe) |
+```python
+{
+    "handedness": "right",        # "left", "right", or "unknown"
+    "confidence": 0.979,
+    "kp2d": [[1412.1, 1111.1],    # 21 image-space [x, y] keypoints
+             [1357.9, 1075.9],
+             ...],
+    "kp3d": None,                 # 21 [x, y, z] keypoints, or null for 2D-only methods
+}
+```
 
 The Daft type is `list[struct{ handedness: string, confidence: float32, kp2d:
 list[list[float32]], kp3d: list[list[float32]] }]`, defined as `HANDS_DTYPE` in
