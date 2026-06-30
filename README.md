@@ -86,6 +86,16 @@ daft-physical-ai --method mediapipe --output-dir my-demo --no-input
 daft-physical-ai --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
 ```
 
+The bare `daft-physical-ai` command works once the package is installed. Until
+it's published to PyPI, run it from a clone instead:
+
+```bash
+uv sync                                 # installs the daft-physical-ai console script
+uv run daft-physical-ai                 # prefix the commands above with `uv run`
+```
+
+Once published: `pip install daft-physical-ai`, then use `daft-physical-ai` directly.
+
 ## Development
 
 ```bash
