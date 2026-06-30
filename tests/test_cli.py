@@ -137,6 +137,15 @@ def test_cli_mediapipe_forces_local_over_modal(tmp_path, capsys) -> None:
     assert "mediapipe" in capsys.readouterr().err.lower()  # the note was printed
 
 
+def test_cli_non_tty_without_no_input_errors(tmp_path, monkeypatch, capsys) -> None:
+    # No terminal + no --no-input: don't silently default - tell the user to use --no-input.
+    monkeypatch.setattr("sys.stdin.isatty", lambda: False)
+    rc = main(["--method", "mediapipe", "--output-dir", str(tmp_path / "d")])
+    assert rc == 2
+    assert "--no-input" in capsys.readouterr().err
+    assert not (tmp_path / "d").exists()
+
+
 def test_cli_default_output_dir(tmp_path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
     rc = main(["--method", "mediapipe", "--no-input"])  # no --output-dir

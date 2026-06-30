@@ -141,8 +141,16 @@ def _write(path: Path, content: str, force: bool) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
-    interactive = not args.no_input and sys.stdin.isatty()
 
+    if not args.no_input and not sys.stdin.isatty():
+        print(
+            "error: no interactive terminal detected. Re-run with --no-input (plus any "
+            "flags, e.g. --method/--runtime/--mano-path) to generate non-interactively.",
+            file=sys.stderr,
+        )
+        return 2
+
+    interactive = not args.no_input
     if interactive:
         print(_INTRO)
 
