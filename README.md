@@ -101,7 +101,7 @@ from the activated venv - not `uv run`, which re-syncs the env and would drop th
 ```bash
 source .venv/bin/activate
 uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
-  -U daft mediapipe scipy opencv-python matplotlib jupyterlab
+  -U daft av mediapipe scipy opencv-python matplotlib jupyterlab
 jupyter lab hand-tracking-demo/demo.ipynb
 ```
 
