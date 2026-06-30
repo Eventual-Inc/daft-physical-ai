@@ -52,6 +52,23 @@ def test_modal_notebook_uses_app_run_not_entrypoint() -> None:
     assert "local_entrypoint" not in src  # entrypoint doesn't fire in a kernel
 
 
+def test_local_demo_includes_visualization() -> None:
+    cfg = DemoConfig(method="mediapipe", runtime="local")
+    src = render_script(cfg)
+    assert "draw_hands" in src and "plt.show()" in src and "BONES" in src
+    nb = json.loads(render_notebook(cfg))
+    code = "".join(
+        (c["source"] if isinstance(c["source"], str) else "".join(c["source"]))
+        for c in nb["cells"]
+        if c["cell_type"] == "code"
+    )
+    assert "draw_hands" in code
+
+
+def test_modal_demo_has_no_visualization() -> None:
+    assert "draw_hands" not in render_script(_cfg("mediapipe", "modal"))
+
+
 @pytest.mark.parametrize(("method", "runtime"), ALL_COMBOS)
 def test_markdown_renders_with_headers_and_code(method: str, runtime: str) -> None:
     md = render_markdown(_cfg(method, runtime))

@@ -14,10 +14,8 @@ import json
 from dataclasses import dataclass
 from string import Template
 
-_TEMPLATES = {
-    "local": "script_local.py.tmpl",
-    "modal": "script_modal.py.tmpl",
-}
+# Only the Modal script uses a template; local demos render from the shared cells.
+_TEMPLATES = {"modal": "script_modal.py.tmpl"}
 
 _VALID_METHODS = ("mediapipe", "wilor", "both")
 _VALID_RUNTIMES = ("local", "modal")
@@ -234,8 +232,64 @@ def _title_method(method: str) -> str:
     return {"mediapipe": "MediaPipe", "wilor": "WiLoR"}[method]
 
 
-def _eval_section(config: DemoConfig) -> str:
-    """The full eval block appended to a demo script (helpers + scoring + report)."""
+# Keypoint visualization (default for local demos). Draws the predicted skeleton on
+# a few frames with cv2 (which ships with the mediapipe/wilor extras) + matplotlib.
+_VIZ_HELPERS = """# --- Visualize: draw the predicted keypoints on a few frames ---
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 21-keypoint hand skeleton (wrist + 5 fingers x 4 joints)
+BONES = [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
+         (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15),
+         (15, 16), (0, 17), (17, 18), (18, 19), (19, 20)]
+
+
+def draw_hands(img, hands):
+    img = np.ascontiguousarray(img)
+    for h in hands or []:
+        kp = np.asarray(h["kp2d"], float)
+        for a, b in BONES:
+            cv2.line(img, tuple(kp[a].astype(int)), tuple(kp[b].astype(int)), (60, 200, 60), 2)
+        for p in kp:
+            cv2.circle(img, tuple(p.astype(int)), 3, (255, 80, 0), -1)
+    return img"""
+
+
+def _viz_cells(config: DemoConfig) -> list[tuple[str, str]]:
+    """Cells that draw the predicted keypoints on a few frames."""
+    methods = _eval_methods(config.method)  # (label, hands-column) pairs
+    cols = ", ".join(f'"{c}"' for _, c in methods)
+    methods_lit = "[" + ", ".join(f'("{lbl}", "{c}")' for lbl, c in methods) + "]"
+    viz = (
+        f"viz = df.select(IMAGE_COLUMN, {cols}).limit(4).to_pydict()\n"
+        "frames = [np.asarray(im) for im in viz[IMAGE_COLUMN]]\n"
+        f"methods = {methods_lit}\n"
+        "fig, axes = plt.subplots(len(methods), len(frames), "
+        "figsize=(3 * len(frames), 3 * len(methods)), squeeze=False)\n"
+        "for r, (label, c) in enumerate(methods):\n"
+        "    for j, (im, hands) in enumerate(zip(frames, viz[c])):\n"
+        "        axes[r][j].imshow(draw_hands(im, hands))\n"
+        "        axes[r][j].set_xticks([])\n"
+        "        axes[r][j].set_yticks([])\n"
+        "    axes[r][0].set_ylabel(label, fontsize=12)\n"
+        'fig.suptitle("track_hands keypoints")\n'
+        "plt.tight_layout()\n"
+        "plt.show()"
+    )
+    return [
+        (
+            "markdown",
+            "## Visualize\n\nDraw the predicted keypoints on a few frames - this is the point of hand "
+            "tracking, so let's see it. (Needs `matplotlib`; `cv2` ships with the method extra.)",
+        ),
+        ("code", _VIZ_HELPERS),
+        ("code", viz),
+    ]
+
+
+def _eval_cells_select_and_report(config: DemoConfig) -> tuple[str, str]:
+    """The score-columns + report lines shared by the eval cells."""
     methods = _eval_methods(config.method)
     score_lines = "\n".join(
         f'df = df.with_column("score_{c}", score(col("{c}"), col("observation.state"), col("observation.extrinsics")))'
@@ -243,13 +297,7 @@ def _eval_section(config: DemoConfig) -> str:
     )
     select_cols = ", ".join(f'"score_{c}"' for _, c in methods)
     report_lines = "\n".join(f'report("{label}", scored["score_{c}"])' for label, c in methods)
-    return (
-        f"{_EVAL_HELPERS}\n\n\n"
-        f"{score_lines}\n"
-        f"scored = df.select({select_cols}).to_pydict()\n\n"
-        'print("\\nEgoDex 2D accuracy (matched predicted hands / 2 GT hands per frame):")\n'
-        f"{report_lines}\n"
-    )
+    return f"{score_lines}\nscored = df.select({select_cols}).to_pydict()", report_lines
 
 
 def _config_block(config: DemoConfig) -> str:
@@ -315,23 +363,34 @@ def _render_modal(config: DemoConfig, tmpl: Template, entrypoint: str) -> str:
 def render_script(config: DemoConfig) -> str:
     """Render the standalone .py demo for this config."""
     config.validate()
-    tmpl = Template(_load_template(_TEMPLATES[config.runtime]))
     if config.runtime == "modal":
+        tmpl = Template(_load_template(_TEMPLATES["modal"]))
         return _render_modal(config, tmpl, entrypoint=_MODAL_ENTRYPOINT)
-    script = tmpl.substitute(
-        title=_title(config),
-        config_block=_config_block(config),
-        track_lines=_track_lines(config.method),
-        result_columns=_result_columns(config.method),
-    )
-    if config.with_eval:
-        script += "\n\n" + _eval_section(config)
-    return script
+    # local: render from the same cells as the notebook/markdown so all three match -
+    # the first markdown cell becomes the docstring, the rest become comments.
+    return _cells_to_script(_demo_cells(config))
+
+
+def _cells_to_script(cells: list[tuple[str, str]]) -> str:
+    parts = []
+    for i, (kind, text) in enumerate(cells):
+        if kind == "code":
+            parts.append(text)
+        elif i == 0:
+            parts.append(f'"""{text.removeprefix("# ")}\n"""')
+        else:
+            parts.append("\n".join(f"# {_unhash(ln)}" if ln.strip() else "#" for ln in text.splitlines()))
+    return "\n\n".join(parts) + "\n"
+
+
+def _unhash(line: str) -> str:
+    """Turn a markdown header line into plain comment text (## Foo -> Foo)."""
+    return line.lstrip("#").lstrip() if line.lstrip().startswith("#") else line
 
 
 def _install_hint(method: str) -> str:
     extra = {"mediapipe": "mediapipe", "wilor": "wilor", "both": "mediapipe,wilor"}[method]
-    return f"daft-physical-ai[{extra}]"
+    return f"daft-physical-ai[{extra}] matplotlib"
 
 
 def render_notebook(config: DemoConfig) -> str:
@@ -357,7 +416,9 @@ def render_markdown(config: DemoConfig, outputs: list[str] | None = None) -> str
         block = f"```python\n{text}\n```"
         captured = next(out_iter, "")  # one slot per code cell, in cell order
         if captured.strip():
-            block += f"\n\n```\n{captured.rstrip()}\n```"
+            # a markdown image link (![...](...)) is appended as-is; anything else is fenced text
+            extra = captured.rstrip() if captured.lstrip().startswith("![") else f"```\n{captured.rstrip()}\n```"
+            block += f"\n\n{extra}"
         parts.append(block)
     return "\n\n".join(parts) + "\n"
 
@@ -414,6 +475,7 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
             ("markdown", "## Inspect the results\n\n`.show()` triggers execution and renders the keypoints per frame."),
             ("code", f"df.select({_result_columns(config.method)}).show()"),
         ]
+        cells += _viz_cells(config)
         if config.with_eval:
             cells += _eval_cells(config)
     return cells
@@ -421,13 +483,7 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
 
 def _eval_cells(config: DemoConfig) -> list[tuple[str, str]]:
     """Notebook cells appending the EgoDex GT evaluation."""
-    methods = _eval_methods(config.method)
-    score_lines = "\n".join(
-        f'df = df.with_column("score_{c}", score(col("{c}"), col("observation.state"), col("observation.extrinsics")))'
-        for _, c in methods
-    )
-    select_cols = ", ".join(f'"score_{c}"' for _, c in methods)
-    report_lines = "\n".join(f'report("{label}", scored["score_{c}"])' for label, c in methods)
+    score_block, report_lines = _eval_cells_select_and_report(config)
     return [
         (
             "markdown",
@@ -437,7 +493,7 @@ def _eval_cells(config: DemoConfig) -> list[tuple[str, str]]:
             "> EgoDex-specific (GT layout + camera intrinsics). Needs `pip install scipy`.",
         ),
         ("code", _EVAL_HELPERS),
-        ("code", f"{score_lines}\nscored = df.select({select_cols}).to_pydict()"),
+        ("code", score_block),
         ("code", f'print("EgoDex 2D accuracy:")\n{report_lines}'),
     ]
 

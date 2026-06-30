@@ -4,7 +4,7 @@ This demo reads a [LeRobot](https://docs.daft.ai/en/stable/datasets/lerobot/) da
 
 ## Setup
 
-Install with `pip install daft-physical-ai[mediapipe]`, then import.
+Install with `pip install daft-physical-ai[mediapipe] matplotlib`, then import.
 
 ```python
 from daft.datasets import lerobot
@@ -45,6 +45,51 @@ df = df.with_column("hands", track_hands(df[IMAGE_COLUMN], method="mediapipe"))
 ```python
 df.select("episode_index", "frame_index", "hands").show()
 ```
+
+## Visualize
+
+Draw the predicted keypoints on a few frames - this is the point of hand tracking, so let's see it. (Needs `matplotlib`; `cv2` ships with the method extra.)
+
+```python
+# --- Visualize: draw the predicted keypoints on a few frames ---
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 21-keypoint hand skeleton (wrist + 5 fingers x 4 joints)
+BONES = [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
+         (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15),
+         (15, 16), (0, 17), (17, 18), (18, 19), (19, 20)]
+
+
+def draw_hands(img, hands):
+    img = np.ascontiguousarray(img)
+    for h in hands or []:
+        kp = np.asarray(h["kp2d"], float)
+        for a, b in BONES:
+            cv2.line(img, tuple(kp[a].astype(int)), tuple(kp[b].astype(int)), (60, 200, 60), 2)
+        for p in kp:
+            cv2.circle(img, tuple(p.astype(int)), 3, (255, 80, 0), -1)
+    return img
+```
+
+```python
+viz = df.select(IMAGE_COLUMN, "hands").limit(4).to_pydict()
+frames = [np.asarray(im) for im in viz[IMAGE_COLUMN]]
+methods = [("MediaPipe", "hands")]
+fig, axes = plt.subplots(len(methods), len(frames), figsize=(3 * len(frames), 3 * len(methods)), squeeze=False)
+for r, (label, c) in enumerate(methods):
+    for j, (im, hands) in enumerate(zip(frames, viz[c])):
+        axes[r][j].imshow(draw_hands(im, hands))
+        axes[r][j].set_xticks([])
+        axes[r][j].set_yticks([])
+    axes[r][0].set_ylabel(label, fontsize=12)
+fig.suptitle("track_hands keypoints")
+plt.tight_layout()
+plt.show()
+```
+
+![track_hands keypoints](demo_keypoints.png)
 
 ## Evaluate against ground truth
 

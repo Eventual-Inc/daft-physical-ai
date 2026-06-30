@@ -56,8 +56,12 @@ One unified output schema regardless of method
 
 ## Example
 
-A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), show the
-keypoints, and score against EgoDex ground truth - in three equivalent forms:
+A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
+keypoints, and score against EgoDex ground truth:
+
+![track_hands keypoints](examples/demo_keypoints.png)
+
+Available in three equivalent forms:
 
 - **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
 - **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
