@@ -45,6 +45,27 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
   (> v0.7.16): bump the `daft` floor in `pyproject.toml`, drop the nightly
   install step above, and re-run `uv lock`.
 
+# Regenerating the examples demo
+
+`examples/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
+don't hand-edit them. They all render from one shared cell list in
+`daft_physical_ai/_render.py`, so editing the source keeps the three formats in
+sync. To rebuild them:
+
+```bash
+python scripts/regen_demo.py          # render -> execute the notebook -> derive md + image
+```
+
+The script renders the notebook (empty), executes it headless
+(`nbconvert --execute`, `DAFT_PROGRESS_BAR=0`), then derives everything else from
+that one executed copy: the figure is written to `demo_keypoints.png`, printed
+output is fenced, and the `.show()` HTML table becomes a markdown table. The
+executing step needs the full inference env (a Daft with the LeRobot reader +
+mediapipe + scipy + opencv + matplotlib + nbconvert; see the nightly-Daft note
+above). `--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
+just the markdown/image (no inference env needed) - handy for tweaking the
+conversion.
+
 # Testing & GPU
 
 - **MediaPipe runs on CPU** - testable locally and in CI.
