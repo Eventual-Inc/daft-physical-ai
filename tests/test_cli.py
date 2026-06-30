@@ -153,11 +153,12 @@ def test_cli_default_output_dir(tmp_path, monkeypatch) -> None:
     assert (tmp_path / "hand-tracking-demo" / "demo.py").exists()
 
 
-def test_cli_writes_both_files(tmp_path) -> None:
+def test_cli_default_writes_all_formats(tmp_path) -> None:
+    # default --format is "all"
     rc = main(["--method", "mediapipe", "--runtime", "local", "--output-dir", str(tmp_path / "d"), "--no-input"])
     assert rc == 0
-    assert (tmp_path / "d" / "demo.py").exists()
-    assert (tmp_path / "d" / "demo.ipynb").exists()
+    for name in ("demo.py", "demo.ipynb", "demo.md"):
+        assert (tmp_path / "d" / name).exists()
 
 
 def test_cli_format_script_only(tmp_path) -> None:

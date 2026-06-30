@@ -52,9 +52,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument(
         "--format",
-        choices=("script", "notebook", "markdown", "both", "all"),
-        default="both",
-        help="what to generate: script (.py), notebook (.ipynb), markdown (.md), both (script+notebook), or all",
+        choices=("script", "notebook", "markdown", "all"),
+        default="all",
+        help="what to generate: script (.py), notebook (.ipynb), markdown (.md), or all (default)",
     )
     p.add_argument("--output-dir", help="directory to write the demo into (default: hand-tracking-demo)")
     p.add_argument("--no-input", action="store_true", help="never prompt; use flags/defaults only")
@@ -166,8 +166,8 @@ def main(argv: list[str] | None = None) -> int:
         output_dir = _prompt_text("Output directory", _DEFAULT_OUTPUT_DIR) if interactive else _DEFAULT_OUTPUT_DIR
     out_dir = Path(output_dir or _DEFAULT_OUTPUT_DIR)
 
-    have_script = args.format in ("script", "both", "all")
-    have_nb = args.format in ("notebook", "both", "all")
+    have_script = args.format in ("script", "all")
+    have_nb = args.format in ("notebook", "all")
     have_md = args.format in ("markdown", "all")
     script_path, nb_path, md_path = out_dir / "demo.py", out_dir / "demo.ipynb", out_dir / "demo.md"
 
