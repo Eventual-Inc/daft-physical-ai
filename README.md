@@ -75,7 +75,16 @@ Available in three equivalent forms:
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
 `daft-physical-ai` CLI - run it with no arguments for an interactive walkthrough,
-or pass flags (`--method wilor --runtime modal --mano-path ... --no-input`).
+or pass flags:
+
+```bash
+# No flags - interactive walkthrough that asks a few questions
+daft-physical-ai
+
+# --no-input skips all prompts; flags supply the answers, the rest use defaults
+daft-physical-ai --method mediapipe --output-dir my-demo --no-input
+daft-physical-ai --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
+```
 
 ## Development
 
