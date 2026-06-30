@@ -25,7 +25,7 @@ _DEFAULT_OUTPUT_DIR = "hand-tracking-demo"
 
 _INTRO = (
     "daft-physical-ai - scaffold a hand-tracking demo.\n"
-    "Answer a few questions and I'll generate a runnable script + notebook (using\n"
+    "Answer a few questions to generate a runnable script + notebook (using\n"
     "track_hands on a LeRobot dataset) that you can run or edit. Press Enter to accept\n"
     "the [default] shown for any question.\n"
 )
