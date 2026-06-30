@@ -90,12 +90,23 @@ The bare `daft-physical-ai` command works once the package is installed. Until
 it's published to PyPI, run it from a clone instead:
 
 ```bash
-uv sync                                 # installs the daft-physical-ai console script
-uv run daft-physical-ai                 # prefix the commands above with `uv run`
-uv run --with jupyterlab jupyter lab hand-tracking-demo/demo.ipynb   # open a generated notebook
+uv sync                          # installs the daft-physical-ai console script
+uv run daft-physical-ai          # generate a demo (prefix the commands above with `uv run`)
 ```
 
-Once published: `pip install daft-physical-ai`, then use `daft-physical-ai` directly.
+To *run* a generated demo you also need its inference stack - including the LeRobot
+reader, which currently ships only in nightly Daft. Install it into the venv, then run
+from the activated venv - not `uv run`, which re-syncs the env and would drop the nightly:
+
+```bash
+source .venv/bin/activate
+uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
+  -U daft mediapipe scipy opencv-python matplotlib jupyterlab
+jupyter lab hand-tracking-demo/demo.ipynb
+```
+
+Once the LeRobot reader lands in a released Daft (> v0.7.16), the nightly step goes
+away and this collapses to `pip install daft-physical-ai`.
 
 ## Development
 
