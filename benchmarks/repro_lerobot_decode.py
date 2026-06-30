@@ -1,22 +1,10 @@
-"""Reproduce slow per-frame video decode in `daft.datasets.lerobot`.
+"""Reproduce slow per-frame video decode in `daft.datasets.lerobot` (upstream Daft).
 
-The frame-decode UDF (`_decode_lerobot_video_timestamp`) does, per row:
+The decode UDF re-opens and re-parses the MP4 container once per frame, so cost
+scales ~linearly at ~3s/frame (mostly `av.open()`). Fix: open each shard once and
+decode its frames in a single pass.
 
-    with file.open() as f_open:           # re-open the shard for EVERY frame
-        with av_mod.open(f_open) as container:
-            container.seek(...)           # seek to keyframe, decode forward to target
-
-So decoding N frames re-opens and re-parses the MP4 container N times (the shard
-isn't in any local cache). Profiling one frame: ~1.8s in `av.open()` alone, ~0.8s
-in the decode loop, ~0.4s in `file.open()` - and all of it repeats per row, so cost
-scales ~linearly at ~3s/frame. The image decode and MediaPipe are negligible by
-comparison. Fixing it means opening each shard once and decoding the requested
-timestamps in a single pass.
-
-This is an upstream Daft issue; the hand-tracking demo is just the victim.
-
-Usage:
-    python benchmarks/repro_lerobot_decode.py              # 1 frame  (fast, ~6s incl. startup)
+    python benchmarks/repro_lerobot_decode.py              # 1 frame  (~6s incl. startup)
     python benchmarks/repro_lerobot_decode.py --rows 8     # 8 frames (~25s)
     python benchmarks/repro_lerobot_decode.py --rows 8 --profile
 """
