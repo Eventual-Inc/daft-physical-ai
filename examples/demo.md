@@ -1,6 +1,6 @@
 # Hand tracking demo - MediaPipe (local runtime)
 
-This demo reads a [LeRobot](https://docs.daft.ai/en/stable/datasets/lerobot/) dataset, runs hand tracking (MediaPipe) as a Daft UDF with `track_hands`, and shows the keypoints. Every method returns the same schema: a list of `{handedness, confidence, kp2d, kp3d?}` per frame (`kp3d` is null for MediaPipe).
+This demo reads a LeRobot dataset, runs hand tracking (MediaPipe) as a Daft UDF with `track_hands`, and shows the keypoints. Every method returns the same schema: a list of `{handedness, confidence, kp2d, kp3d?}` per frame (`kp3d` is null for MediaPipe).
 
 ## Setup
 
@@ -45,51 +45,6 @@ df = df.with_column("hands", track_hands(df[IMAGE_COLUMN], method="mediapipe"))
 ```python
 df.select("episode_index", "frame_index", "hands").show()
 ```
-
-## Visualize
-
-Draw the predicted keypoints on a few frames - this is the point of hand tracking, so let's see it. (Needs `matplotlib`; `cv2` ships with the method extra.)
-
-```python
-# --- Visualize: draw the predicted keypoints on a few frames ---
-import cv2
-import matplotlib.pyplot as plt
-import numpy as np
-
-# 21-keypoint hand skeleton (wrist + 5 fingers x 4 joints)
-BONES = [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
-         (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15),
-         (15, 16), (0, 17), (17, 18), (18, 19), (19, 20)]
-
-
-def draw_hands(img, hands):
-    img = np.ascontiguousarray(img)
-    for h in hands or []:
-        kp = np.asarray(h["kp2d"], float)
-        for a, b in BONES:
-            cv2.line(img, tuple(kp[a].astype(int)), tuple(kp[b].astype(int)), (60, 200, 60), 2)
-        for p in kp:
-            cv2.circle(img, tuple(p.astype(int)), 3, (255, 80, 0), -1)
-    return img
-```
-
-```python
-viz = df.select(IMAGE_COLUMN, "hands").limit(4).to_pydict()
-frames = [np.asarray(im) for im in viz[IMAGE_COLUMN]]
-methods = [("MediaPipe", "hands")]
-fig, axes = plt.subplots(len(methods), len(frames), figsize=(3 * len(frames), 3 * len(methods)), squeeze=False)
-for r, (label, c) in enumerate(methods):
-    for j, (im, hands) in enumerate(zip(frames, viz[c])):
-        axes[r][j].imshow(draw_hands(im, hands))
-        axes[r][j].set_xticks([])
-        axes[r][j].set_yticks([])
-    axes[r][0].set_ylabel(label, fontsize=12)
-fig.suptitle("track_hands keypoints")
-plt.tight_layout()
-plt.show()
-```
-
-![track_hands keypoints](demo_keypoints.png)
 
 ## Evaluate against ground truth
 
@@ -186,3 +141,66 @@ report("MediaPipe", scored["score_hands"])
 EgoDex 2D accuracy:
 MediaPipe    detect=100%  mean_err=0.105  PCK@.1/.2/.3 = 54/88/97
 ```
+
+## Visualize: ground truth vs predictions
+
+Each row is a frame; the first column is the EgoDex ground-truth hands (green), the rest are the predicted keypoints. This is the most telling view - you see where each method is right and where it misses.
+
+```python
+# --- Visualize: draw the predicted keypoints on a few frames ---
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+# 21-keypoint hand skeleton (wrist + 5 fingers x 4 joints)
+BONES = [(0, 1), (1, 2), (2, 3), (3, 4), (0, 5), (5, 6), (6, 7), (7, 8),
+         (0, 9), (9, 10), (10, 11), (11, 12), (0, 13), (13, 14), (14, 15),
+         (15, 16), (0, 17), (17, 18), (18, 19), (19, 20)]
+
+
+def draw_hands(img, hands):
+    img = np.ascontiguousarray(img)
+    for h in hands or []:
+        kp = np.asarray(h["kp2d"], float)
+        for a, b in BONES:
+            cv2.line(img, tuple(kp[a].astype(int)), tuple(kp[b].astype(int)), (60, 200, 60), 2)
+        for p in kp:
+            cv2.circle(img, tuple(p.astype(int)), 3, (255, 80, 0), -1)
+    return img
+
+def draw_gt(img, state, extr):
+    """Draw the projected EgoDex GT hands (wrist + fingertips) in green."""
+    img = np.ascontiguousarray(img)
+    for side in (0, 1):
+        uv = _project(_hand_pts(np.asarray(state, float), side), extr)
+        if not np.isfinite(uv).all():
+            continue
+        wrist = tuple(uv[0].astype(int))
+        for tip in uv[1:]:
+            cv2.line(img, wrist, tuple(tip.astype(int)), (0, 220, 0), 2)
+            cv2.circle(img, tuple(tip.astype(int)), 5, (255, 0, 0), -1)
+        cv2.circle(img, wrist, 6, (0, 120, 255), -1)
+    return img
+```
+
+```python
+viz = df.select(IMAGE_COLUMN, "observation.state", "observation.extrinsics", "hands").limit(4).to_pydict()
+columns = [("GT", None)] + [("MediaPipe", "hands")]
+n = len(viz["frame_index"]) if "frame_index" in viz else len(viz[IMAGE_COLUMN])
+fig, axes = plt.subplots(n, len(columns), figsize=(3 * len(columns), 3 * n), squeeze=False)
+for i in range(n):
+    img = np.asarray(viz[IMAGE_COLUMN][i])
+    for jc, (label, c) in enumerate(columns):
+        cell = (draw_gt(img.copy(), viz["observation.state"][i], viz["observation.extrinsics"][i])
+                if c is None else draw_hands(img.copy(), viz[c][i]))
+        axes[i][jc].imshow(cell)
+        axes[i][jc].set_xticks([])
+        axes[i][jc].set_yticks([])
+        if i == 0:
+            axes[i][jc].set_title(label)
+fig.suptitle("Ground truth vs predictions")
+plt.tight_layout()
+plt.show()
+```
+
+![track_hands keypoints](demo_keypoints.png)

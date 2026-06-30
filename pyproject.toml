@@ -41,6 +41,9 @@ wilor = [
   "rich",
   "webdataset"
 ]
+# Everything (both methods). WiLoR still needs the CUDA torch build + chumpy-from-git
+# (see the wilor note above); those can't ship in metadata.
+all = ["daft-physical-ai[mediapipe,wilor]"]
 
 [project.scripts]
 daft-physical-ai = "daft_physical_ai.cli:main"

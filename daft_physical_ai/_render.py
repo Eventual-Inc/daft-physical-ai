@@ -256,13 +256,63 @@ def draw_hands(img, hands):
     return img"""
 
 
+_GT_DRAW = '''
+def draw_gt(img, state, extr):
+    """Draw the projected EgoDex GT hands (wrist + fingertips) in green."""
+    img = np.ascontiguousarray(img)
+    for side in (0, 1):
+        uv = _project(_hand_pts(np.asarray(state, float), side), extr)
+        if not np.isfinite(uv).all():
+            continue
+        wrist = tuple(uv[0].astype(int))
+        for tip in uv[1:]:
+            cv2.line(img, wrist, tuple(tip.astype(int)), (0, 220, 0), 2)
+            cv2.circle(img, tuple(tip.astype(int)), 5, (255, 0, 0), -1)
+        cv2.circle(img, wrist, 6, (0, 120, 255), -1)
+    return img'''
+
+
 def _viz_cells(config: DemoConfig) -> list[tuple[str, str]]:
-    """Cells that draw the predicted keypoints on a few frames."""
+    """Visualization cells: a GT-vs-prediction montage with eval, else an overlay."""
     methods = _eval_methods(config.method)  # (label, hands-column) pairs
-    cols = ", ".join(f'"{c}"' for _, c in methods)
+    method_cols = ", ".join(f'"{c}"' for _, c in methods)
     methods_lit = "[" + ", ".join(f'("{lbl}", "{c}")' for lbl, c in methods) + "]"
-    viz = (
-        f"viz = df.select(IMAGE_COLUMN, {cols}).limit(4).to_pydict()\n"
+
+    if config.with_eval:
+        # GT projection helpers (_hand_pts/_project) already defined by the eval cells above.
+        comparison = (
+            f'viz = df.select(IMAGE_COLUMN, "observation.state", "observation.extrinsics", '
+            f"{method_cols}).limit(4).to_pydict()\n"
+            f'columns = [("GT", None)] + {methods_lit}\n'
+            'n = len(viz["frame_index"]) if "frame_index" in viz else len(viz[IMAGE_COLUMN])\n'
+            "fig, axes = plt.subplots(n, len(columns), figsize=(3 * len(columns), 3 * n), squeeze=False)\n"
+            "for i in range(n):\n"
+            "    img = np.asarray(viz[IMAGE_COLUMN][i])\n"
+            "    for jc, (label, c) in enumerate(columns):\n"
+            '        cell = (draw_gt(img.copy(), viz["observation.state"][i], viz["observation.extrinsics"][i])\n'
+            "                if c is None else draw_hands(img.copy(), viz[c][i]))\n"
+            "        axes[i][jc].imshow(cell)\n"
+            "        axes[i][jc].set_xticks([])\n"
+            "        axes[i][jc].set_yticks([])\n"
+            "        if i == 0:\n"
+            "            axes[i][jc].set_title(label)\n"
+            'fig.suptitle("Ground truth vs predictions")\n'
+            "plt.tight_layout()\n"
+            "plt.show()"
+        )
+        return [
+            (
+                "markdown",
+                "## Visualize: ground truth vs predictions\n\nEach row is a frame; the first column is the "
+                "EgoDex ground-truth hands (green), the rest are the predicted keypoints. This is the most "
+                "telling view - you see where each method is right and where it misses.",
+            ),
+            ("code", _VIZ_HELPERS + "\n\n" + _GT_DRAW.strip()),
+            ("code", comparison),
+        ]
+
+    overlay = (
+        f"viz = df.select(IMAGE_COLUMN, {method_cols}).limit(4).to_pydict()\n"
         "frames = [np.asarray(im) for im in viz[IMAGE_COLUMN]]\n"
         f"methods = {methods_lit}\n"
         "fig, axes = plt.subplots(len(methods), len(frames), "
@@ -284,7 +334,7 @@ def _viz_cells(config: DemoConfig) -> list[tuple[str, str]]:
             "tracking, so let's see it. (Needs `matplotlib`; `cv2` ships with the method extra.)",
         ),
         ("code", _VIZ_HELPERS),
-        ("code", viz),
+        ("code", overlay),
     ]
 
 
@@ -428,7 +478,7 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
     method_name = {"mediapipe": "MediaPipe", "wilor": "WiLoR", "both": "MediaPipe and WiLoR"}[config.method]
     intro = (
         f"# {_title(config)}\n\n"
-        f"This demo reads a [LeRobot](https://docs.daft.ai/en/stable/datasets/lerobot/) dataset, runs "
+        f"This demo reads a LeRobot dataset, runs "
         f"hand tracking ({method_name}) as a Daft UDF with `track_hands`, and shows the keypoints. "
         "Every method returns the same schema: a list of "
         "`{handedness, confidence, kp2d, kp3d?}` per frame (`kp3d` is null for MediaPipe)."
@@ -475,9 +525,10 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
             ("markdown", "## Inspect the results\n\n`.show()` triggers execution and renders the keypoints per frame."),
             ("code", f"df.select({_result_columns(config.method)}).show()"),
         ]
-        cells += _viz_cells(config)
+        # eval first so its GT-projection helpers are available to the comparison viz
         if config.with_eval:
             cells += _eval_cells(config)
+        cells += _viz_cells(config)
     return cells
 
 
