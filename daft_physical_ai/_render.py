@@ -84,7 +84,8 @@ def _modal_image_block(config: DemoConfig) -> str:
     Grounded in the recipe verified in TESTING.md. WiLoR assets (repo + weights) and
     MANO are set up at build time so replicas don't race to clone.
     """
-    apt = ['"git"', '"ffmpeg"', '"libgl1"', '"libglib2.0-0"']
+    # libgl1/libglib2.0-0 + the GLES/EGL libs MediaPipe loads at runtime.
+    apt = ['"git"', '"ffmpeg"', '"libgl1"', '"libglib2.0-0"', '"libgles2"', '"libegl1"']
     pip = ['"daft"', '"av"', '"numpy<2"', '"pillow"', '"hf-transfer"', '"huggingface_hub"']
     if _uses(config.method, "mediapipe"):
         pip.append('"mediapipe"')
@@ -166,23 +167,48 @@ def _title(config: DemoConfig) -> str:
     return f"Hand tracking demo - {method} ({config.runtime} runtime)"
 
 
+# Script form: `modal run demo.py` invokes this local entrypoint.
+_MODAL_ENTRYPOINT = """
+
+@app.local_entrypoint()
+def main():
+    out = run.remote()
+    print(f"got {len(out['frame_index'])} frames back from Modal")
+"""
+
+# Notebook form: Modal can't use a local entrypoint in a kernel, so drive it with
+# `app.run()` and pull the result back. Needs the kernel's Python to match the
+# image (Modal serializes notebook-defined funcs). See:
+# https://modal.com/docs/guide/jupyter-notebooks
+_MODAL_NOTEBOOK_RUN = """with modal.enable_output():
+    with app.run():
+        out = run.remote()
+
+print(f"got {len(out['frame_index'])} frames back from Modal")"""
+
+
+def _render_modal(config: DemoConfig, tmpl: Template, entrypoint: str) -> str:
+    gpu = ', gpu="L4"' if _uses(config.method, "wilor") else ""
+    track = _track_lines(config.method, wilor_extra=', wilor_root="/WiLoR", device="cuda"')
+    return tmpl.substitute(
+        title=_title(config),
+        app_name=f"hand-tracking-{config.method}",
+        modal_setup_fn=_modal_setup_fn(config),
+        modal_image=_modal_image_block(config),
+        modal_gpu=gpu,
+        config_block=_config_block(config),
+        track_lines=_indent_cont(track, 4),  # $track_lines sits in the function body
+        result_columns=_result_columns(config.method),
+        entrypoint=entrypoint,
+    )
+
+
 def render_script(config: DemoConfig) -> str:
     """Render the standalone .py demo for this config."""
     config.validate()
     tmpl = Template(_load_template(_TEMPLATES[config.runtime]))
     if config.runtime == "modal":
-        gpu = ', gpu="L4"' if _uses(config.method, "wilor") else ""
-        track = _track_lines(config.method, wilor_extra=', wilor_root="/WiLoR", device="cuda"')
-        return tmpl.substitute(
-            title=_title(config),
-            app_name=f"hand-tracking-{config.method}",
-            modal_setup_fn=_modal_setup_fn(config),
-            modal_image=_modal_image_block(config),
-            modal_gpu=gpu,
-            config_block=_config_block(config),
-            track_lines=_indent_cont(track, 4),  # $track_lines sits in the function body
-            result_columns=_result_columns(config.method),
-        )
+        return _render_modal(config, tmpl, entrypoint=_MODAL_ENTRYPOINT)
     return tmpl.substitute(
         title=_title(config),
         config_block=_config_block(config),
@@ -201,8 +227,18 @@ def render_notebook(config: DemoConfig) -> str:
     )
     cells: list[tuple[str, str]] = [("markdown", intro)]
     if config.runtime == "modal":
-        # The whole Modal script is one code cell (it must run as a module via `modal run`).
-        cells.append(("code", render_script(config)))
+        # Cell 1: the Modal app + function definitions (no local entrypoint).
+        # Cell 2: drive it with app.run() and pull the result back.
+        tmpl = Template(_load_template(_TEMPLATES["modal"]))
+        cells.append(
+            (
+                "markdown",
+                "> Modal serializes notebook-defined functions, so this kernel's Python "
+                "version must match the image (3.11). Or run the script form: `modal run demo.py`.",
+            )
+        )
+        cells.append(("code", _render_modal(config, tmpl, entrypoint="").rstrip()))
+        cells.append(("code", _MODAL_NOTEBOOK_RUN))
     else:
         cells.append(
             ("code", "import daft\nfrom daft.datasets import lerobot\n\nfrom daft_physical_ai import track_hands")

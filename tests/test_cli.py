@@ -29,7 +29,27 @@ def test_rendered_notebook_is_valid_ipynb(method: str, runtime: str) -> None:
     assert nb["nbformat"] == 4
     assert nb["cells"], "notebook has no cells"
     assert nb["cells"][0]["cell_type"] == "markdown"
-    assert any(c["cell_type"] == "code" for c in nb["cells"])
+    code_cells = [c for c in nb["cells"] if c["cell_type"] == "code"]
+    assert code_cells, "notebook has no code cells"
+    for i, c in enumerate(code_cells):
+        src = c["source"] if isinstance(c["source"], str) else "".join(c["source"])
+        compile(src, f"cell{i}", "exec")  # each cell must be valid Python
+
+
+def test_modal_script_uses_local_entrypoint() -> None:
+    src = render_script(_cfg("wilor", "modal"))
+    assert "@app.local_entrypoint()" in src  # `modal run demo.py` path
+
+
+def test_modal_notebook_uses_app_run_not_entrypoint() -> None:
+    nb = json.loads(render_notebook(_cfg("wilor", "modal")))
+    src = "".join(
+        (c["source"] if isinstance(c["source"], str) else "".join(c["source"]))
+        for c in nb["cells"]
+        if c["cell_type"] == "code"
+    )
+    assert "with app.run():" in src  # notebook drives Modal itself
+    assert "local_entrypoint" not in src  # entrypoint doesn't fire in a kernel
 
 
 def test_method_calls_match_choice() -> None:
@@ -61,6 +81,16 @@ def test_validate_rejects_bad_config() -> None:
         DemoConfig(runtime="nope").validate()
     with pytest.raises(ValueError, match="limit"):
         DemoConfig(limit=0).validate()
+
+
+def test_cli_mediapipe_forces_local_over_modal(tmp_path, capsys) -> None:
+    # MediaPipe is CPU-only: --runtime modal should be overridden to local.
+    rc = main(["--method", "mediapipe", "--runtime", "modal", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    assert rc == 0
+    src = (tmp_path / "d" / "demo.py").read_text()
+    assert "import modal" not in src
+    assert "lerobot.read" in src
+    assert "mediapipe" in capsys.readouterr().err.lower()  # the note was printed
 
 
 def test_cli_writes_both_files(tmp_path) -> None:
