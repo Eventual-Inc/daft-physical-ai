@@ -14,6 +14,15 @@ from pathlib import Path
 
 from ._render import _VALID_METHODS, _VALID_RUNTIMES, DemoConfig, render_notebook, render_script
 
+_DEFAULT_OUTPUT_DIR = "hand-tracking-demo"
+
+_INTRO = (
+    "daft-physical-ai - scaffold a hand-tracking demo.\n"
+    "Answer a few questions and I'll generate a runnable script + notebook (using\n"
+    "track_hands on a LeRobot dataset) that you can run or edit. Press Enter to accept\n"
+    "the [default] shown for any question.\n"
+)
+
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -29,7 +38,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--image-column", help="camera column to decode")
     p.add_argument("--limit", type=int, help="number of frames to annotate")
     p.add_argument("--format", choices=("script", "notebook", "both"), default="both", help="what to generate")
-    p.add_argument("--output-dir", default="hand-tracking-demo", help="directory to write the demo into")
+    p.add_argument("--output-dir", help="directory to write the demo into (default: hand-tracking-demo)")
     p.add_argument("--no-input", action="store_true", help="never prompt; use flags/defaults only")
     p.add_argument("-f", "--force", action="store_true", help="overwrite existing files")
     return p
@@ -102,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     args = _build_parser().parse_args(argv)
     interactive = not args.no_input and sys.stdin.isatty()
 
+    if interactive:
+        print(_INTRO)
+
     try:
         config = _collect_config(args, interactive)
         config.validate()
@@ -109,7 +121,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {err}", file=sys.stderr)
         return 2
 
-    out_dir = Path(args.output_dir)
+    output_dir = args.output_dir
+    if output_dir is None:
+        output_dir = _prompt_text("Output directory", _DEFAULT_OUTPUT_DIR) if interactive else _DEFAULT_OUTPUT_DIR
+    out_dir = Path(output_dir or _DEFAULT_OUTPUT_DIR)
     written: list[Path] = []
     try:
         if args.format in ("script", "both"):

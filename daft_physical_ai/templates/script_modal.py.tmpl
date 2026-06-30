@@ -36,7 +36,7 @@ def run():
 
     $track_lines
 
-    out = df.select(*$result_columns).to_pydict()
+    out = df.select($result_columns).to_pydict()
     n = len(out["frame_index"])
     print(f"annotated {n} frames", flush=True)
     return out

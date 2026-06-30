@@ -15,4 +15,4 @@ df = lerobot.read(DATASET, load_video_frames=IMAGE_COLUMN).limit(LIMIT)
 
 $track_lines
 
-df.select(*$result_columns).show()
+df.select($result_columns).show()

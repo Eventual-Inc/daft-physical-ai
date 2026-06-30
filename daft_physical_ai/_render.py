@@ -137,10 +137,10 @@ def _modal_setup_fn(config: DemoConfig) -> str:
 
 
 def _result_columns(method: str) -> str:
-    """Python list literal of the columns to display."""
-    base = ["episode_index", "frame_index"]
-    hands = ["hands_mediapipe", "hands_wilor"] if method == "both" else ["hands"]
-    return repr(base + hands)
+    """Comma-separated quoted column names for `df.select(...)`."""
+    cols = ["episode_index", "frame_index"]
+    cols += ["hands_mediapipe", "hands_wilor"] if method == "both" else ["hands"]
+    return ", ".join(f'"{c}"' for c in cols)
 
 
 def _config_block(config: DemoConfig) -> str:
@@ -246,7 +246,7 @@ def render_notebook(config: DemoConfig) -> str:
         cells.append(("code", _config_block(config)))
         cells.append(("code", "df = lerobot.read(DATASET, load_video_frames=IMAGE_COLUMN).limit(LIMIT)"))
         cells.append(("code", _track_lines(config.method)))
-        cells.append(("code", f"df.select(*{_result_columns(config.method)}).show()"))
+        cells.append(("code", f"df.select({_result_columns(config.method)}).show()"))
     return _build_ipynb(cells)
 
 

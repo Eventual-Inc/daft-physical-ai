@@ -93,6 +93,13 @@ def test_cli_mediapipe_forces_local_over_modal(tmp_path, capsys) -> None:
     assert "mediapipe" in capsys.readouterr().err.lower()  # the note was printed
 
 
+def test_cli_default_output_dir(tmp_path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    rc = main(["--method", "mediapipe", "--no-input"])  # no --output-dir
+    assert rc == 0
+    assert (tmp_path / "hand-tracking-demo" / "demo.py").exists()
+
+
 def test_cli_writes_both_files(tmp_path) -> None:
     rc = main(["--method", "mediapipe", "--runtime", "local", "--output-dir", str(tmp_path / "d"), "--no-input"])
     assert rc == 0
