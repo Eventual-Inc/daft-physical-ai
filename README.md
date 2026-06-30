@@ -28,10 +28,6 @@ df = df.with_column("hands", track_hands(df["observation.image"], method="mediap
 df.write_parquet("annotated/")
 ```
 
-`track_hands` is also exported at the top level
-(`from daft_physical_ai import track_hands`). Any image column works - the LeRobot
-reader is just the most convenient source for robot data.
-
 Install the method you need as an extra: `pip install daft-physical-ai[mediapipe]`
 (CPU, 2D), `pip install daft-physical-ai[wilor]` (GPU, 3D), or
 `pip install daft-physical-ai[all]` for both. WiLoR additionally needs a CUDA

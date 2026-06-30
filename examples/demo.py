@@ -9,7 +9,7 @@ This demo reads a LeRobot dataset, runs hand tracking (MediaPipe) as a Daft UDF 
 
 from daft.datasets import lerobot
 
-from daft_physical_ai import track_hands
+from daft_physical_ai.hands import track_hands
 
 # Configure
 #

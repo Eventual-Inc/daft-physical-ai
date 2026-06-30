@@ -25,7 +25,7 @@ def run():
     from daft.datasets import lerobot
     from huggingface_hub import snapshot_download
 
-    from daft_physical_ai import track_hands
+    from daft_physical_ai.hands import track_hands
 
     local = os.path.join(HF_CACHE, DATASET.split("/")[-1])
     if not os.path.exists(os.path.join(local, "meta/info.json")):

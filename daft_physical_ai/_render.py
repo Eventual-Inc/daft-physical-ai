@@ -4,7 +4,7 @@ Pure string/JSON building - no I/O, no prompts - so it's easy to unit-test. The
 CLI (:mod:`daft_physical_ai.cli`) collects a :class:`DemoConfig` and calls
 :func:`render_script` / :func:`render_notebook`.
 
-The generated demo imports :func:`daft_physical_ai.track_hands`. The package never
+The generated demo imports :func:`daft_physical_ai.hands.track_hands`. The package never
 imports Modal; the Modal runtime only appears in the *generated* user code.
 """
 
@@ -507,7 +507,7 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
     else:
         cells += [
             ("markdown", f"## Setup\n\nInstall with `pip install {_install_hint(config.method)}`, then import."),
-            ("code", "from daft.datasets import lerobot\n\nfrom daft_physical_ai import track_hands"),
+            ("code", "from daft.datasets import lerobot\n\nfrom daft_physical_ai.hands import track_hands"),
             ("markdown", "## Configure\n\nThe dataset, the camera column to decode, and how many frames to run."),
             ("code", _config_block(config)),
             (

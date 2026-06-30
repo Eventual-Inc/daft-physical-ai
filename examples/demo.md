@@ -9,7 +9,7 @@ Install with `pip install daft-physical-ai[mediapipe] matplotlib`, then import.
 ```python
 from daft.datasets import lerobot
 
-from daft_physical_ai import track_hands
+from daft_physical_ai.hands import track_hands
 ```
 
 ## Configure

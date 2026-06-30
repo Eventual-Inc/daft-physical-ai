@@ -7,6 +7,6 @@ returns the same output schema - see `HANDS_DTYPE`.
 
 from __future__ import annotations
 
-from .hands import HAND_DTYPE, HANDS_DTYPE, track_hands
+from .hands import HAND_DTYPE, HANDS_DTYPE
 
-__all__ = ["HANDS_DTYPE", "HAND_DTYPE", "track_hands"]
+__all__ = ["HANDS_DTYPE", "HAND_DTYPE"]
