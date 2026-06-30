@@ -6,9 +6,8 @@ pipeline and execute lazily, batched, and distributed.
 
 ## API
 
-The package operates on an image column and returns a hand-pose column - it
-doesn't know about LeRobot, EgoDex, or Modal, so it composes with any Daft
-DataFrame. A LeRobot dataset is the natural source: Daft's native reader
+The package operates on a Daft image column and returns a hand-pose column. A
+LeRobot dataset is the natural source: Daft's native reader
 `daft.datasets.lerobot` (added in [Daft #7090](https://github.com/Eventual-Inc/Daft/pull/7090))
 decodes each camera into an image column with `load_video_frames`.
 
