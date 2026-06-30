@@ -63,6 +63,15 @@ login reminder (`modal setup`) printing for the modal runtime.
 - **Local MediaPipe** - both `python demo.py` and the notebook (headless via
   `nbconvert --execute`, all cells run, the final `.show()` renders Daft's HTML
   table).
+- **With `--with-eval`** - the demo's EgoDex scoring ran end to end on CPU and
+  produced sensible metrics (e.g. 12 frames: `detect=100% mean_err=0.105
+  PCK@.1/.2/.3 = 54/88/97`). The committed `examples/demo.{py,ipynb,md}` are this
+  MediaPipe+eval demo; the notebook is executed and the markdown carries its
+  outputs (Daft progress bars disabled via `DAFT_PROGRESS_BAR=0` so they stay
+  clean).
+- **Three mediums stay equivalent** - notebook and markdown render from one shared
+  cell list; a test asserts every notebook code cell appears verbatim in the
+  markdown.
 - **Modal (MediaPipe pipeline)** - a generated Modal script run end to end with
   `modal run`: image builds, dataset downloads, inference runs on Modal, and 6
   annotated frames return (`got 6 frames back from Modal`). This caught a real bug

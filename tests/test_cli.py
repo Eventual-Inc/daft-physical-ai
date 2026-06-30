@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from daft_physical_ai._render import DemoConfig, render_notebook, render_script
+from daft_physical_ai._render import DemoConfig, render_markdown, render_notebook, render_script
 from daft_physical_ai.cli import main
 
 ALL_COMBOS = [(method, runtime) for method in ("mediapipe", "wilor", "both") for runtime in ("local", "modal")]
@@ -50,6 +50,50 @@ def test_modal_notebook_uses_app_run_not_entrypoint() -> None:
     )
     assert "with app.run():" in src  # notebook drives Modal itself
     assert "local_entrypoint" not in src  # entrypoint doesn't fire in a kernel
+
+
+@pytest.mark.parametrize(("method", "runtime"), ALL_COMBOS)
+def test_markdown_renders_with_headers_and_code(method: str, runtime: str) -> None:
+    md = render_markdown(_cfg(method, runtime))
+    assert md.startswith("# ")
+    assert "```python" in md
+
+
+def test_markdown_and_notebook_share_content() -> None:
+    cfg = _cfg("mediapipe", "local")
+    md = render_markdown(cfg)
+    nb = json.loads(render_notebook(cfg))
+    for c in nb["cells"]:
+        if c["cell_type"] == "code":
+            src = c["source"] if isinstance(c["source"], str) else "".join(c["source"])
+            assert src in md  # every notebook code cell appears verbatim in the markdown
+
+
+def test_with_eval_appends_scoring() -> None:
+    cfg = DemoConfig(method="mediapipe", runtime="local", with_eval=True)
+    for rendered in (render_script(cfg), render_markdown(cfg)):
+        assert "def score(" in rendered
+        assert "linear_sum_assignment" in rendered
+        assert "report(" in rendered
+    compile(render_script(cfg), "demo.py", "exec")  # eval block is valid Python
+
+
+def test_with_eval_requires_local_runtime() -> None:
+    with pytest.raises(ValueError, match="local"):
+        DemoConfig(method="mediapipe", runtime="modal", with_eval=True).validate()
+
+
+def test_cli_format_all_writes_three(tmp_path) -> None:
+    rc = main(["--method", "mediapipe", "--format", "all", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    assert rc == 0
+    for name in ("demo.py", "demo.ipynb", "demo.md"):
+        assert (tmp_path / "d" / name).exists()
+
+
+def test_cli_with_eval_flag(tmp_path) -> None:
+    rc = main(["--method", "mediapipe", "--with-eval", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    assert rc == 0
+    assert "def score(" in (tmp_path / "d" / "demo.py").read_text()
 
 
 def test_method_calls_match_choice() -> None:

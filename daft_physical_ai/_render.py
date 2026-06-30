@@ -33,6 +33,7 @@ class DemoConfig:
     dataset: str = "pepijn223/egodex-test"
     image_column: str = "observation.image"
     limit: int = 12
+    with_eval: bool = False  # append EgoDex GT scoring (detect% + PCK) to the demo
 
     def validate(self) -> None:
         if self.method not in _VALID_METHODS:
@@ -43,6 +44,8 @@ class DemoConfig:
             raise ValueError(f"method={self.method!r} needs a mano_path (MANO_RIGHT.pkl; research-gated)")
         if self.limit < 1:
             raise ValueError(f"limit must be >= 1, got {self.limit}")
+        if self.with_eval and self.runtime != "local":
+            raise ValueError("with_eval is only supported for the local runtime")
 
 
 def _uses(method: str, name: str) -> bool:
@@ -143,6 +146,112 @@ def _result_columns(method: str) -> str:
     return ", ".join(f'"{c}"' for c in cols)
 
 
+# EgoDex ground-truth scoring, appended to a demo when with_eval is set. It's an
+# example concern (dataset-specific), never part of the package. The scoring runs as
+# a Daft @daft.func; metrics are summarized from the collected results.
+_EVAL_HELPERS = '''# --- Evaluation against EgoDex ground truth (2D, wrist + 5 fingertips) ---
+# EgoDex-specific: GT hand poses live in observation.state (left = dims 0-23,
+# right = 24-47); the camera is observation.extrinsics. Needs scipy + numpy.
+import numpy as np
+from scipy.optimize import linear_sum_assignment
+
+import daft
+from daft import DataType, col
+
+FX = FY = 736.6339          # EgoDex camera intrinsics
+CX, CY = 960.0, 540.0
+SIX = [0, 4, 8, 12, 16, 20]  # wrist + 5 fingertip keypoints
+THRESH = [0.1, 0.2, 0.3]     # PCK thresholds (normalized)
+
+
+def _hand_pts(state, side):
+    b = side * 24            # 24 dims per hand: wrist(3) + joints; we take wrist + 5 tips
+    return np.vstack([state[b : b + 3], state[b + 9 : b + 24].reshape(5, 3)])
+
+
+def _project(points_world, extr):
+    cam_from_world = np.linalg.inv(np.asarray(extr, float).reshape(4, 4))
+    cam = (cam_from_world @ np.hstack([points_world, np.ones((len(points_world), 1))]).T).T[:, :3]
+    z = cam[:, 2]
+    with np.errstate(divide="ignore", invalid="ignore"):
+        uv = np.stack([FX * cam[:, 0] / z + CX, FY * cam[:, 1] / z + CY], axis=1)
+    uv[z <= 0] = np.nan
+    return uv
+
+
+def _norm(p):               # translation + scale invariant (hand size)
+    p = p - p[0]
+    return p / (np.linalg.norm(p[1:], axis=1).mean() + 1e-9)
+
+
+def _pair_err(gt6, pred6):  # per-keypoint error, fingertips matched by assignment
+    g, m = _norm(gt6), _norm(pred6)
+    d = np.linalg.norm(g[1:, None] - m[None, 1:], axis=2)
+    r, c = linear_sum_assignment(d)
+    return np.concatenate([[0.0], d[r, c]])
+
+
+_ERR = DataType.struct({
+    "n_gt": DataType.int64(),
+    "n_matched": DataType.int64(),
+    "errs": DataType.list(DataType.list(DataType.float64())),
+})
+
+
+@daft.func(return_dtype=_ERR)
+def score(hands, state, extr):
+    """Match predicted hands to the 2 GT hands (Hungarian on normalized error)."""
+    gts = [uv for uv in (_project(_hand_pts(np.asarray(state, float), s), extr) for s in (0, 1)) if np.isfinite(uv).all()]
+    preds = [np.asarray(h["kp2d"], float)[SIX] for h in (hands or [])]
+    if not gts or not preds:
+        return {"n_gt": len(gts), "n_matched": 0, "errs": []}
+    pair = [[_pair_err(g, p) for p in preds] for g in gts]
+    cost = np.array([[e.mean() for e in row] for row in pair])
+    r, c = linear_sum_assignment(cost)   # match predicted hands to GT hands
+    return {"n_gt": len(gts), "n_matched": len(r), "errs": [[float(x) for x in pair[i][j]] for i, j in zip(r, c)]}
+
+
+def report(label, scores):
+    n_gt = sum(s["n_gt"] for s in scores)
+    matched = sum(s["n_matched"] for s in scores)
+    errs = [e for s in scores for hand in s["errs"] for e in hand]
+    mean_errs = [float(np.mean(hand)) for s in scores for hand in s["errs"]]
+    pck = [100 * np.mean([e < t for e in errs]) if errs else 0.0 for t in THRESH]
+    detect = 100 * matched / n_gt if n_gt else 0.0
+    mean = float(np.mean(mean_errs)) if mean_errs else float("nan")
+    print(f"{label:12} detect={detect:3.0f}%  mean_err={mean:.3f}  "
+          f"PCK@.1/.2/.3 = {pck[0]:.0f}/{pck[1]:.0f}/{pck[2]:.0f}")'''
+
+
+def _eval_methods(method: str) -> list[tuple[str, str]]:
+    """(label, hands-column) pairs to score."""
+    if method == "both":
+        return [("WiLoR", "hands_wilor"), ("MediaPipe", "hands_mediapipe")]
+    return [(_title_method(method), "hands")]
+
+
+def _title_method(method: str) -> str:
+    return {"mediapipe": "MediaPipe", "wilor": "WiLoR"}[method]
+
+
+def _eval_section(config: DemoConfig) -> str:
+    """The full eval block appended to a demo script (helpers + scoring + report)."""
+    methods = _eval_methods(config.method)
+    score_lines = "\n".join(
+        f'df = df.with_column("score_{c}", score(col("{c}"), col("observation.state"), col("observation.extrinsics")))'
+        for _, c in methods
+    )
+    select_cols = ", ".join(f'"score_{c}"' for _, c in methods)
+    report_lines = "\n".join(f'report("{label}", scored["score_{c}"])' for label, c in methods)
+    return (
+        f"{_EVAL_HELPERS}\n\n\n"
+        f"{score_lines}\n"
+        f"scored = df.select({select_cols}).to_pydict()\n\n"
+        'print("\\nEgoDex 2D accuracy (matched predicted hands / 2 GT hands per frame):")\n'
+        f"{report_lines}\n"
+    )
+
+
 def _config_block(config: DemoConfig) -> str:
     lines = [
         f'DATASET = "{config.dataset}"',
@@ -209,12 +318,15 @@ def render_script(config: DemoConfig) -> str:
     tmpl = Template(_load_template(_TEMPLATES[config.runtime]))
     if config.runtime == "modal":
         return _render_modal(config, tmpl, entrypoint=_MODAL_ENTRYPOINT)
-    return tmpl.substitute(
+    script = tmpl.substitute(
         title=_title(config),
         config_block=_config_block(config),
         track_lines=_track_lines(config.method),
         result_columns=_result_columns(config.method),
     )
+    if config.with_eval:
+        script += "\n\n" + _eval_section(config)
+    return script
 
 
 def _install_hint(method: str) -> str:
@@ -223,8 +335,35 @@ def _install_hint(method: str) -> str:
 
 
 def render_notebook(config: DemoConfig) -> str:
-    """Render the demo notebook, with a markdown cell explaining each step."""
+    """Render the demo as a Jupyter notebook (.ipynb)."""
     config.validate()
+    return _build_ipynb(_demo_cells(config))
+
+
+def render_markdown(config: DemoConfig, outputs: list[str] | None = None) -> str:
+    """Render the demo as a Markdown tutorial (prose + fenced code), for reading.
+
+    `outputs`, if given, is one text output per code cell in order (empty = none);
+    each non-empty output is shown as a fenced block after its code, so readers see
+    results without running anything.
+    """
+    config.validate()
+    out_iter = iter(outputs or [])
+    parts = []
+    for kind, text in _demo_cells(config):
+        if kind == "markdown":
+            parts.append(text)
+            continue
+        block = f"```python\n{text}\n```"
+        captured = next(out_iter, "")  # one slot per code cell, in cell order
+        if captured.strip():
+            block += f"\n\n```\n{captured.rstrip()}\n```"
+        parts.append(block)
+    return "\n\n".join(parts) + "\n"
+
+
+def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
+    """Ordered (markdown|code) cells - the shared source for notebook and markdown."""
     method_name = {"mediapipe": "MediaPipe", "wilor": "WiLoR", "both": "MediaPipe and WiLoR"}[config.method]
     intro = (
         f"# {_title(config)}\n\n"
@@ -275,7 +414,32 @@ def render_notebook(config: DemoConfig) -> str:
             ("markdown", "## Inspect the results\n\n`.show()` triggers execution and renders the keypoints per frame."),
             ("code", f"df.select({_result_columns(config.method)}).show()"),
         ]
-    return _build_ipynb(cells)
+        if config.with_eval:
+            cells += _eval_cells(config)
+    return cells
+
+
+def _eval_cells(config: DemoConfig) -> list[tuple[str, str]]:
+    """Notebook cells appending the EgoDex GT evaluation."""
+    methods = _eval_methods(config.method)
+    score_lines = "\n".join(
+        f'df = df.with_column("score_{c}", score(col("{c}"), col("observation.state"), col("observation.extrinsics")))'
+        for _, c in methods
+    )
+    select_cols = ", ".join(f'"score_{c}"' for _, c in methods)
+    report_lines = "\n".join(f'report("{label}", scored["score_{c}"])' for label, c in methods)
+    return [
+        (
+            "markdown",
+            "## Evaluate against ground truth\n\nEgoDex ships per-frame GT hand poses, so we can score the "
+            "predictions: project both GT hands, match the predicted hands to them, and report detect% + PCK. "
+            "The matching runs as a Daft UDF (`score`); the summary is computed from the collected results.\n\n"
+            "> EgoDex-specific (GT layout + camera intrinsics). Needs `pip install scipy`.",
+        ),
+        ("code", _EVAL_HELPERS),
+        ("code", f"{score_lines}\nscored = df.select({select_cols}).to_pydict()"),
+        ("code", f'print("EgoDex 2D accuracy:")\n{report_lines}'),
+    ]
 
 
 def _build_ipynb(cells: list[tuple[str, str]]) -> str:

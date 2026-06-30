@@ -38,6 +38,9 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 
 ## Later
 
+- [ ] **Publish to PyPI.** Tag a release (`v0.1.0`) to trigger
+  `.github/workflows/publish-package.yml` (trusted publishing). This also unblocks
+  generated Modal demos, which `pip install daft-physical-ai`.
 - [ ] Switch off the Daft nightly once `daft.datasets.lerobot` ships in a release
   (> v0.7.16): bump the `daft` floor in `pyproject.toml`, drop the nightly
   install step above, and re-run `uv lock`.

@@ -12,7 +12,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from ._render import _VALID_METHODS, _VALID_RUNTIMES, DemoConfig, render_notebook, render_script
+from ._render import (
+    _VALID_METHODS,
+    _VALID_RUNTIMES,
+    DemoConfig,
+    render_markdown,
+    render_notebook,
+    render_script,
+)
 
 _DEFAULT_OUTPUT_DIR = "hand-tracking-demo"
 
@@ -37,7 +44,18 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--dataset", help="LeRobot dataset id or path")
     p.add_argument("--image-column", help="camera column to decode")
     p.add_argument("--limit", type=int, help="number of frames to annotate")
-    p.add_argument("--format", choices=("script", "notebook", "both"), default="both", help="what to generate")
+    p.add_argument(
+        "--with-eval",
+        action="store_true",
+        default=None,
+        help="append EgoDex ground-truth scoring (detect%% + PCK) to the demo (local runtime only)",
+    )
+    p.add_argument(
+        "--format",
+        choices=("script", "notebook", "markdown", "both", "all"),
+        default="both",
+        help="what to generate: script (.py), notebook (.ipynb), markdown (.md), both (script+notebook), or all",
+    )
     p.add_argument("--output-dir", help="directory to write the demo into (default: hand-tracking-demo)")
     p.add_argument("--no-input", action="store_true", help="never prompt; use flags/defaults only")
     p.add_argument("-f", "--force", action="store_true", help="overwrite existing files")
@@ -59,6 +77,14 @@ def _prompt_text(label: str, default: str | None) -> str | None:
     suffix = f" [{default}]" if default else ""
     raw = input(f"{label}{suffix}: ").strip()
     return raw or default
+
+
+def _prompt_yes_no(label: str, default: bool) -> bool:
+    opts = "Y/n" if default else "y/N"
+    raw = input(f"{label} [{opts}]: ").strip().lower()
+    if not raw:
+        return default
+    return raw in ("y", "yes")
 
 
 def _collect_config(args: argparse.Namespace, interactive: bool) -> DemoConfig:
@@ -90,6 +116,11 @@ def _collect_config(args: argparse.Namespace, interactive: bool) -> DemoConfig:
     if image_column is None:
         image_column = _prompt_text("Image column", d.image_column) if interactive else d.image_column
 
+    # Evaluation is local-only and EgoDex-specific; only offered when not on Modal.
+    with_eval = bool(args.with_eval)
+    if args.with_eval is None and runtime == "local" and interactive:
+        with_eval = _prompt_yes_no("Add EgoDex ground-truth evaluation (detect% + PCK)?", default=False)
+
     return DemoConfig(
         method=method,
         runtime=runtime,
@@ -97,6 +128,7 @@ def _collect_config(args: argparse.Namespace, interactive: bool) -> DemoConfig:
         dataset=dataset or d.dataset,
         image_column=image_column or d.image_column,
         limit=args.limit if args.limit is not None else d.limit,
+        with_eval=with_eval,
     )
 
 
@@ -125,16 +157,23 @@ def main(argv: list[str] | None = None) -> int:
     if output_dir is None:
         output_dir = _prompt_text("Output directory", _DEFAULT_OUTPUT_DIR) if interactive else _DEFAULT_OUTPUT_DIR
     out_dir = Path(output_dir or _DEFAULT_OUTPUT_DIR)
+
+    have_script = args.format in ("script", "both", "all")
+    have_nb = args.format in ("notebook", "both", "all")
+    have_md = args.format in ("markdown", "all")
+    script_path, nb_path, md_path = out_dir / "demo.py", out_dir / "demo.ipynb", out_dir / "demo.md"
+
     written: list[Path] = []
     try:
-        if args.format in ("script", "both"):
-            script = out_dir / "demo.py"
-            _write(script, render_script(config), args.force)
-            written.append(script)
-        if args.format in ("notebook", "both"):
-            nb = out_dir / "demo.ipynb"
-            _write(nb, render_notebook(config), args.force)
-            written.append(nb)
+        if have_script:
+            _write(script_path, render_script(config), args.force)
+            written.append(script_path)
+        if have_nb:
+            _write(nb_path, render_notebook(config), args.force)
+            written.append(nb_path)
+        if have_md:
+            _write(md_path, render_markdown(config), args.force)
+            written.append(md_path)
     except FileExistsError as err:
         print(f"error: {err}", file=sys.stderr)
         return 1
@@ -142,11 +181,6 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Created {config.method} demo ({config.runtime} runtime):")
     for path in written:
         print(f"  {path}")
-
-    have_script = args.format in ("script", "both")
-    have_nb = args.format in ("notebook", "both")
-    script_path = out_dir / "demo.py"
-    nb_path = out_dir / "demo.ipynb"
 
     if config.runtime == "modal":
         print("\nModal runs remotely - install Modal and log in first:")
@@ -164,6 +198,8 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  jupyter lab {nb_path}")
     if have_nb:
         print("  (or open demo.ipynb in your code editor, e.g. VS Code)")
+    if have_md:
+        print(f"  ({md_path} is a readable walkthrough - not executable)")
     return 0
 
 

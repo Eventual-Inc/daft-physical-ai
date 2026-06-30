@@ -54,6 +54,19 @@ One unified output schema regardless of method
 (`kp3d` is null for MediaPipe):
 `list[struct{ handedness, confidence, kp2d, kp3d? }]`.
 
+## Example
+
+A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), show the
+keypoints, and score against EgoDex ground truth - in three equivalent forms:
+
+- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
+- **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/demo.py](examples/demo.py)** - plain script.
+
+Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
+`daft-physical-ai` CLI - run it with no arguments for an interactive walkthrough,
+or pass flags (`--method wilor --runtime modal --mano-path ... --no-input`).
+
 ## Development
 
 ```bash
