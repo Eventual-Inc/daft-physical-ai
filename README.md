@@ -5,9 +5,8 @@ tracking. The annotation methods run as Daft UDFs, so they slot into any Daft
 pipeline and execute lazily, batched, and distributed.
 
 > **Status:** `track_hands` is implemented for both methods - MediaPipe (CPU, 2D)
-> and WiLoR (GPU, 3D). CLI + demo are next (see
-> [design doc](https://github.com/Eventual-Inc/multibase/pull/527)). How each
-> method was verified is documented in [TESTING.md](TESTING.md).
+> and WiLoR (GPU, 3D); CLI + demo are next. How each method was verified is in
+> [TESTING.md](TESTING.md).
 
 ## API
 
@@ -37,9 +36,8 @@ df.write_parquet("annotated/")
 ```
 
 `track_hands` is also exported at the top level
-(`from daft_physical_ai import track_hands`). Any image column works
-(`daft.read_parquet(...)["image"]`, etc.) - the LeRobot reader is just the most
-convenient source for robot data.
+(`from daft_physical_ai import track_hands`). Any image column works - the LeRobot
+reader is just the most convenient source for robot data.
 
 Install the method you need as an extra: `pip install daft-physical-ai[mediapipe]`
 (CPU, 2D) or `pip install daft-physical-ai[wilor]` (GPU, 3D). WiLoR also needs a

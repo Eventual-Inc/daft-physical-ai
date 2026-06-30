@@ -19,8 +19,7 @@
 
 Working implementations to port from: multibase `src/post7_hand_tracking/egodex_daft/`
 (`mediapipe_egodex_daft.py`, `wilor_egodex_daft.py`), already on the native
-`daft.datasets.lerobot` reader. Package design: multibase
-[#527](https://github.com/Eventual-Inc/multibase/pull/527).
+`daft.datasets.lerobot` reader.
 
 ## Now
 
@@ -35,8 +34,7 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 - [ ] **Add tests + align with the template**: real `tests/` (replace the
   placeholder `greet`), confirm `track_hands` returns a Daft expression, lock the
   output schema.
-- [ ] **CLI + demo**: the `daft-physical-ai` console script + demo notebook/script
-  per the design doc.
+- [ ] **CLI + demo**: the `daft-physical-ai` console script + demo notebook/script.
 
 ## Later
 
