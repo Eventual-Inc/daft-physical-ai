@@ -41,17 +41,19 @@ wilor = [
   "rich",
   "webdataset"
 ]
+# Everything (both methods). WiLoR still needs the CUDA torch build + chumpy-from-git
+# (see the wilor note above); those can't ship in metadata.
+all = ["daft-physical-ai[mediapipe,wilor]"]
+
+[project.scripts]
+daft-physical-ai = "daft_physical_ai.cli:main"
 
 [project.urls]
 Repository = "https://github.com/Eventual-Inc/daft-physical-ai"
 
-[dependency-groups]
-dev = [
-  "pre-commit==4.6.0",
-  "pytest==9.1.1",
-  "ruff==0.15.20",
-  "mypy==2.1.0"
-]
+[tool.hatch.build.targets.wheel]
+# Ship the CLI's demo templates (non-.py data files) inside the package.
+include = ["daft_physical_ai/**/*.py", "daft_physical_ai/templates/*.tmpl"]
 
 [tool.hatch.version]
 source = "vcs"
@@ -64,3 +66,11 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+  "pre-commit==4.6.0",
+  "pytest==9.1.1",
+  "ruff==0.15.20",
+  "mypy==2.1.0"
+]
