@@ -29,10 +29,10 @@ def decode_rows(n: int) -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Reproduce slow per-frame LeRobot video decode.")
-    ap.add_argument("--rows", type=int, default=1, help="frames to decode (default: 1)")
-    ap.add_argument("--profile", action="store_true", help="cProfile the run (top cumulative calls)")
-    args = ap.parse_args()
+    parser = argparse.ArgumentParser(description="Reproduce slow per-frame LeRobot video decode.")
+    parser.add_argument("--rows", type=int, default=1, help="frames to decode (default: 1)")
+    parser.add_argument("--profile", action="store_true", help="cProfile the run (top cumulative calls)")
+    args = parser.parse_args()
 
     import daft
 
@@ -41,19 +41,19 @@ def main() -> None:
         import io
         import pstats
 
-        pr = cProfile.Profile()
-        t = time.perf_counter()
-        pr.runcall(decode_rows, args.rows)
-        dt = time.perf_counter() - t
-        s = io.StringIO()
-        pstats.Stats(pr, stream=s).sort_stats("cumulative").print_stats(30)
-        print(s.getvalue())
+        profiler = cProfile.Profile()
+        start = time.perf_counter()
+        profiler.runcall(decode_rows, args.rows)
+        elapsed = time.perf_counter() - start
+        report_buffer = io.StringIO()
+        pstats.Stats(profiler, stream=report_buffer).sort_stats("cumulative").print_stats(30)
+        print(report_buffer.getvalue())
     else:
-        t = time.perf_counter()
+        start = time.perf_counter()
         decode_rows(args.rows)
-        dt = time.perf_counter() - t
+        elapsed = time.perf_counter() - start
 
-    print(f"daft {daft.__version__}: decoded {args.rows} frame(s) in {dt:.2f}s  ({dt / args.rows:.2f}s/frame)")
+    print(f"daft {daft.__version__}: decoded {args.rows} frame(s) in {elapsed:.2f}s  ({elapsed / args.rows:.2f}s/frame)")
 
 
 if __name__ == "__main__":
