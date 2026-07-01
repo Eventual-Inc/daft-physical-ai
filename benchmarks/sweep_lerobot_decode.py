@@ -1,8 +1,9 @@
 """Sweep the LeRobot decode over row counts, profile each, and chart the growth.
 
 Shows that decode time grows ~linearly with frame count (no amortization) because
-`av.open()` re-parses the MP4 container once per frame. Writes two charts next to
-this script: total time vs frames, and per-function self-time vs frames.
+the reader re-opens the remote shard once per frame, and each `av.open()` re-fetches
+its index over the network (see raw_av_decode.py - parsing/decoding are cheap).
+Writes two charts next to this script: total time vs frames, per-function self-time.
 
     python benchmarks/sweep_lerobot_decode.py            # rows 1..10 (~35s)
 """

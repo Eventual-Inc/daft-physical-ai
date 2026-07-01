@@ -1,8 +1,10 @@
 """Reproduce slow per-frame video decode in `daft.datasets.lerobot` (upstream Daft).
 
-The decode UDF re-opens and re-parses the MP4 container once per frame, so cost
-scales ~linearly at ~3s/frame (mostly `av.open()`). Fix: open each shard once and
-decode its frames in a single pass.
+The decode UDF re-opens the remote MP4 shard once per frame, and each `av.open()`
+re-fetches the shard's index over the network - so cost scales ~linearly at
+~3s/frame. Parsing and decoding themselves are cheap (see raw_av_decode.py); the
+cost is the repeated network fetch. Fix: open each shard once, decode its frames
+in a single pass.
 
     python benchmarks/repro_lerobot_decode.py              # 1 frame  (~6s incl. startup)
     python benchmarks/repro_lerobot_decode.py --rows 8     # 8 frames (~25s)
@@ -53,7 +55,9 @@ def main() -> None:
         decode_rows(args.rows)
         elapsed = time.perf_counter() - start
 
-    print(f"daft {daft.__version__}: decoded {args.rows} frame(s) in {elapsed:.2f}s  ({elapsed / args.rows:.2f}s/frame)")
+    print(
+        f"daft {daft.__version__}: decoded {args.rows} frame(s) in {elapsed:.2f}s  ({elapsed / args.rows:.2f}s/frame)"
+    )
 
 
 if __name__ == "__main__":
