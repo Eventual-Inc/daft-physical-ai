@@ -25,7 +25,7 @@ def decode_rows(n: int) -> None:
     from daft.datasets import lerobot
 
     df = lerobot.read(DATASET, load_video_frames=IMAGE_COLUMN).limit(n)
-    df.select("episode_index", "frame_index", IMAGE_COLUMN).to_pydict()  # materialize -> decode
+    df.select("episode_index", "frame_index", IMAGE_COLUMN).collect()  # materialize -> decode
 
 
 def main() -> None:
