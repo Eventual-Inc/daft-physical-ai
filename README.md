@@ -102,11 +102,18 @@ from the activated venv - not `uv run`, which re-syncs the env and would drop th
 source .venv/bin/activate
 uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
   -U daft av mediapipe scipy opencv-python matplotlib jupyterlab
+python benchmarks/vendor/apply.py    # overlay the batched-decode fix (Daft #7184)
 jupyter lab hand-tracking-demo/demo.ipynb
 ```
 
+The `apply.py` step patches nightly Daft's LeRobot reader with the batched video
+decode from [Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184), which opens
+each video shard once per batch instead of once per frame (see `benchmarks/vendor/`).
+Re-run it after any daft reinstall or `uv sync`.
+
 Once the LeRobot reader lands in a released Daft (> v0.7.16), the nightly step goes
-away and this collapses to `pip install daft-physical-ai`.
+away and this collapses to `pip install daft-physical-ai` - and once #7184 ships,
+the `apply.py` step goes too.
 
 ## Development
 
