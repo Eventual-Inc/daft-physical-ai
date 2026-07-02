@@ -26,4 +26,5 @@ build/
 # Agent Prompting Templates
 CLAUDE.local.md
 .claude/**/*.md
+!.claude/skills/**/*.md
 .claude/worktrees/
