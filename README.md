@@ -1,8 +1,10 @@
 # daft-physical-ai
 
-Physical-AI data annotation on [Daft](https://github.com/Eventual-Inc/Daft), starting with hand
-tracking. The annotation methods run as Daft UDFs, so they slot into any Daft
-pipeline and execute lazily, batched, and distributed.
+Physical-AI data annotation and episode analysis on
+[Daft](https://github.com/Eventual-Inc/Daft), starting with hand tracking and a
+canonical one-row-per-step episode table. The annotation methods run as Daft
+UDFs, so they slot into any Daft pipeline and execute lazily, batched, and
+distributed.
 
 ## API
 
@@ -60,18 +62,53 @@ The Daft type is `list[struct{ handedness: string, confidence: float32, kp2d:
 list[list[float32]], kp3d: list[list[float32]] }]`, defined as `HANDS_DTYPE` in
 `daft_physical_ai/hands/schema.py`.
 
+## Episode tables
+
+For rollout analysis and dataset normalization, `daft_physical_ai.episodes`
+defines a portable Arrow/parquet contract: one row per step, with episode-level
+metadata denormalized onto every row. That shape makes failure analysis a single
+Daft scan:
+
+```python
+import daft
+from daft_physical_ai.episodes import Episode, Step, write_episode
+
+# Build or ingest an Episode, then write the canonical parquet part.
+episode = Episode(
+    episode_id="libero_spatial/0/0/openvla",
+    source="rollout",
+    instruction="put the bowl on the plate",
+    steps=(Step(timestep=0),),
+    success=False,
+    terminal_failure="unlabeled",
+    model="openvla-demo",
+    policy_type="openvla",
+)
+write_episode(episode, "data/rollouts", run_id="demo")
+
+df = daft.read_parquet("data/rollouts/*.parquet")
+failures = df.where(df["success"] == False)
+```
+
+The first example is a CPU-only failure-mode mining demo that writes synthetic
+rollouts, reads them with Daft, and labels slip-then-regrasp loops:
+
+```bash
+uv run python examples/failure_modes/regrasp_demo.py --no-plot
+```
+
 ## Example
 
 A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
 keypoints, and score against EgoDex ground truth:
 
-![track_hands keypoints](examples/demo_keypoints.png)
+![track_hands keypoints](examples/egodex_handtracking_lite/demo_keypoints.png)
 
 Available in three equivalent forms:
 
-- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
-- **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
-- **[examples/demo.py](examples/demo.py)** - plain script.
+- **[examples/egodex_handtracking_lite/demo.md](examples/egodex_handtracking_lite/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
+- **[examples/egodex_handtracking_lite/demo.ipynb](examples/egodex_handtracking_lite/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/egodex_handtracking_lite/demo.py](examples/egodex_handtracking_lite/demo.py)** - plain script.
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
 `daft-physical-ai` CLI - run it with no arguments for an interactive walkthrough,

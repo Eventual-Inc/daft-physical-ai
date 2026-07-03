@@ -687,6 +687,7 @@ source = { editable = "." }
 dependencies = [
     { name = "daft" },
     { name = "numpy" },
+    { name = "pyarrow" },
 ]
 
 [package.optional-dependencies]
@@ -765,6 +766,7 @@ requires-dist = [
     { name = "opencv-python-headless", marker = "extra == 'wilor'" },
     { name = "pandas", marker = "extra == 'all'" },
     { name = "pandas", marker = "extra == 'wilor'" },
+    { name = "pyarrow", specifier = ">=15" },
     { name = "pyrootutils", marker = "extra == 'all'" },
     { name = "pyrootutils", marker = "extra == 'wilor'" },
     { name = "pytorch-lightning", marker = "extra == 'all'", specifier = "==2.1.3" },

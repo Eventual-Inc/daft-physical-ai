@@ -10,6 +10,7 @@ The FastAPI app serves:
 - `/examples` - concrete example gallery
 - `/demos/droid-kitchen` - a normal docs page with an embedded notebook iframe
 - `/demos/egodex-hands` - a local-first EgoDex hand-tracking demo page
+- `/demos/failure-modes` - a CPU-only episode failure-mining demo page
 - `/_marimo/droid-kitchen` - the Marimo notebook backed by Daft
 
 ## Local iteration
@@ -45,6 +46,13 @@ source .venv/bin/activate
 uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
   -U daft av mediapipe scipy opencv-python matplotlib
 python examples/egodex_handtracking_lite/demo.py
+```
+
+Run the failure-mode mining demo locally without Modal:
+
+```bash
+uv run python examples/failure_modes/regrasp_demo.py --no-plot
+uv run --with matplotlib python examples/failure_modes/regrasp_demo.py
 ```
 
 ## Pair with Claude Code

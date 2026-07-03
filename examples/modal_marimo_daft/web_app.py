@@ -46,6 +46,15 @@ GALLERY_ITEMS = [
         image="/_example_assets/demo_keypoints.png",
     ),
     GalleryItem(
+        title="Failure-mode mining",
+        label="Episode analysis",
+        href="/demos/failure-modes",
+        description=(
+            "Write one-row-per-step episode tables, filter failures with Daft, "
+            "and label slip-then-regrasp loops from rollout signals."
+        ),
+    ),
+    GalleryItem(
         title="Try it on your own data",
         label="Multibase",
         href="https://eventual.ai/multibase",
@@ -72,36 +81,44 @@ DOC_NAV_ITEMS = [
     *NAV_ITEMS,
     ("DROID episode index", "/demos/droid-kitchen"),
     ("EgoDex hand tracking", "/demos/egodex-hands"),
+    ("Failure-mode mining", "/demos/failure-modes"),
 ]
 
 DEMO_TOPICS = [
     (
         "Running pipelines",
         "Move from local iteration to hosted execution without changing the notebook shape.",
+        "/demos/droid-kitchen",
     ),
     (
         "Reading data",
         "Load robot datasets, metadata, videos, and table assets into Daft.",
+        "/demos/droid-kitchen",
     ),
     (
         "Episode data",
         "Inspect episode rows, frame media, task fields, and success labels.",
+        "/demos/failure-modes",
     ),
     (
         "Transforms",
         "Filter, join, type, and enrich robotics data with Daft expressions.",
+        "/demos/droid-kitchen",
     ),
     (
         "Episode operations",
         "Annotate, trim, score, and track signals across episodes.",
+        "/demos/failure-modes",
     ),
     (
         "Inference",
         "Run models over images, video-derived rows, metadata, and structured columns.",
+        "/demos/egodex-hands",
     ),
     (
         "Writing data",
         "Persist annotated datasets for training and downstream analysis.",
+        "/demos/failure-modes",
     ),
 ]
 
@@ -139,12 +156,12 @@ def gallery_cards() -> str:
 def demo_topic_cards() -> str:
     return "\n".join(
         f"""
-        <a class="topic-card" href="/demos/droid-kitchen">
+        <a class="topic-card" href="{href}">
           <span>{title}</span>
           <p>{description}</p>
         </a>
         """
-        for title, description in DEMO_TOPICS
+        for title, description, href in DEMO_TOPICS
     )
 
 
@@ -302,6 +319,7 @@ def create_app(
         <section class="feature-grid">
           <a href="/demos/droid-kitchen"><span>Live demo</span><strong>DROID episode index</strong><p>Read DROID metadata, filter successful episodes, and inspect a Daft query plan.</p></a>
           <a href="/demos/egodex-hands"><span>Local demo</span><strong>EgoDex hand tracking</strong><p>Run MediaPipe locally and compare predictions against EgoDex ground truth.</p></a>
+          <a href="/demos/failure-modes"><span>Analysis demo</span><strong>Failure-mode mining</strong><p>Write canonical episode rows and label re-grasp loops with a Daft scan.</p></a>
         </section>
         <section class="doc-body">{render_markdown(content_path / "demos.md")}</section>
         """
@@ -378,6 +396,27 @@ def create_app(
               <a href="/_example_assets/demo.md">Rendered markdown</a>
               <a href="/_example_assets/demo.py">Script</a>
               <a href="/_example_assets/demo.ipynb">Notebook</a>
+              <a href="https://eventual.ai/multibase" target="_blank" rel="noreferrer">Use your own data</a>
+            </div>
+            """,
+        )
+
+    @web.get("/demos/failure-modes", response_class=HTMLResponse)
+    async def failure_modes() -> HTMLResponse:
+        body = f"""
+        <section class="doc-body">{render_markdown(content_path / "failure_modes.md")}</section>
+        """
+        return page_shell(
+            title="Failure-mode mining",
+            active="/demos",
+            eyebrow="Episode analysis",
+            summary="A CPU-only demo that writes canonical rollout rows, scans them with Daft, and labels re-grasp failures.",
+            body=body,
+            mode="wide",
+            aside="""
+            <div class="toc-card">
+              <span>Artifacts</span>
+              <a href="/examples">Examples</a>
               <a href="https://eventual.ai/multibase" target="_blank" rel="noreferrer">Use your own data</a>
             </div>
             """,
