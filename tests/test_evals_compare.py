@@ -82,9 +82,7 @@ def test_compare_policies_pairs_specs() -> None:
 
     left_only_failures = [
         episode_id
-        for episode_id, left, right in zip(
-            data["episode_id"], data["success_left"], data["success_right"]
-        )
+        for episode_id, left, right in zip(data["episode_id"], data["success_left"], data["success_right"])
         if right and not left
     ]
     assert left_only_failures == ["libero_spatial/0/1/7", "libero_spatial/0/2/7"]

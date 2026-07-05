@@ -100,23 +100,30 @@ contract. `episode_id` names the evaluation *spec*
 ran the same benchmark join into a paired, per-spec comparison, and a run can
 be checked against the published protocol without re-simulating anything:
 
+Real benchmark rollouts ship in-repo
+([examples/08_policy_evals/data/](examples/08_policy_evals/data/README.md):
+OpenVLA and VLA-JEPA on LIBERO-Spatial, 100 episodes each, ~2 MB), so this
+runs offline after a clone:
+
 ```python
 import daft
 from daft_physical_ai.evals import compare_policies, success_rates, validate_run
 
-df = daft.read_parquet("data/rollouts/*.parquet")
-success_rates(df).show()                                  # success rate per policy
+df = daft.read_parquet("examples/08_policy_evals/data/rollouts/*.parquet")
+success_rates(df).show()                                  # openvla 84%, vla_jepa 99%
 paired = compare_policies(df, "openvla", "vla_jepa")      # same specs, side by side
-report = validate_run(df, suite="libero_spatial", policy_type="openvla")
-assert report.ok  # 50 trials/task, seed 7, per-suite step caps - or named issues
+report = validate_run(df, suite="libero_spatial", policy_type="openvla", trials_per_task=10)
+assert report.ok  # task coverage, trials/task, seed 7, step caps - or named issues
 ```
 
 Rollout *generation* (simulators, policy checkpoints, GPU images) stays in a
-separate harness and lands here as parquet in the episode schema. The first
-example is a CPU-only failure-mining demo that writes synthetic rollouts,
-reads them with Daft, and labels slip-then-regrasp loops:
+separate harness and lands here as parquet in the episode schema. The runnable
+walkthroughs live in [examples/08_policy_evals/](examples/08_policy_evals/):
 
 ```bash
+uv run python examples/08_policy_evals/success_rates.py      # scoreboard, per task
+uv run python examples/08_policy_evals/compare_policies.py   # paired per-spec diffs
+uv run python examples/08_policy_evals/validate_protocol.py  # protocol check (CI-able)
 uv run python examples/08_policy_evals/mine_failures.py --no-plot
 ```
 

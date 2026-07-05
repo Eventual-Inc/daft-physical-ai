@@ -60,21 +60,15 @@ def test_faithful_run_passes() -> None:
 
 def test_scope_filters_other_policies_and_suites() -> None:
     rows = make_run_rows() + make_run_rows(policy_type="vla_jepa", seed=11, trials=1)
-    report = validate_run(
-        to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2
-    )
+    report = validate_run(to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2)
 
     assert report.ok  # vla_jepa's off-seed short run must not leak into openvla's report
 
 
 def test_missing_task_and_trial_count_flagged() -> None:
     rows = [row for row in make_run_rows() if row["task_id"] != 9]
-    rows = [
-        row for row in rows if not (row["task_id"] == 0 and row["init_state_id"] == 1)
-    ]
-    report = validate_run(
-        to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2
-    )
+    rows = [row for row in rows if not (row["task_id"] == 0 and row["init_state_id"] == 1)]
+    report = validate_run(to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2)
 
     codes = {issue.code for issue in report.issues}
     assert codes == {"missing_tasks", "trial_count"}
@@ -93,9 +87,7 @@ def test_wrong_seed_flagged() -> None:
 
 def test_step_cap_exceeded_flagged() -> None:
     rows = make_run_rows(steps=251)  # spatial cap is 250
-    report = validate_run(
-        to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2
-    )
+    report = validate_run(to_frame(rows), suite="libero_spatial", policy_type="openvla", trials_per_task=2)
 
     codes = [issue.code for issue in report.issues]
     assert codes == ["step_cap_exceeded"]
@@ -114,9 +106,7 @@ def test_doubled_parquet_part_flagged_as_step_count_mismatch() -> None:
 
 
 def test_empty_scope_reports_empty_run() -> None:
-    report = validate_run(
-        to_frame(make_run_rows()), suite="libero_goal", policy_type="openvla"
-    )
+    report = validate_run(to_frame(make_run_rows()), suite="libero_goal", policy_type="openvla")
 
     assert not report.ok
     assert [issue.code for issue in report.issues] == ["empty_run"]

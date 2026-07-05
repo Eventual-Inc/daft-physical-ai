@@ -19,7 +19,7 @@ target scripts named in their READMEs.
 | 05 | [Inference](05_inference/) | Model-backed labeling with Daft AI functions: structured episode labels, VLM failure classification, semantic search | planned |
 | 06 | [Writing data](06_writing_data/) | Training/analysis-ready outputs: canonical rollout parquet, LeRobot writers when Daft ships them | planned |
 | 07 | [Training handoff](07_training_handoff/) | Curated Daft dataframes into `to_torch_dataloader` | planned |
-| 08 | [Policy evals](08_policy_evals/) | Benchmark reproduction and failure mining over rollout parquet | `mine_failures.py` |
+| 08 | [Policy evals](08_policy_evals/) | Benchmark reproduction and failure mining over real LIBERO rollouts (OpenVLA vs VLA-JEPA, in-repo) | `success_rates.py` · `compare_policies.py` · `validate_protocol.py` · `mine_failures.py` |
 
 Deployment recipes live outside the numbered journey:
 

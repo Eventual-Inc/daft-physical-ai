@@ -47,10 +47,12 @@ lives in the VLA-JEPA harness repo and lands here as schema-conforming parquet.
   `daft_physical_ai/pose/` + `examples/03_transforms/`.
 - [ ] **`operations.motion_trim`** - first new deterministic episode op
   (`examples/04_episode_operations/motion_trim.py`).
-- [ ] **Host real LIBERO rollout parquet** (OpenVLA + VLA-JEPA runs from the
-  harness) publicly, then land `examples/08_policy_evals/`
-  `success_rates.py` / `compare_policies.py` / `validate_protocol.py` against
-  it - benchmark-analysis reproduction with no GPU or sim installed.
+- [x] **Real LIBERO rollout parquet lands in-repo** (OpenVLA + VLA-JEPA,
+  libero_spatial, 100 episodes each, ~2 MB compacted;
+  `examples/08_policy_evals/data/`) with `success_rates.py` /
+  `compare_policies.py` / `validate_protocol.py` running against it offline.
+  Follow-up: mirror to HF / Multibase once an org namespace is picked, and add
+  the 50-trial canonical sweep when the harness runs it.
 - [ ] **LeRobot examples** (`01_reading_data/lerobot_episode_index.py`,
   `02_episode_data/merge_lerobot_datasets.py`) once the reader ships in a
   released Daft.

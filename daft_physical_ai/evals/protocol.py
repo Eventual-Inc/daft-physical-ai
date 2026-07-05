@@ -108,9 +108,7 @@ def validate_run(
 
     issues: list[ProtocolIssue] = []
     if not episode_ids:
-        issues.append(
-            ProtocolIssue("empty_run", f"no rows for suite={suite!r} policy_type={policy_type!r}")
-        )
+        issues.append(ProtocolIssue("empty_run", f"no rows for suite={suite!r} policy_type={policy_type!r}"))
         return ProtocolReport(
             suite=suite,
             policy_type=policy_type,
@@ -123,42 +121,30 @@ def validate_run(
     expected_tasks = SUITE_NUM_TASKS.get(suite)
     max_steps = SUITE_MAX_STEPS.get(suite)
     if expected_tasks is None:
-        issues.append(
-            ProtocolIssue("unknown_suite", f"{suite!r} has no published task count or step cap")
-        )
+        issues.append(ProtocolIssue("unknown_suite", f"{suite!r} has no published task count or step cap"))
 
     observed_tasks = sorted({task for task in data["task_id"] if task is not None})
     if expected_tasks is not None:
         missing = sorted(set(range(expected_tasks)) - set(observed_tasks))
         if missing:
-            issues.append(
-                ProtocolIssue("missing_tasks", f"tasks never attempted: {_preview(missing)}")
-            )
+            issues.append(ProtocolIssue("missing_tasks", f"tasks never attempted: {_preview(missing)}"))
 
     trial_counts: dict[int, int] = {}
     for task in data["task_id"]:
         if task is not None:
             trial_counts[task] = trial_counts.get(task, 0) + 1
     off_protocol = sorted(
-        f"task {task}: {count}/{trials_per_task}"
-        for task, count in trial_counts.items()
-        if count != trials_per_task
+        f"task {task}: {count}/{trials_per_task}" for task, count in trial_counts.items() if count != trials_per_task
     )
     if off_protocol:
         issues.append(ProtocolIssue("trial_count", f"trials per task off: {_preview(off_protocol)}"))
 
     bad_seeds = sorted({s for s in data["seed"] if s != seed})
     if bad_seeds:
-        issues.append(
-            ProtocolIssue("seed_mismatch", f"expected seed {seed}, found {_preview(bad_seeds)}")
-        )
+        issues.append(ProtocolIssue("seed_mismatch", f"expected seed {seed}, found {_preview(bad_seeds)}"))
 
     if max_steps is not None:
-        over_cap = [
-            episode_id
-            for episode_id, n_rows in zip(episode_ids, data["n_rows"])
-            if n_rows > max_steps
-        ]
+        over_cap = [episode_id for episode_id, n_rows in zip(episode_ids, data["n_rows"]) if n_rows > max_steps]
         if over_cap:
             issues.append(
                 ProtocolIssue(
@@ -178,8 +164,7 @@ def validate_run(
         issues.append(
             ProtocolIssue(
                 "step_count_mismatch",
-                "row count disagrees with step_idx/num_steps (truncated or doubled part): "
-                f"{_preview(inconsistent)}",
+                f"row count disagrees with step_idx/num_steps (truncated or doubled part): {_preview(inconsistent)}",
             )
         )
 
