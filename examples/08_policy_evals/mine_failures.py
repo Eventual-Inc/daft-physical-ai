@@ -1,3 +1,12 @@
+"""Mine policy failures from canonical rollout parquet with Daft.
+
+Writes synthetic OpenVLA / VLA-JEPA rollout failures into the one-row-per-step
+schema, scans the parquet glob with Daft, and labels slip-then-regrasp loops
+from object height and gripper state. Synthetic on purpose: it proves the
+analysis surface end-to-end on CPU; hosted rollouts from a real benchmark run
+drop in via the same schema.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -8,7 +17,7 @@ from pathlib import Path
 import numpy as np
 
 from daft_physical_ai.episodes import Episode, Step, write_episode
-from daft_physical_ai.failure_modes import detect_regrasp
+from daft_physical_ai.evals import detect_regrasp
 
 TARGET_OBJECT = "akita_black_bowl"
 SCENARIOS = {

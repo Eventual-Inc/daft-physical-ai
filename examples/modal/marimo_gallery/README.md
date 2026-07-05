@@ -10,7 +10,7 @@ The FastAPI app serves:
 - `/examples` - concrete example gallery
 - `/demos/droid-kitchen` - a normal docs page with an embedded notebook iframe
 - `/demos/egodex-hands` - a local-first EgoDex hand-tracking demo page
-- `/demos/failure-modes` - a CPU-only episode failure-mining demo page
+- `/demos/policy-evals` - a CPU-only policy-eval / failure-mining demo page
 - `/_marimo/droid-kitchen` - the Marimo notebook backed by Daft
 
 ## Local iteration
@@ -18,7 +18,7 @@ The FastAPI app serves:
 Write broad docs and gallery copy in Markdown:
 
 ```text
-examples/modal_marimo_daft/content/
+examples/modal/marimo_gallery/content/
 ```
 
 Run the site shell locally:
@@ -30,13 +30,13 @@ uv run \
   --with markdown \
   --with marimo \
   --with daft \
-  uvicorn --app-dir examples/modal_marimo_daft web_app:create_app --factory --reload
+  uvicorn --app-dir examples/modal/marimo_gallery web_app:create_app --factory --reload
 ```
 
 Edit the Marimo notebook directly when you want notebook authoring mode:
 
 ```bash
-uv run --with marimo --with daft marimo edit examples/modal_marimo_daft/notebooks/droid_kitchen.py --no-token
+uv run --with marimo --with daft marimo edit examples/modal/marimo_gallery/notebooks/droid_kitchen.py --no-token
 ```
 
 Run the EgoDex hand-tracking demo locally without Modal:
@@ -45,14 +45,14 @@ Run the EgoDex hand-tracking demo locally without Modal:
 source .venv/bin/activate
 uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
   -U daft av mediapipe scipy opencv-python matplotlib
-python examples/egodex_handtracking_lite/demo.py
+python examples/04_episode_operations/hand_tracking/demo.py
 ```
 
-Run the failure-mode mining demo locally without Modal:
+Run the policy-eval failure-mining demo locally without Modal:
 
 ```bash
-uv run python examples/failure_modes/regrasp_demo.py --no-plot
-uv run --with matplotlib python examples/failure_modes/regrasp_demo.py
+uv run python examples/08_policy_evals/mine_failures.py --no-plot
+uv run --with matplotlib python examples/08_policy_evals/mine_failures.py
 ```
 
 ## Pair with Claude Code
@@ -64,7 +64,7 @@ Start a Marimo notebook with `--no-token`, then invoke the skill from Claude
 Code:
 
 ```text
-/marimo-pair pair with me on examples/modal_marimo_daft/notebooks/droid_kitchen.py
+/marimo-pair pair with me on examples/modal/marimo_gallery/notebooks/droid_kitchen.py
 ```
 
 The top-right "Use Your Own Data" CTA links directly to
@@ -74,13 +74,13 @@ The top-right "Use Your Own Data" CTA links directly to
 
 ```bash
 uvx modal setup
-uvx modal serve examples/modal_marimo_daft/modal_app.py
+uvx modal serve examples/modal/marimo_gallery/modal_app.py
 ```
 
 Deploy it as a persistent Modal web app:
 
 ```bash
-uvx modal deploy examples/modal_marimo_daft/modal_app.py
+uvx modal deploy examples/modal/marimo_gallery/modal_app.py
 ```
 
 The browser renders Marimo. Daft runs in the Modal container.

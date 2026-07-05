@@ -13,7 +13,7 @@ the local inference environment is installed.
 source .venv/bin/activate
 uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
   -U daft av mediapipe scipy opencv-python matplotlib
-python examples/egodex_handtracking_lite/demo.py
+python examples/04_episode_operations/hand_tracking/demo.py
 ```
 
 The Daft nightly is currently needed for the native LeRobot reader. Once that
@@ -23,7 +23,7 @@ reader ships in a released Daft version, the nightly install step can go away.
 
 ```bash
 source .venv/bin/activate
-jupyter lab examples/egodex_handtracking_lite/demo.ipynb
+jupyter lab examples/04_episode_operations/hand_tracking/demo.ipynb
 ```
 
 The committed markdown and image are already rendered, so researchers can inspect

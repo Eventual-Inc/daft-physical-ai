@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from daft_physical_ai.failure_modes import detect_regrasp
+from daft_physical_ai.evals import detect_regrasp
 
 
 def test_detect_regrasp_loop() -> None:

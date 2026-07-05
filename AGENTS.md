@@ -15,26 +15,45 @@
    but not yet in a released version (latest is v0.7.16):
    `uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai -U daft`
 
-# Roadmap
+# Architecture
 
-Working implementations to port from: multibase `src/post7_hand_tracking/egodex_daft/`
-(`mediapipe_egodex_daft.py`, `wilor_egodex_daft.py`), already on the native
-`daft.datasets.lerobot` reader.
+The repo is a Daft-native physical-AI starter kit, not a pipeline framework -
+Daft already owns reads, transforms, writes, and AI functions. The package owns
+physical-AI *semantics* and grows only where examples repeat a helper:
+
+- `episodes/` - the canonical one-row-per-step Arrow/parquet contract shared by
+  datasets and eval rollouts. `episode_id` names the evaluation spec
+  (`suite/task_id/init_state_id/seed`), not the attempt.
+- `hands/` - `track_hands` (MediaPipe CPU / WiLoR GPU) behind one output schema.
+- `evals/` - the analysis half of the eval loop: `success_rates`,
+  `compare_policies`, `failure_counts` (always grouped by policy - shared specs
+  must never chimera), `detect_regrasp`, and `validate_run` against the
+  published LIBERO protocol.
+
+`examples/` is the product surface: numbered stages 01-08 mirroring the
+researcher workflow (read, episode data, transforms, episode operations,
+inference, writing, training handoff, policy evals). Index in
+`examples/README.md`; planned scripts are named in each stage's README.
+
+Rollout *generation* (LIBERO sim, OpenVLA/VLA-JEPA stacks, Modal GPU apps)
+lives in the VLA-JEPA harness repo and lands here as schema-conforming parquet.
+
+# Roadmap
 
 ## Now
 
-- [ ] **Implement `hands/` - MediaPipe first** (easiest: CPU, permissive license,
-  no weights to supply). `_mediapipe.py` `@daft.cls` + the `track_hands(method="mediapipe")`
-  facade, returning the shared output schema.
-- [ ] **Implement WiLoR** (`method="wilor"`): GPU, 3D MANO keypoints, user-supplied
-  `mano_path`. Port the `@daft.cls` from multibase.
-- [ ] **Test both thoroughly and document how** (a `TESTING.md`): capture the
-  commands + observed hand counts. MediaPipe locally on CPU; WiLoR on Modal (see
-  Testing & GPU below).
-- [ ] **Add tests + align with the template**: real `tests/` (replace the
-  placeholder `greet`), confirm `track_hands` returns a Daft expression, lock the
-  output schema.
-- [ ] **CLI + demo**: the `daft-physical-ai` console script + demo notebook/script.
+- [ ] **Port `pose/` from daft-examples egodex** (pure-NumPy hand/skeleton
+  geometry, feature UDF wrappers, scenario queries) into
+  `daft_physical_ai/pose/` + `examples/03_transforms/`.
+- [ ] **`operations.motion_trim`** - first new deterministic episode op
+  (`examples/04_episode_operations/motion_trim.py`).
+- [ ] **Host real LIBERO rollout parquet** (OpenVLA + VLA-JEPA runs from the
+  harness) publicly, then land `examples/08_policy_evals/`
+  `success_rates.py` / `compare_policies.py` / `validate_protocol.py` against
+  it - benchmark-analysis reproduction with no GPU or sim installed.
+- [ ] **LeRobot examples** (`01_reading_data/lerobot_episode_index.py`,
+  `02_episode_data/merge_lerobot_datasets.py`) once the reader ships in a
+  released Daft.
 
 ## Later
 
@@ -44,13 +63,19 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 - [ ] Switch off the Daft nightly once `daft.datasets.lerobot` ships in a release
   (> v0.7.16): bump the `daft` floor in `pyproject.toml`, drop the nightly
   install step above, and re-run `uv lock`.
+- [ ] **Promote the LIBERO rollout runner + `Policy` seam** from the VLA-JEPA
+  harness into a `daft-physical-ai[libero]` extra. Feasible - the `hf-libero`
+  wheel co-resolves with modern policy stacks in one Python >=3.12 process -
+  but gated on a lerobot release carrying the `vla_jepa` policy port (a
+  git-SHA pin cannot ship in PyPI metadata). Until then the harness repo owns
+  generation; the schema is the contract.
 
-# Regenerating the examples demo
+# Regenerating the hand-tracking demo
 
-`examples/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
-don't hand-edit them. They all render from one shared cell list in
-`daft_physical_ai/_render.py`, so editing the source keeps the three formats in
-sync. To rebuild them:
+`examples/04_episode_operations/hand_tracking/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}`
+are **generated** - don't hand-edit them. They all render from one shared cell
+list in `daft_physical_ai/_render.py`, so editing the source keeps the three
+formats in sync. To rebuild them:
 
 ```bash
 python scripts/regen_demo.py          # render -> execute the notebook -> derive md + image

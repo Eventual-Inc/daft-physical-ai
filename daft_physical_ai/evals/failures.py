@@ -1,4 +1,11 @@
-"""Detect slip-then-regrasp loops from per-step episode signals."""
+"""Failure labeling from per-step episode signals.
+
+`detect_regrasp` is the first heuristic in the terminal-failure taxonomy
+(`daft_physical_ai.episodes.schema.TERMINAL_FAILURE_LABELS`). It needs only two
+signal tracks - object height and gripper state - so it runs on any rollout or
+dataset episode that lands in the canonical step-row schema, with no simulator
+or model in the loop.
+"""
 
 from __future__ import annotations
 

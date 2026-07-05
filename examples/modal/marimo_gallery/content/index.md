@@ -25,7 +25,7 @@ uv run \
   --with markdown \
   --with marimo \
   --with daft \
-  uvicorn --app-dir examples/modal_marimo_daft web_app:create_app --factory --reload
+  uvicorn --app-dir examples/modal/marimo_gallery web_app:create_app --factory --reload
 ```
 
 Open the site, edit Markdown, and refresh. Open a demo page when you need live
@@ -34,7 +34,7 @@ execution.
 ## Hosting workflow
 
 ```bash
-uvx modal serve examples/modal_marimo_daft/modal_app.py
+uvx modal serve examples/modal/marimo_gallery/modal_app.py
 ```
 
 The website remains ordinary FastAPI-rendered HTML. Marimo is mounted under an

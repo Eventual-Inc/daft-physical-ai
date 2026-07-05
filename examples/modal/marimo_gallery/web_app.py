@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 ROOT = Path(__file__).resolve().parent
 DEFAULT_CONTENT_DIR = ROOT / "content"
 DEFAULT_NOTEBOOKS_DIR = ROOT / "notebooks"
-DEFAULT_EXAMPLE_ASSETS_DIR = ROOT.parent / "egodex_handtracking_lite"
+DEFAULT_EXAMPLE_ASSETS_DIR = ROOT.parents[1] / "04_episode_operations" / "hand_tracking"
 
 
 @dataclass(frozen=True)
@@ -46,12 +46,12 @@ GALLERY_ITEMS = [
         image="/_example_assets/demo_keypoints.png",
     ),
     GalleryItem(
-        title="Failure-mode mining",
-        label="Episode analysis",
-        href="/demos/failure-modes",
+        title="Policy evals: failure mining",
+        label="Policy evals",
+        href="/demos/policy-evals",
         description=(
-            "Write one-row-per-step episode tables, filter failures with Daft, "
-            "and label slip-then-regrasp loops from rollout signals."
+            "Write one-row-per-step rollout tables, compare policies on the same "
+            "benchmark specs, and label slip-then-regrasp loops from step signals."
         ),
     ),
     GalleryItem(
@@ -81,7 +81,7 @@ DOC_NAV_ITEMS = [
     *NAV_ITEMS,
     ("DROID episode index", "/demos/droid-kitchen"),
     ("EgoDex hand tracking", "/demos/egodex-hands"),
-    ("Failure-mode mining", "/demos/failure-modes"),
+    ("Policy evals", "/demos/policy-evals"),
 ]
 
 DEMO_TOPICS = [
@@ -98,7 +98,7 @@ DEMO_TOPICS = [
     (
         "Episode data",
         "Inspect episode rows, frame media, task fields, and success labels.",
-        "/demos/failure-modes",
+        "/demos/policy-evals",
     ),
     (
         "Transforms",
@@ -108,7 +108,7 @@ DEMO_TOPICS = [
     (
         "Episode operations",
         "Annotate, trim, score, and track signals across episodes.",
-        "/demos/failure-modes",
+        "/demos/egodex-hands",
     ),
     (
         "Inference",
@@ -118,7 +118,12 @@ DEMO_TOPICS = [
     (
         "Writing data",
         "Persist annotated datasets for training and downstream analysis.",
-        "/demos/failure-modes",
+        "/demos/policy-evals",
+    ),
+    (
+        "Policy evals",
+        "Reproduce benchmark runs, compare policies on the same specs, and mine failures.",
+        "/demos/policy-evals",
     ),
 ]
 
@@ -259,8 +264,8 @@ def egodex_panel() -> str:
         <strong>Rendered output is committed</strong>
         <p>
           The demo markdown, notebook, script, and keypoint image live in
-          <code>examples/egodex_handtracking_lite/</code>. Run it locally when
-          you want fresh inference.
+          <code>examples/04_episode_operations/hand_tracking/</code>. Run it
+          locally when you want fresh inference.
         </p>
         <div class="inline-actions">
           <a href="/_example_assets/demo.md">Read markdown</a>
@@ -319,7 +324,7 @@ def create_app(
         <section class="feature-grid">
           <a href="/demos/droid-kitchen"><span>Live demo</span><strong>DROID episode index</strong><p>Read DROID metadata, filter successful episodes, and inspect a Daft query plan.</p></a>
           <a href="/demos/egodex-hands"><span>Local demo</span><strong>EgoDex hand tracking</strong><p>Run MediaPipe locally and compare predictions against EgoDex ground truth.</p></a>
-          <a href="/demos/failure-modes"><span>Analysis demo</span><strong>Failure-mode mining</strong><p>Write canonical episode rows and label re-grasp loops with a Daft scan.</p></a>
+          <a href="/demos/policy-evals"><span>Analysis demo</span><strong>Policy evals</strong><p>Compare policies on the same benchmark specs and label re-grasp loops with a Daft scan.</p></a>
         </section>
         <section class="doc-body">{render_markdown(content_path / "demos.md")}</section>
         """
@@ -401,16 +406,20 @@ def create_app(
             """,
         )
 
-    @web.get("/demos/failure-modes", response_class=HTMLResponse)
-    async def failure_modes() -> HTMLResponse:
+    @web.get("/demos/failure-modes")
+    async def old_failure_modes() -> RedirectResponse:
+        return RedirectResponse("/demos/policy-evals", status_code=307)
+
+    @web.get("/demos/policy-evals", response_class=HTMLResponse)
+    async def policy_evals() -> HTMLResponse:
         body = f"""
-        <section class="doc-body">{render_markdown(content_path / "failure_modes.md")}</section>
+        <section class="doc-body">{render_markdown(content_path / "policy_evals.md")}</section>
         """
         return page_shell(
-            title="Failure-mode mining",
+            title="Policy evals",
             active="/demos",
-            eyebrow="Episode analysis",
-            summary="A CPU-only demo that writes canonical rollout rows, scans them with Daft, and labels re-grasp failures.",
+            eyebrow="Benchmark analysis",
+            summary="A CPU-only demo that writes canonical rollout rows, compares policies with Daft, and labels re-grasp failures.",
             body=body,
             mode="wide",
             aside="""

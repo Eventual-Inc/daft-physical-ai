@@ -31,7 +31,7 @@ image = (
         remote_path=str(REMOTE_ROOT / "content"),
     )
     .add_local_dir(
-        Path(__file__).parent.parent / "egodex_handtracking_lite",
+        Path(__file__).resolve().parents[2] / "04_episode_operations" / "hand_tracking",
         remote_path=str(REMOTE_ROOT / "example_assets"),
     )
 )

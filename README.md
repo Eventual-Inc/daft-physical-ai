@@ -1,10 +1,12 @@
 # daft-physical-ai
 
-Physical-AI data annotation and episode analysis on
-[Daft](https://github.com/Eventual-Inc/Daft), starting with hand tracking and a
-canonical one-row-per-step episode table. The annotation methods run as Daft
-UDFs, so they slot into any Daft pipeline and execute lazily, batched, and
-distributed.
+Physical-AI data annotation, episode analysis, and policy evals on
+[Daft](https://github.com/Eventual-Inc/Daft): hand tracking, a canonical
+one-row-per-step episode table, and benchmark comparison over rollout parquet.
+The annotation methods run as Daft UDFs, so they slot into any Daft pipeline
+and execute lazily, batched, and distributed. Runnable recipes for the whole
+workflow - read, inspect, transform, operate, label, write, train, evaluate -
+are indexed in [examples/](examples/README.md).
 
 ## API
 
@@ -90,11 +92,32 @@ df = daft.read_parquet("data/rollouts/*.parquet")
 failures = df.where(df["success"] == False)
 ```
 
-The first example is a CPU-only failure-mode mining demo that writes synthetic
-rollouts, reads them with Daft, and labels slip-then-regrasp loops:
+## Policy evals
+
+`daft_physical_ai.evals` is the analysis half of the eval loop over that
+contract. `episode_id` names the evaluation *spec*
+(`suite/task_id/init_state_id/seed`), not the attempt - so two policies that
+ran the same benchmark join into a paired, per-spec comparison, and a run can
+be checked against the published protocol without re-simulating anything:
+
+```python
+import daft
+from daft_physical_ai.evals import compare_policies, success_rates, validate_run
+
+df = daft.read_parquet("data/rollouts/*.parquet")
+success_rates(df).show()                                  # success rate per policy
+paired = compare_policies(df, "openvla", "vla_jepa")      # same specs, side by side
+report = validate_run(df, suite="libero_spatial", policy_type="openvla")
+assert report.ok  # 50 trials/task, seed 7, per-suite step caps - or named issues
+```
+
+Rollout *generation* (simulators, policy checkpoints, GPU images) stays in a
+separate harness and lands here as parquet in the episode schema. The first
+example is a CPU-only failure-mining demo that writes synthetic rollouts,
+reads them with Daft, and labels slip-then-regrasp loops:
 
 ```bash
-uv run python examples/failure_modes/regrasp_demo.py --no-plot
+uv run python examples/08_policy_evals/mine_failures.py --no-plot
 ```
 
 ## Example
@@ -102,13 +125,13 @@ uv run python examples/failure_modes/regrasp_demo.py --no-plot
 A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
 keypoints, and score against EgoDex ground truth:
 
-![track_hands keypoints](examples/egodex_handtracking_lite/demo_keypoints.png)
+![track_hands keypoints](examples/04_episode_operations/hand_tracking/demo_keypoints.png)
 
 Available in three equivalent forms:
 
-- **[examples/egodex_handtracking_lite/demo.md](examples/egodex_handtracking_lite/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
-- **[examples/egodex_handtracking_lite/demo.ipynb](examples/egodex_handtracking_lite/demo.ipynb)** - runnable notebook (outputs included).
-- **[examples/egodex_handtracking_lite/demo.py](examples/egodex_handtracking_lite/demo.py)** - plain script.
+- **[examples/04_episode_operations/hand_tracking/demo.md](examples/04_episode_operations/hand_tracking/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
+- **[examples/04_episode_operations/hand_tracking/demo.ipynb](examples/04_episode_operations/hand_tracking/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/04_episode_operations/hand_tracking/demo.py](examples/04_episode_operations/hand_tracking/demo.py)** - plain script.
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
 `daft-physical-ai` CLI - run it with no arguments for an interactive walkthrough,

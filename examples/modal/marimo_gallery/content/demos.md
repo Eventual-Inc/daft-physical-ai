@@ -13,11 +13,12 @@ production-scale.
 - **Episode operations**: annotate, trim, score, and track signals across episodes.
 - **Inference**: call models over images, videos, metadata, and structured columns.
 - **Writing data**: persist annotated datasets for training and downstream analysis.
+- **Policy evals**: reproduce benchmark runs, compare policies on the same specs, and mine failures.
 
 The first live demo is the DROID episode index. The shape is intentionally
 small: read metadata, filter episodes, project operational columns, inspect the
 plan, and keep the notebook embedded in a normal web page.
 
 The first local demo is EgoDex hand tracking. It uses the generated
-`examples/egodex_handtracking_lite/` artifacts, runs on CPU with MediaPipe, and
-does not require Modal.
+`examples/04_episode_operations/hand_tracking/` artifacts, runs on CPU with
+MediaPipe, and does not require Modal.
