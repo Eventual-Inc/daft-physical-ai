@@ -18,9 +18,12 @@ STATE_DIM = 8
 EMBEDDING_DIM = 1024
 SCHEMA_VERSION = "rollout-v1"
 
+# Mirrored by the VLA-JEPA harness's ``harness/schema.py`` — keep the two in sync
+# when adding labels (values only, so SCHEMA_VERSION is unaffected).
 TERMINAL_FAILURE_LABELS = (
     "re_grasp",
     "no_grasp",
+    "grasp_no_lift",
     "drop_no_recover",
     "wrong_object",
     "missed_target",

@@ -27,7 +27,16 @@ from .compare import (
     failure_counts,
     success_rates,
 )
-from .failures import FailureEvent, FailureLabel, RegraspDetection, detect_regrasp
+from .failures import (
+    FailureEvent,
+    FailureFeatures,
+    FailureLabel,
+    RegraspDetection,
+    RolloutFailureLabel,
+    classify_failure,
+    detect_regrasp,
+    label_failures,
+)
 from .protocol import (
     CORE_SUITES,
     NUM_STEPS_WAIT,
@@ -49,14 +58,18 @@ __all__ = [
     "SUITE_NUM_TASKS",
     "TRIALS_PER_TASK",
     "FailureEvent",
+    "FailureFeatures",
     "FailureLabel",
     "ProtocolIssue",
     "ProtocolReport",
     "RegraspDetection",
+    "RolloutFailureLabel",
+    "classify_failure",
     "compare_policies",
     "detect_regrasp",
     "episode_outcomes",
     "failure_counts",
+    "label_failures",
     "success_rates",
     "validate_run",
 ]
