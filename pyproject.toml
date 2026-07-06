@@ -14,6 +14,8 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
+# robomimic/LIBERO HDF5 demo ingest (daft_physical_ai.ingest.Hdf5Ingestor).
+hdf5 = ["h5py>=3.10"]
 # MediaPipe wheels are not published for Python 3.13 yet.
 mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
@@ -72,5 +74,6 @@ dev = [
   "pre-commit==4.6.0",
   "pytest==9.1.1",
   "ruff==0.15.20",
-  "mypy==2.1.0"
+  "mypy==2.1.0",
+  "h5py>=3.10"  # exercises the hdf5 ingest tests in CI
 ]
