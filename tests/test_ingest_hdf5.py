@@ -9,6 +9,7 @@ path emits.
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import numpy as np
 import pytest
@@ -129,7 +130,7 @@ def test_spine_projection_lands_on_rollout_schema(tmp_path) -> None:
     episode = next(iter(Hdf5Ingestor().load(str(tmp_path / "d.hdf5"))))
 
     assert episode.suite == "libero_goal"
-    rows = episode.to_step_rows(run_id="test")
+    rows: list[dict[str, Any]] = episode.to_step_rows(run_id="test")
     out = write_rows(rows, tmp_path / "ep.parquet")
     assert_emits_schema(out)  # schema parity with ROLLOUT_SCHEMA
 
@@ -168,7 +169,7 @@ def test_libero_task_name_and_suite_like_the_real_release(tmp_path) -> None:
 def test_native_libero_obs_aliases(tmp_path) -> None:
     _write_robomimic(tmp_path / "n.hdf5", native=True, demos=[("demo_0", 3, True)])
     episode = next(iter(Hdf5Ingestor().load(str(tmp_path / "n.hdf5"))))
-    rows = episode.to_step_rows(run_id="test")
+    rows: list[dict[str, Any]] = episode.to_step_rows(run_id="test")
 
     assert len(rows[0]["state"]) == 8  # ee_ori already axis-angle, no quat conversion
     assert rows[0]["state"][3:6] == [0.0, 0.0, 0.0]

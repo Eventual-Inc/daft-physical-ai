@@ -130,7 +130,7 @@ def _episode_from_demo(g, demo_index, file_stem, instruction, task_name, suite, 
     dones = np.asarray(g["dones"][:]) if "dones" in g else None
 
     eef_pos_arr = state_arr = gripper_scalar = None
-    obs = g["obs"] if "obs" in g else None
+    obs = g.get("obs")
     if obs is not None:
         pk = _first_present(obs, _EEF_POS_KEYS)
         eef_pos_arr = np.asarray(obs[pk][:], dtype=np.float32) if pk else None
@@ -221,7 +221,7 @@ class Hdf5Ingestor(Ingestor):
                 task_name = problem_name
 
             demo_keys = sorted(
-                (k for k in data.keys() if k.startswith("demo")),
+                (k for k in data if k.startswith("demo")),
                 key=lambda k: int(k.split("_")[1]),  # demo_10 must follow demo_2
             )
             if split is not None and "mask" in f:

@@ -24,35 +24,57 @@ physical-AI *semantics* and grows only where examples repeat a helper:
 - `episodes/` - the canonical one-row-per-step Arrow/parquet contract shared by
   datasets and eval rollouts. `episode_id` names the evaluation spec
   (`suite/task_id/init_state_id/seed`), not the attempt.
+- `ingest/` - adapters for formats Daft has no native reader for (robomimic/
+  LIBERO HDF5 today), yielding `Episode` objects into the contract.
 - `hands/` - `track_hands` (MediaPipe CPU / WiLoR GPU) behind one output schema.
+- `operations/` - deterministic trajectory ops (`motion_trim` / `noop_mask`):
+  pure NumPy cores wrapped in Daft groupbys.
 - `evals/` - the analysis half of the eval loop: `success_rates`,
   `compare_policies`, `failure_counts` (always grouped by policy - shared specs
-  must never chimera), `detect_regrasp`, and `validate_run` against the
-  published LIBERO protocol.
+  must never chimera), `classify_failure`/`label_failures` (signal-based, the
+  production path; `detect_regrasp` needs object poses), and `validate_run`
+  against the published LIBERO protocol.
+- `curation.py` - the eval->training bridge: `sft_view` (views, not copies),
+  `preference_pairs`, `acquisition_map`. Demos join rollouts on
+  `(suite, task_name)`, never `task_id`/`episode_id`.
 
 `examples/` is the product surface: numbered stages 01-08 mirroring the
 researcher workflow (read, episode data, transforms, episode operations,
 inference, writing, training handoff, policy evals). Index in
-`examples/README.md`; planned scripts are named in each stage's README.
+`examples/README.md`; planned scripts are named in each stage's README. Real
+data ships in-repo (500 LIBERO-Spatial demos, 200 benchmark rollouts), so the
+loop runs offline up to the training step.
 
 Rollout *generation* (LIBERO sim, OpenVLA/VLA-JEPA stacks, Modal GPU apps)
 lives in the VLA-JEPA harness repo and lands here as schema-conforming parquet.
+The `TERMINAL_FAILURE_LABELS` tuple is mirrored in the harness's schema - keep
+them in sync (the harness still needs `grasp_no_lift` added).
 
 # Roadmap
 
+The loop is operational up to the training step, offline, on committed data:
+normalize demos (02) -> audit/trim (04) -> curate views + preference pairs
+(06) -> torch handoff (07) -> benchmark analysis, failure labeling, and the
+acquisition map (08).
+
 ## Now
 
+- [ ] **Close the loop's training step** - fine-tune a small lerobot policy on
+  the curated vs naive SFT views and re-roll through the harness. Gated on GPU
+  budget authorization (~low hundreds of dollars on Modal); everything up to
+  the handoff is already in place.
 - [ ] **Port `pose/` from daft-examples egodex** (pure-NumPy hand/skeleton
   geometry, feature UDF wrappers, scenario queries) into
   `daft_physical_ai/pose/` + `examples/03_transforms/`.
-- [ ] **`operations.motion_trim`** - first new deterministic episode op
-  (`examples/04_episode_operations/motion_trim.py`).
+- [x] **`operations.motion_trim`** - shipped as the no-noops audit
+  (`examples/04_episode_operations/motion_trim.py`); measured ~0.2% strict
+  no-ops on the LIBERO-Spatial originals.
 - [x] **Real LIBERO rollout parquet lands in-repo** (OpenVLA + VLA-JEPA,
   libero_spatial, 100 episodes each, ~2 MB compacted;
-  `examples/08_policy_evals/data/`) with `success_rates.py` /
-  `compare_policies.py` / `validate_protocol.py` running against it offline.
-  Follow-up: mirror to HF / Multibase once an org namespace is picked, and add
-  the 50-trial canonical sweep when the harness runs it.
+  `examples/08_policy_evals/data/`), plus the full 500-demo demonstration
+  suite (`examples/02_episode_data/data/`). Follow-up: mirror to HF /
+  Multibase once an org namespace is picked, and add the 50-trial canonical
+  sweep when the harness runs it.
 - [ ] **LeRobot examples** (`01_reading_data/lerobot_episode_index.py`,
   `02_episode_data/merge_lerobot_datasets.py`) once the reader ships in a
   released Daft.

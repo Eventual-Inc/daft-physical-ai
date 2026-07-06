@@ -123,9 +123,17 @@ walkthroughs live in [examples/08_policy_evals/](examples/08_policy_evals/):
 ```bash
 uv run python examples/08_policy_evals/success_rates.py      # scoreboard, per task
 uv run python examples/08_policy_evals/compare_policies.py   # paired per-spec diffs
+uv run python examples/08_policy_evals/label_failures.py     # name failures from signals
+uv run python examples/08_policy_evals/acquisition_map.py    # what to collect next
 uv run python examples/08_policy_evals/validate_protocol.py  # protocol check (CI-able)
-uv run python examples/08_policy_evals/mine_failures.py --no-plot
 ```
+
+From there `daft_physical_ai.curation` closes the loop up to training:
+`sft_view` (successes, motion-trimmed - views, not copies), `preference_pairs`
+(shared specs with opposite outcomes), and `acquisition_map` feed the
+stage 06/07 examples, ending at `to_torch_dataloader` with `(batch, 7)` action
+tensors. The 500-demonstration LIBERO-Spatial suite this runs on is committed
+in [examples/02_episode_data/data/](examples/02_episode_data/data/README.md).
 
 ## Example
 

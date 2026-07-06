@@ -26,11 +26,17 @@ layouts OpenVLA loses (and loses none OpenVLA wins), and every OpenVLA loss
 ran to the 250-step cap while VLA-JEPA finished the same layout in 78-141
 steps - the failures are stalls, not quick mistakes.
 
+The failures name themselves from per-step signals - no simulator, no VLM: 16
+of the 17 are slip-then-regrasp fumble loops (`evals.label_failures`), and the
+acquisition map ranks where they concentrate, i.e. what to collect next.
+
 Run the walkthroughs:
 
 ```bash
 uv run python examples/08_policy_evals/success_rates.py
 uv run python examples/08_policy_evals/compare_policies.py
+uv run python examples/08_policy_evals/label_failures.py
+uv run python examples/08_policy_evals/acquisition_map.py
 uv run python examples/08_policy_evals/validate_protocol.py
 uv run python examples/08_policy_evals/mine_failures.py --no-plot
 ```

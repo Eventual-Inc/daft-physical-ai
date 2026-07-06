@@ -16,21 +16,30 @@ example below runs offline on CPU after a clone.
   15 layouts OpenVLA loses (and loses none OpenVLA wins) - and every OpenVLA
   loss ran to the 250-step cap while VLA-JEPA finished the same layout in
   78-141 steps: the failures are stalls, not quick mistakes.
+- `label_failures.py` - name every failure from per-step gripper/eef signals
+  (`evals.classify_failure`), no simulator or VLM. Verdict on this data: 16
+  of 17 failures are slip-then-regrasp fumble loops averaging ~11 grasp
+  attempts before the cap; labels write only to an optional sidecar.
+- `acquisition_map.py` - rank where failures concentrate into the "collect
+  these next" table. Top of the real plan: task 5 (bowl on ramekin),
+  re_grasp on init states 1, 3, 4, 8.
 - `validate_protocol.py` - check the parquet against the published protocol
   (task coverage, trials/task, seed, step caps); exits non-zero on deviation,
   so it drops into CI. This dataset is the 10-trials/task quick variant; the
   canonical run is 50.
-- `mine_failures.py` - label slip-then-regrasp loops from per-step
-  gripper/object-height signals (synthetic rollouts, proves the labeling
-  workflow end-to-end).
+- `mine_failures.py` - the synthetic end-to-end demo: writes rollouts through
+  the schema, mines them with Daft, plots the hero trace.
 
 ```bash
 uv run python examples/08_policy_evals/success_rates.py
 uv run python examples/08_policy_evals/compare_policies.py
+uv run python examples/08_policy_evals/label_failures.py
+uv run python examples/08_policy_evals/acquisition_map.py
 uv run python examples/08_policy_evals/validate_protocol.py
 uv run python examples/08_policy_evals/mine_failures.py --no-plot
 ```
 
 The package side lives in `daft_physical_ai.evals`: `success_rates` /
 `compare_policies` / `failure_counts` (grouped by policy so shared specs never
-chimera), `detect_regrasp`, and `validate_run`.
+chimera), `classify_failure` / `label_failures`, `detect_regrasp`, and
+`validate_run`.
