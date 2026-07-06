@@ -93,19 +93,30 @@ def _quat_xyzw_to_axis_angle(quat) -> np.ndarray:
 
 
 def _read_file_meta(data_group, path):
-    """Instruction / task_name / suite / bddl are constant per file - read once."""
+    """Instruction / task_name / suite / bddl are constant per file - read once.
+
+    Real LIBERO releases set ``problem_info.domain_name`` to ``"robosuite"``
+    (the engine), not the suite - the suite is only recoverable from the
+    ``bddl_file_name`` path (``.../bddl_files/libero_spatial/<task>.bddl``) or
+    the filename. Only trust ``domain_name`` when it names a known suite.
+    """
     attrs = data_group.attrs
     instruction, problem_name, suite, bddl_file = "", None, None, None
     if "problem_info" in attrs:
         info = json.loads(_attr_str(attrs["problem_info"]))
         instruction = info.get("language_instruction", "") or ""
         problem_name = info.get("problem_name")
-        suite = info.get("domain_name")
+        domain = info.get("domain_name")
+        if domain in _KNOWN_SUITES:
+            suite = domain
     elif "env_args" in attrs:
         env_args = json.loads(_attr_str(attrs["env_args"]))
         problem_name = env_args.get("env_name")
     if "bddl_file_name" in attrs:
         bddl_file = _attr_str(attrs["bddl_file_name"])
+    if suite is None and bddl_file:  # .../bddl_files/<suite>/<task>.bddl
+        lowered = bddl_file.lower()
+        suite = next((s for s in _KNOWN_SUITES if s in lowered), None)
     if suite is None:  # fall back to the filename
         stem = os.path.basename(path).lower()
         suite = next((s for s in _KNOWN_SUITES if s in stem), None)
@@ -140,9 +151,7 @@ def _episode_from_demo(g, demo_index, file_stem, instruction, task_name, suite, 
 
         # 8-dim proprio state only when all three pieces are present.
         if eef_pos_arr is not None and axis_angle is not None and gqpos is not None and gqpos.shape[1] >= 2:
-            state_arr = np.concatenate([eef_pos_arr[:, :3], axis_angle[:, :3], gqpos[:, :2]], axis=1).astype(
-                np.float32
-            )
+            state_arr = np.concatenate([eef_pos_arr[:, :3], axis_angle[:, :3], gqpos[:, :2]], axis=1).astype(np.float32)
 
     success = bool(
         (rewards is not None and rewards.size and float(np.max(rewards)) == 1.0)

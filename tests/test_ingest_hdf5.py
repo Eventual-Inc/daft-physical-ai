@@ -75,6 +75,7 @@ def _write_robomimic(
     with_dones=True,
     problem_info=True,
     suite="libero_goal",
+    bddl="/x/put_bowl.bddl",
     demos=None,
     mask=None,
 ):
@@ -90,7 +91,7 @@ def _write_robomimic(
                     "language_instruction": "put the bowl on the plate",
                 }
             )
-            data.attrs["bddl_file_name"] = "/x/put_bowl.bddl"
+            data.attrs["bddl_file_name"] = bddl
         for name, n, success in demos:
             _write_demo(
                 data,
@@ -117,9 +118,7 @@ def test_integer_demo_sort(tmp_path) -> None:
 
 def test_success_derivation(tmp_path) -> None:
     _write_robomimic(tmp_path / "d.hdf5", demos=[("demo_0", 3, True), ("demo_1", 3, False)])
-    episodes = {
-        int(ep.episode_id.rsplit("/", 1)[1]): ep for ep in Hdf5Ingestor().load(str(tmp_path / "d.hdf5"))
-    }
+    episodes = {int(ep.episode_id.rsplit("/", 1)[1]): ep for ep in Hdf5Ingestor().load(str(tmp_path / "d.hdf5"))}
 
     assert episodes[0].success is True
     assert episodes[1].success is False
@@ -147,13 +146,21 @@ def test_spine_projection_lands_on_rollout_schema(tmp_path) -> None:
         assert abs(row["gripper_action"] - row["action"][-1]) < 1e-6
 
 
-def test_libero_task_name_from_file_stem(tmp_path) -> None:
-    # The stem minus `_demo` is the benchmark task name rollouts record - the
-    # demos<->rollouts join key. problem_name (a scene label) stays in metadata.
+def test_libero_task_name_and_suite_like_the_real_release(tmp_path) -> None:
+    # Real LIBERO files record domain_name="robosuite" (the engine); the suite
+    # is only in the bddl path. The stem minus `_demo` is the benchmark task
+    # name rollouts record - the demos<->rollouts join key. problem_name (a
+    # scene label) stays in metadata.
     path = tmp_path / "pick_up_the_black_bowl_and_place_it_on_the_plate_demo.hdf5"
-    _write_robomimic(path, suite="libero_spatial", demos=[("demo_0", 3, True)])
+    _write_robomimic(
+        path,
+        suite="robosuite",
+        bddl="libero/libero/bddl_files/libero_spatial/pick_up_the_black_bowl.bddl",
+        demos=[("demo_0", 3, True)],
+    )
     episode = next(iter(Hdf5Ingestor().load(str(path))))
 
+    assert episode.suite == "libero_spatial"
     assert episode.task_name == "pick_up_the_black_bowl_and_place_it_on_the_plate"
     assert episode.metadata["problem_name"] == "KitchenDemo"
 
