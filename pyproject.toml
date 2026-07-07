@@ -4,8 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "daft-physical-ai"
-description = "Physical-AI data annotation on Daft, starting with hand tracking."
-dependencies = ["daft>=0.7.5", "numpy"]
+description = "Physical-AI data annotation and episode analysis on Daft."
+# daft floor: 0.7.17 ships daft.datasets.lerobot (the reader the examples use).
+dependencies = ["daft>=0.7.17", "numpy", "pyarrow>=15"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
@@ -14,6 +15,8 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
+# robomimic/LIBERO HDF5 demo ingest (daft_physical_ai.ingest.Hdf5Ingestor).
+hdf5 = ["h5py>=3.10"]
 # MediaPipe wheels are not published for Python 3.13 yet.
 mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
@@ -72,5 +75,6 @@ dev = [
   "pre-commit==4.6.0",
   "pytest==9.1.1",
   "ruff==0.15.20",
-  "mypy==2.1.0"
+  "mypy==2.1.0",
+  "h5py>=3.10"  # exercises the hdf5 ingest tests in CI
 ]

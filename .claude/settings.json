@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bash .claude/skills/marimo-pair/scripts/discover-servers.sh *)",
+      "Bash(bash .claude/skills/marimo-pair/scripts/execute-code.sh *)"
+    ]
+  }
+}
