@@ -26,6 +26,10 @@ physical-AI *semantics* and grows only where examples repeat a helper:
 - `ingest/` - adapters for formats Daft has no native reader for (robomimic/
   LIBERO HDF5 today), yielding `Episode` objects into the contract.
 - `hands/` - `track_hands` (MediaPipe CPU / WiLoR GPU) behind one output schema.
+- `pose/` - model-free pose geometry (48-D hand state + 204-D body skeleton
+  conventions), episode-level feature tracks, and scenario queries
+  (grasping/lifting from state alone; grips/reaching/in-hand/twisting with
+  the skeleton). Dataset adapters produce the arrays; this stays NumPy-pure.
 - `operations/` - deterministic trajectory ops (`motion_trim` / `noop_mask`):
   pure NumPy cores wrapped in Daft groupbys.
 - `evals/` - the analysis half of the eval loop: `success_rates`,
@@ -62,9 +66,12 @@ acquisition map (08).
   the curated vs naive SFT views and re-roll through the harness. Gated on GPU
   budget authorization (~low hundreds of dollars on Modal); everything up to
   the handoff is already in place.
-- [ ] **Port `pose/` from daft-examples egodex** (pure-NumPy hand/skeleton
-  geometry, feature UDF wrappers, scenario queries) into
-  `daft_physical_ai/pose/` + `examples/03_transforms/`.
+- [x] **Port `pose/` from daft-examples egodex** - state/skeleton geometry,
+  `EpisodeFeatureComputer` + `TemporalFeatureComputer`, scenario predicates,
+  calibration, and segment stitching, with examples 03/04 running on the
+  public LeRobot v3 EgoDex sample. The EgoDex-specific plumbing (raw-HDF5
+  FrameBuilder, SigLIP embeddings, viz, pipeline facade) stays in
+  daft-examples; the seam is the state/skeleton arrays.
 - [x] **`operations.motion_trim`** - shipped as the no-noops audit
   (`examples/04_episode_operations/motion_trim.py`); measured ~0.2% strict
   no-ops on the LIBERO-Spatial originals.
