@@ -40,9 +40,8 @@ Install the method you need as an extra: `pip install daft-physical-ai[mediapipe
 extra because PyPI metadata can't carry direct references), plus a user-supplied
 `MANO_RIGHT.pkl` ([research-gated](docs/mano.md)).
 
-> **Note:** `daft.datasets.lerobot` is merged but not yet in a published Daft
-> release (latest is v0.7.16; the reader lands in the next one). Until then it's
-> available from Daft `main`.
+> **Note:** `daft.datasets.lerobot` ships in Daft v0.7.17+ (this package's
+> floor), with `read` / `read_episodes` / `read_tasks` for LeRobot v3 datasets.
 
 ## Output schema
 
@@ -169,19 +168,13 @@ uv sync                          # installs the daft-physical-ai console script
 uv run daft-physical-ai          # generate a demo (prefix the commands above with `uv run`)
 ```
 
-To *run* a generated demo you also need its inference stack - including the LeRobot
-reader, which currently ships only in nightly Daft. Install it into the venv, then run
-from the activated venv - not `uv run`, which re-syncs the env and would drop the nightly:
+To *run* a generated demo you also need its inference stack (the LeRobot reader
+ships with the regular Daft dependency as of v0.7.17):
 
 ```bash
-source .venv/bin/activate
-uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
-  -U daft av mediapipe scipy opencv-python matplotlib jupyterlab
-jupyter lab hand-tracking-demo/demo.ipynb
+uv run --with av --with mediapipe --with scipy --with opencv-python \
+  --with matplotlib --with jupyterlab jupyter lab hand-tracking-demo/demo.ipynb
 ```
-
-Once the LeRobot reader lands in a released Daft (> v0.7.16), the nightly step goes
-away and this collapses to `pip install daft-physical-ai`.
 
 ## Development
 

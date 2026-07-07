@@ -9,7 +9,9 @@ Episode-level views over the canonical step rows: normalize a dataset into
   demo, signals only). The full suite - 500 demos, 62,250 step rows,
   ~4.7 MB - is committed under [`data/`](data/README.md), so downstream
   stages run offline.
+- `merge_lerobot_datasets.py` - merge two LeRobot recording sessions into one
+  training table: re-index `episode_index` and the global frame `index`, then
+  concat - the collision-prone part of combining recordings, as one Daft query.
 
 Planned: `episode_stats.py` (durations, frame counts, success rates,
-gripper-transition counts), `merge_lerobot_datasets.py` (needs the next
-Daft release).
+gripper-transition counts).

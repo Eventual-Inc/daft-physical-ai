@@ -14,8 +14,8 @@ Every example runs first-try on a clean environment. Directories marked
 
 | # | Stage | What it covers | Status |
 |---|---|---|---|
-| 01 | [Reading data](01_reading_data/) | Robot datasets into Daft: DROID today; LeRobot, raw EgoDex HDF5+video next | `droid_episode_index.py` |
-| 02 | [Episode data](02_episode_data/) | LIBERO demonstrations normalized into canonical step rows; the full suite ships in-repo (signals-only, ~4.7 MB) | `normalize_libero_demos.py` + [`data/`](02_episode_data/data/README.md) |
+| 01 | [Reading data](01_reading_data/) | Robot datasets into Daft: DROID and LeRobot v3 today; raw EgoDex HDF5+video next | `droid_episode_index.py` · `lerobot_episode_index.py` |
+| 02 | [Episode data](02_episode_data/) | LIBERO demonstrations normalized into canonical step rows (full suite in-repo, ~4.7 MB); LeRobot session merging | `normalize_libero_demos.py` · `merge_lerobot_datasets.py` + [`data/`](02_episode_data/data/README.md) |
 | 03 | [Transforms](03_transforms/) | Deterministic NumPy features as Daft UDFs: pose geometry, quality checks, frame embeddings | planned |
 | 04 | [Episode operations](04_episode_operations/) | Hand tracking on EgoDex; the motion-trim / no-noops audit on real demos | [`hand_tracking/`](04_episode_operations/hand_tracking/) · `motion_trim.py` |
 | 05 | [Inference](05_inference/) | Model-backed labeling with Daft AI functions: structured episode labels, VLM failure classification, semantic search | planned |

@@ -10,10 +10,9 @@
 1. Set up Python environment, install dependencies, and build dev package: `uv sync`
 2. Activate .venv: `source .venv/bin/activate`
 3. Run tests: `uv run pytest tests/ -v`
-4. To use the LeRobot reader (`daft.datasets.lerobot`), install a nightly Daft -
-   it is merged ([Daft #7090](https://github.com/Eventual-Inc/Daft/pull/7090))
-   but not yet in a released version (latest is v0.7.16):
-   `uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai -U daft`
+
+The LeRobot reader (`daft.datasets.lerobot`, [Daft #7090](https://github.com/Eventual-Inc/Daft/pull/7090))
+ships in the regular `daft>=0.7.17` dependency - no nightly needed.
 
 # Architecture
 
@@ -75,18 +74,15 @@ acquisition map (08).
   suite (`examples/02_episode_data/data/`). Follow-up: mirror to HF /
   Multibase once an org namespace is picked, and add the 50-trial canonical
   sweep when the harness runs it.
-- [ ] **LeRobot examples** (`01_reading_data/lerobot_episode_index.py`,
-  `02_episode_data/merge_lerobot_datasets.py`) once the reader ships in a
-  released Daft.
+- [x] **LeRobot examples** (`01_reading_data/lerobot_episode_index.py`,
+  `02_episode_data/merge_lerobot_datasets.py`) on the released
+  `daft.datasets.lerobot` reader (Daft v0.7.17).
 
 ## Later
 
 - [ ] **Publish to PyPI.** Tag a release (`v0.1.0`) to trigger
   `.github/workflows/publish-package.yml` (trusted publishing). This also unblocks
   generated Modal demos, which `pip install daft-physical-ai`.
-- [ ] Switch off the Daft nightly once `daft.datasets.lerobot` ships in a release
-  (> v0.7.16): bump the `daft` floor in `pyproject.toml`, drop the nightly
-  install step above, and re-run `uv lock`.
 - [ ] **Promote the LIBERO rollout runner + `Policy` seam** from the VLA-JEPA
   harness into a `daft-physical-ai[libero]` extra. Feasible - the `hf-libero`
   wheel co-resolves with modern policy stacks in one Python >=3.12 process -
@@ -109,9 +105,9 @@ The script renders the notebook (empty), executes it headless
 (`nbconvert --execute`, `DAFT_PROGRESS_BAR=0`), then derives everything else from
 that one executed copy: the figure is written to `demo_keypoints.png`, printed
 output is fenced, and the `.show()` HTML table becomes a markdown table. The
-executing step needs the full inference env (a Daft with the LeRobot reader +
-mediapipe + scipy + opencv + matplotlib + nbconvert; see the nightly-Daft note
-above). `--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
+executing step needs the full inference env (mediapipe + scipy + opencv +
+matplotlib + nbconvert on top of the regular deps).
+`--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
 just the markdown/image (no inference env needed) - handy for tweaking the
 conversion.
 

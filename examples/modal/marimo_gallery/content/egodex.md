@@ -10,14 +10,12 @@ the local inference environment is installed.
 ## Run locally
 
 ```bash
-source .venv/bin/activate
-uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
-  -U daft av mediapipe scipy opencv-python matplotlib
-python examples/04_episode_operations/hand_tracking/demo.py
+uv run --with av --with mediapipe --with scipy --with opencv-python --with matplotlib \
+  python examples/04_episode_operations/hand_tracking/demo.py
 ```
 
-The Daft nightly is currently needed for the native LeRobot reader. Once that
-reader ships in a released Daft version, the nightly install step can go away.
+The native LeRobot reader ships with Daft v0.7.17+, so the regular project
+dependencies cover it - only the inference extras above are additional.
 
 ## Notebook path
 

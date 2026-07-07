@@ -42,10 +42,8 @@ uv run --with marimo --with daft marimo edit examples/modal/marimo_gallery/noteb
 Run the EgoDex hand-tracking demo locally without Modal:
 
 ```bash
-source .venv/bin/activate
-uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
-  -U daft av mediapipe scipy opencv-python matplotlib
-python examples/04_episode_operations/hand_tracking/demo.py
+uv run --with av --with mediapipe --with scipy --with opencv-python --with matplotlib \
+  python examples/04_episode_operations/hand_tracking/demo.py
 ```
 
 Run the policy-eval failure-mining demo locally without Modal:
