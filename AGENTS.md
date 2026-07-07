@@ -29,7 +29,11 @@ physical-AI *semantics* and grows only where examples repeat a helper:
 - `pose/` - model-free pose geometry (48-D hand state + 204-D body skeleton
   conventions), episode-level feature tracks, and scenario queries
   (grasping/lifting from state alone; grips/reaching/in-hand/twisting with
-  the skeleton). Dataset adapters produce the arrays; this stays NumPy-pure.
+  the skeleton). Dataset adapters produce the arrays; the geometry stays
+  NumPy-pure. `pose/temporal.py` is the distributed twin: the same rates as
+  in-plan Daft window expressions (`lead(1)` over per-episode windows),
+  pinned to the NumPy path by an equivalence test - mirrors the upstream
+  daft-examples egodex architecture post-merge.
 - `operations/` - deterministic trajectory ops (`motion_trim` / `noop_mask`):
   pure NumPy cores wrapped in Daft groupbys.
 - `evals/` - the analysis half of the eval loop: `success_rates`,

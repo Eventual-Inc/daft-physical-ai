@@ -5,7 +5,9 @@ exploding episodes into per-frame rows, running rowwise geometry at N=1, and
 differentiating with window functions, run the vectorized geometry libraries
 (`daft_physical_ai.pose.state`, `daft_physical_ai.pose.skeleton`) once over the
 whole (N, ...) episode and take plain NumPy forward differences for the rates.
-Same feature definitions, no explode and no windows.
+Same feature definitions, no explode and no windows. The distributed twin -
+the same rates as in-plan Daft window expressions over per-frame tables -
+lives in `daft_physical_ai.pose.temporal`.
 
 Feature tracks per hand (tag ``L``/``R``):
 

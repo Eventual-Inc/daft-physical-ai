@@ -6,8 +6,11 @@ Ported from the daft-examples EgoDex pipeline, keeping its clean seams:
   conventions: the 48-D hand state (wrist xyz + rot6d + 5 fingertips per hand)
   and the 204-D body skeleton (68 named joints x xyz).
 - `features` - episode-level track assembly: run the geometry once over a
-  whole (N, ...) episode and take plain forward differences for rates. No
-  frame explode, no window functions.
+  whole (N, ...) episode and take plain forward differences for rates
+  (in-memory arrays, easy to test).
+- `temporal` - the distributed twin: the same rates as Daft window
+  expressions over per-frame tables (``lead(1)``, ``euclidean_distance``,
+  centered smoothing), staying lazy in the query plan end to end.
 - `query` - scenario predicates as ``(tracks, thresholds) -> (N,) bool mask``
   callables (writing grip, hammer grip, grasping, lifting, ...), percentile
   calibration over a corpus, and segment stitching.
@@ -51,6 +54,7 @@ from .state import (
     rot6d_slice,
     rotation_from_rot6d,
 )
+from .temporal import add_temporal_features, state_frame_features
 
 __all__ = [
     "FPS",
@@ -60,6 +64,7 @@ __all__ = [
     "STATE_TRACKS",
     "EpisodeFeatureComputer",
     "TemporalFeatureComputer",
+    "add_temporal_features",
     "arm_extension",
     "calibrate",
     "calibrate_arrays",
@@ -76,5 +81,6 @@ __all__ = [
     "rotation_from_rot6d",
     "scenario_mask",
     "segments_of",
+    "state_frame_features",
     "top_segments",
 ]

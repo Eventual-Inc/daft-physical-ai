@@ -16,7 +16,7 @@ Every example runs first-try on a clean environment. Directories marked
 |---|---|---|---|
 | 01 | [Reading data](01_reading_data/) | Robot datasets into Daft: DROID and LeRobot v3 today; raw EgoDex HDF5+video next | `droid_episode_index.py` · `lerobot_episode_index.py` |
 | 02 | [Episode data](02_episode_data/) | LIBERO demonstrations normalized into canonical step rows (full suite in-repo, ~4.7 MB); LeRobot session merging | `normalize_libero_demos.py` · `merge_lerobot_datasets.py` + [`data/`](02_episode_data/data/README.md) |
-| 03 | [Transforms](03_transforms/) | Pure-NumPy pose-feature tracks per episode (curl, pinch, palm, rates) on a public EgoDex sample | `pose_features_numpy.py` |
+| 03 | [Transforms](03_transforms/) | Pose-feature tracks two ways on a public EgoDex sample: per-episode NumPy arrays, and the same rates as in-plan Daft window expressions | `pose_features_numpy.py` · `pose_rates_in_dag.py` |
 | 04 | [Episode operations](04_episode_operations/) | Hand tracking on EgoDex; the motion-trim / no-noops audit; pose scenario queries stitched into segments | [`hand_tracking/`](04_episode_operations/hand_tracking/) · `motion_trim.py` · `pose_query_segments.py` |
 | 05 | [Inference](05_inference/) | Model-backed labeling with Daft AI functions: structured episode labels, VLM failure classification, semantic search | planned |
 | 06 | [Writing data](06_writing_data/) | Curated training artifacts as views: SFT step rows + manifest + preference pairs | `write_curated_manifest.py` |
