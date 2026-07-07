@@ -182,7 +182,7 @@ def test_episode_feature_computer_state_only_and_full() -> None:
     full = computer.compute(state=state, skeleton=make_skeleton(n=5))
     for name in STATE_TRACKS + SKELETON_TRACKS:
         assert f"{name}_L" in full
-    assert full["flex_nonthumb_R"].shape == (5, 4)
+    assert np.asarray(full["flex_nonthumb_R"]).shape == (5, 4)
 
 
 def test_state_shape_is_validated() -> None:

@@ -136,7 +136,8 @@ def _features_dtype() -> DataType:
         for name in STATE_TRACKS + SKELETON_TRACKS:
             fields[f"{name}_{tag}"] = _TRACK  # (N,)
         fields[f"flex_nonthumb_{tag}"] = _TRACK  # (N, 4)
-    return DataType.struct(fields)
+    dtype: DataType = DataType.struct(fields)
+    return dtype
 
 
 #: Struct dtype of the full track set (state + skeleton), for Daft UDF wrappers.

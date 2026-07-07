@@ -60,9 +60,7 @@ def writing_grip(t, thr):
 
 def hammer_grip(t, thr):
     """Power: all four fingers curled and the thumb wrapped across a proximal knuckle."""
-    return (t["flex_nonthumb"] > thr["curled_flexion"]).all(axis=1) & (
-        t["thumb_min_knuckle"] < thr["thumb_on_knuckle"]
-    )
+    return (t["flex_nonthumb"] > thr["curled_flexion"]).all(axis=1) & (t["thumb_min_knuckle"] < thr["thumb_on_knuckle"])
 
 
 def twisting(t, thr):
@@ -91,8 +89,10 @@ def lifting(t, thr):
 
 
 def openness(t, thr, open_lo=0.0, open_hi=1.0):
-    """Openness band (1 = fully open palm), mapped onto the closure track via the
-    calibrated closure spread [closure_lo, closure_hi]: higher openness -> lower closure.
+    """Openness band (1 = fully open palm) over the closure track.
+
+    Mapped via the calibrated closure spread [closure_lo, closure_hi]:
+    higher openness -> lower closure.
     """
     span = (thr["closure_hi"] - thr["closure_lo"]) or 1.0
     clo_lo = thr["closure_hi"] - open_hi * span

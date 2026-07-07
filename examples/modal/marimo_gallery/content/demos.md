@@ -15,10 +15,13 @@ production-scale.
 - **Writing data**: persist annotated datasets for training and downstream analysis.
 - **Policy evals**: reproduce benchmark runs, compare policies on the same specs, and mine failures.
 
-The first live demo is the DROID episode index. The shape is intentionally
-small: read metadata, filter episodes, project operational columns, inspect the
-plan, and keep the notebook embedded in a normal web page.
+The live demo is the DROID episode index: read metadata, filter episodes,
+project operational columns, inspect the plan, with the notebook embedded in a
+normal web page. The local demos run on CPU without Modal: EgoDex hand
+tracking (the generated `examples/04_episode_operations/hand_tracking/`
+artifacts), the motion-trim/no-noops audit over the in-repo LIBERO
+demonstrations, and pose scenario queries over a public EgoDex sample.
 
-The first local demo is EgoDex hand tracking. It uses the generated
-`examples/04_episode_operations/hand_tracking/` artifacts, runs on CPU with
-MediaPipe, and does not require Modal.
+Every topic above maps to a numbered stage in `examples/README.md` (01
+reading data through 08 policy evals), each runnable against data committed
+in the repo.

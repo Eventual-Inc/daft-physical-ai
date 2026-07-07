@@ -50,8 +50,26 @@ GALLERY_ITEMS = [
         label="Policy evals",
         href="/demos/policy-evals",
         description=(
-            "Write one-row-per-step rollout tables, compare policies on the same "
-            "benchmark specs, and label slip-then-regrasp loops from step signals."
+            "Real benchmark rollouts in-repo: OpenVLA 84% vs VLA-JEPA 99%, every "
+            "failure labeled from step signals (16 of 17 are re-grasp loops)."
+        ),
+    ),
+    GalleryItem(
+        title="Pose features and scenario segments",
+        label="Pose",
+        href="https://github.com/Eventual-Inc/daft-physical-ai/tree/main/examples/03_transforms",
+        description=(
+            "Pure-NumPy pose tracks per episode on a public EgoDex sample - curl, "
+            "pinch, palm orientation - with grasp/lift segments stitched in time."
+        ),
+    ),
+    GalleryItem(
+        title="Curate and hand off to training",
+        label="Curation",
+        href="https://github.com/Eventual-Inc/daft-physical-ai/tree/main/examples/06_writing_data",
+        description=(
+            "Motion-trimmed SFT views, preference pairs from the policy comparison, "
+            "and to_torch_dataloader batches: (64, 7) actions, (64, 8) states."
         ),
     ),
     GalleryItem(
@@ -302,8 +320,8 @@ def create_app(
     async def home() -> HTMLResponse:
         body = f"""
         <section class="feature-grid">
-          <a href="/demos"><span>Demos</span><strong>Workflow topics</strong><p>Reading data, transforms, episode operations, inference, and writing outputs.</p></a>
-          <a href="/examples"><span>Examples</span><strong>Concrete runs</strong><p>End-to-end examples that show inputs, operations, and outputs.</p></a>
+          <a href="/demos"><span>Demos</span><strong>Workflow topics</strong><p>Reading data, transforms, episode operations, inference, writing outputs, and policy evals.</p></a>
+          <a href="/examples"><span>Examples</span><strong>The loop, measured</strong><p>Numbered 01-08 recipes running on real data committed in the repo.</p></a>
           <a href="https://eventual.ai/multibase" target="_blank" rel="noreferrer"><span>Private data</span><strong>Use your own data</strong><p>Route proprietary datasets to the managed Multibase workflow.</p></a>
         </section>
         <section class="doc-body">{render_markdown(content_path / "index.md")}</section>
@@ -312,7 +330,10 @@ def create_app(
             title="Getting Started",
             active="/",
             eyebrow="Quick start",
-            summary="A normal website for docs and galleries, with Marimo embedded only where live execution matters.",
+            summary=(
+                "Physical-AI data curation and policy evals on Daft - the loop from raw "
+                "robot datasets to the training handoff, runnable offline on data in the repo."
+            ),
             body=body,
             mode="wide",
         )

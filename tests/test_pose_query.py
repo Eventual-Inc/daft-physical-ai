@@ -61,10 +61,18 @@ def test_writing_grip_tripod_shape() -> None:
 
 def test_calibrate_arrays_pools_hands_and_episodes() -> None:
     episodes = [
-        {f"{name}_{tag}": np.linspace(0, 1, 11) for tag in ("L", "R") for name in (
-            "arm_ext_rate", "wrist_speed", "articulation", "thumb_min_tip",
-            "thumb_min_knuckle", "closure",
-        )}
+        {
+            f"{name}_{tag}": np.linspace(0, 1, 11)
+            for tag in ("L", "R")
+            for name in (
+                "arm_ext_rate",
+                "wrist_speed",
+                "articulation",
+                "thumb_min_tip",
+                "thumb_min_knuckle",
+                "closure",
+            )
+        }
         | {f"flex_nonthumb_{tag}": np.tile(np.linspace(0, 1, 11)[:, None], (1, 4)) for tag in ("L", "R")}
     ]
     thresholds = calibrate_arrays(episodes)
