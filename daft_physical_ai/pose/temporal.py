@@ -30,9 +30,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-import numpy as np
-
 import daft
+import numpy as np
 from daft import DataType, col
 from daft.functions import euclidean_distance
 from daft.window import Window
