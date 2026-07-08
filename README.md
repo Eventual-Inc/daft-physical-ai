@@ -36,9 +36,11 @@ Install the method you need as an extra: `pip install daft-physical-ai[mediapipe
 extra because PyPI metadata can't carry direct references), plus a user-supplied
 `MANO_RIGHT.pkl` ([research-gated](docs/mano.md)).
 
-> **Note:** `daft.datasets.lerobot` is merged but not yet in a published Daft
-> release (latest is v0.7.16; the reader lands in the next one). Until then it's
-> available from Daft `main`.
+> **Note:** the LeRobot reader with batched video decode
+> ([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)) is not yet in a
+> stable Daft release (latest is v0.7.17). Until it is, this repo resolves `daft`
+> from the nightly index - `uv sync` handles it via the `daft-nightly` index in
+> `pyproject.toml`.
 
 ## Output schema
 
@@ -94,19 +96,20 @@ uv sync                          # installs the daft-physical-ai console script
 uv run daft-physical-ai          # generate a demo (prefix the commands above with `uv run`)
 ```
 
-To *run* a generated demo you also need its inference stack - including the LeRobot
-reader, which currently ships only in nightly Daft. Install it into the venv, then run
-from the activated venv - not `uv run`, which re-syncs the env and would drop the nightly:
+To *run* a generated demo you also need its inference stack (`uv sync` already
+brings the nightly Daft with the LeRobot reader). Install the extras into the
+venv, then run from the activated venv - not `uv run`, which re-syncs the env
+and would drop them:
 
 ```bash
 source .venv/bin/activate
-uv pip install --prerelease=allow --extra-index-url https://nightly.daft.ai \
-  -U daft av mediapipe scipy opencv-python matplotlib jupyterlab
+uv pip install -U av mediapipe scipy opencv-python matplotlib jupyterlab
 jupyter lab hand-tracking-demo/demo.ipynb
 ```
 
-Once the LeRobot reader lands in a released Daft (> v0.7.16), the nightly step goes
-away and this collapses to `pip install daft-physical-ai`.
+Once the LeRobot reader lands in a stable Daft release (> v0.7.17), the nightly
+pin in `pyproject.toml` goes away and this collapses to
+`pip install daft-physical-ai`.
 
 ## Development
 
