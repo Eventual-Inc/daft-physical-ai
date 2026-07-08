@@ -101,14 +101,14 @@ def test_with_eval_requires_local_runtime() -> None:
 
 
 def test_cli_format_all_writes_three(tmp_path) -> None:
-    rc = main(["--method", "mediapipe", "--format", "all", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    rc = main(["hands", "--method", "mediapipe", "--format", "all", "--output-dir", str(tmp_path / "d"), "--no-input"])
     assert rc == 0
     for name in ("demo.py", "demo.ipynb", "demo.md"):
         assert (tmp_path / "d" / name).exists()
 
 
 def test_cli_with_eval_flag(tmp_path) -> None:
-    rc = main(["--method", "mediapipe", "--with-eval", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    rc = main(["hands", "--method", "mediapipe", "--with-eval", "--output-dir", str(tmp_path / "d"), "--no-input"])
     assert rc == 0
     assert "def score(" in (tmp_path / "d" / "demo.py").read_text()
 
@@ -146,7 +146,9 @@ def test_validate_rejects_bad_config() -> None:
 
 def test_cli_mediapipe_forces_local_over_modal(tmp_path, capsys) -> None:
     # MediaPipe is CPU-only: --runtime modal should be overridden to local.
-    rc = main(["--method", "mediapipe", "--runtime", "modal", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    rc = main(
+        ["hands", "--method", "mediapipe", "--runtime", "modal", "--output-dir", str(tmp_path / "d"), "--no-input"]
+    )
     assert rc == 0
     src = (tmp_path / "d" / "demo.py").read_text()
     assert "import modal" not in src
@@ -157,7 +159,7 @@ def test_cli_mediapipe_forces_local_over_modal(tmp_path, capsys) -> None:
 def test_cli_non_tty_without_no_input_errors(tmp_path, monkeypatch, capsys) -> None:
     # No terminal + no --no-input: don't silently default - tell the user to use --no-input.
     monkeypatch.setattr("sys.stdin.isatty", lambda: False)
-    rc = main(["--method", "mediapipe", "--output-dir", str(tmp_path / "d")])
+    rc = main(["hands", "--method", "mediapipe", "--output-dir", str(tmp_path / "d")])
     assert rc == 2
     assert "--no-input" in capsys.readouterr().err
     assert not (tmp_path / "d").exists()
@@ -165,35 +167,52 @@ def test_cli_non_tty_without_no_input_errors(tmp_path, monkeypatch, capsys) -> N
 
 def test_cli_default_output_dir(tmp_path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
-    rc = main(["--method", "mediapipe", "--no-input"])  # no --output-dir
+    rc = main(["hands", "--method", "mediapipe", "--no-input"])  # no --output-dir
     assert rc == 0
     assert (tmp_path / "hand-tracking-demo" / "demo.py").exists()
 
 
 def test_cli_default_writes_all_formats(tmp_path) -> None:
     # default --format is "all"
-    rc = main(["--method", "mediapipe", "--runtime", "local", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    rc = main(
+        ["hands", "--method", "mediapipe", "--runtime", "local", "--output-dir", str(tmp_path / "d"), "--no-input"]
+    )
     assert rc == 0
     for name in ("demo.py", "demo.ipynb", "demo.md"):
         assert (tmp_path / "d" / name).exists()
 
 
 def test_cli_format_script_only(tmp_path) -> None:
-    rc = main(["--method", "mediapipe", "--output-dir", str(tmp_path / "d"), "--format", "script", "--no-input"])
+    rc = main(
+        ["hands", "--method", "mediapipe", "--output-dir", str(tmp_path / "d"), "--format", "script", "--no-input"]
+    )
     assert rc == 0
     assert (tmp_path / "d" / "demo.py").exists()
     assert not (tmp_path / "d" / "demo.ipynb").exists()
 
 
 def test_cli_wilor_without_mano_errors(tmp_path, capsys) -> None:
-    rc = main(["--method", "wilor", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    rc = main(["hands", "--method", "wilor", "--output-dir", str(tmp_path / "d"), "--no-input"])
     assert rc == 2
     assert "mano" in capsys.readouterr().err.lower()
     assert not (tmp_path / "d").exists()
 
 
 def test_cli_refuses_overwrite_without_force(tmp_path) -> None:
-    args = ["--method", "mediapipe", "--output-dir", str(tmp_path / "d"), "--no-input"]
+    args = ["hands", "--method", "mediapipe", "--output-dir", str(tmp_path / "d"), "--no-input"]
     assert main(args) == 0
     assert main(args) == 1  # second run: files exist
     assert main(args + ["--force"]) == 0  # force overwrites
+
+
+def test_cli_bare_command_prints_help(capsys) -> None:
+    # No subcommand: list the available commands rather than erroring.
+    assert main([]) == 0
+    assert "hands" in capsys.readouterr().out
+
+
+def test_cli_unknown_command_errors(capsys) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        main(["frobnicate"])
+    assert excinfo.value.code == 2
+    assert "invalid choice" in capsys.readouterr().err

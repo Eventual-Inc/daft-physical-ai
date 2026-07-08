@@ -76,17 +76,20 @@ Available in three equivalent forms:
 - **[examples/demo.py](examples/demo.py)** - plain script.
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
-`daft-physical-ai` CLI - run it with no arguments for an interactive walkthrough,
-or pass flags:
+`daft-physical-ai hands` command - run it with no flags for an interactive
+walkthrough, or pass flags:
 
 ```bash
 # No flags - interactive walkthrough that asks a few questions
-daft-physical-ai
+daft-physical-ai hands
 
 # --no-input skips all prompts; flags supply the answers, the rest use defaults
-daft-physical-ai --method mediapipe --output-dir my-demo --no-input
-daft-physical-ai --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
+daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
+daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
 ```
+
+Hand tracking is the first capability; each new one will be its own subcommand
+(`daft-physical-ai <command>` lists what's available).
 
 The bare `daft-physical-ai` command works once the package is installed. Until
 it's published to PyPI, run it from a clone instead:

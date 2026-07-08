@@ -1,4 +1,4 @@
-"""`daft-physical-ai` console entry point: scaffold a personalized demo.
+"""`daft-physical-ai hands`: scaffold a personalized hand-tracking demo.
 
 `npm create`-style: ask a few questions (method, runtime, mano_path, ...), then
 generate a runnable script and/or notebook tailored to those choices and print the
@@ -12,7 +12,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from ._render import (
+from .._render import (
     _VALID_METHODS,
     _VALID_RUNTIMES,
     DemoConfig,
@@ -24,18 +24,19 @@ from ._render import (
 _DEFAULT_OUTPUT_DIR = "hand-tracking-demo"
 
 _INTRO = (
-    "daft-physical-ai - scaffold a hand-tracking demo.\n"
+    "daft-physical-ai hands - scaffold a hand-tracking demo.\n"
     "Answer a few questions to generate a runnable script + notebook (using\n"
     "track_hands on a LeRobot dataset) that you can run or edit. Press Enter to accept\n"
     "the [default] shown for any question.\n"
 )
 
+_DESCRIPTION = "Scaffold a personalized hand-tracking demo (script + notebook)."
 
-def _build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(
-        prog="daft-physical-ai",
-        description="Scaffold a personalized hand-tracking demo (script + notebook).",
-    )
+
+def register(subparsers: argparse._SubParsersAction) -> None:
+    """Attach the `hands` subcommand to the top-level parser."""
+    p = subparsers.add_parser("hands", help=_DESCRIPTION.rstrip(".").lower(), description=_DESCRIPTION)
+    p.set_defaults(func=run)
     p.add_argument("--method", choices=_VALID_METHODS, help="which tracker(s): mediapipe, wilor, or both")
     p.add_argument("--runtime", choices=_VALID_RUNTIMES, help="where inference runs: local (GPU/CPU) or modal")
     p.add_argument("--mano-path", help="path to MANO_RIGHT.pkl (required for wilor/both)")
@@ -59,7 +60,6 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--output-dir", help="directory to write the demo into (default: hand-tracking-demo)")
     p.add_argument("--no-input", action="store_true", help="never prompt; use flags/defaults only")
     p.add_argument("-f", "--force", action="store_true", help="overwrite existing files")
-    return p
 
 
 def _prompt_choice(label: str, choices: tuple[str, ...], default: str) -> str:
@@ -139,9 +139,7 @@ def _write(path: Path, content: str, force: bool) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = _build_parser().parse_args(argv)
-
+def run(args: argparse.Namespace) -> int:
     if not args.no_input and not sys.stdin.isatty():
         print(
             "error: no interactive terminal detected. Re-run with --no-input (plus any "
@@ -209,7 +207,3 @@ def main(argv: list[str] | None = None) -> int:
     if have_md:
         print(f"  ({md_path} is a readable walkthrough - not executable)")
     return 0
-
-
-if __name__ == "__main__":  # pragma: no cover
-    raise SystemExit(main())
