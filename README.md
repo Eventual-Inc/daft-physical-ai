@@ -4,6 +4,12 @@ Physical-AI data processing on [Daft](https://github.com/Eventual-Inc/Daft), sta
 tracking. The methods run as Daft UDFs, so they slot into any Daft
 pipeline and execute lazily, batched, and distributed.
 
+Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
+
+```bash
+pip install daft-physical-ai[mediapipe]
+```
+
 ## API
 
 The package operates on a Daft image column and returns a hand-pose column. A
@@ -91,18 +97,14 @@ daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.p
 Hand tracking is the first capability; each new one will be its own subcommand
 (`daft-physical-ai <command>` lists what's available).
 
-The bare `daft-physical-ai` command works once the package is installed. Until
-it's published to PyPI, run it from a clone instead:
+The bare `daft-physical-ai` command comes with the
+[PyPI package](https://pypi.org/project/daft-physical-ai/) (`pip install daft-physical-ai`).
+From a clone of this repo, `uv sync` installs it too (`uv run daft-physical-ai`).
 
-```bash
-uv sync                          # installs the daft-physical-ai console script
-uv run daft-physical-ai          # generate a demo (prefix the commands above with `uv run`)
-```
-
-To *run* a generated demo you also need its inference stack (`uv sync` already
-brings the nightly Daft with the LeRobot reader). Install the extras into the
-venv, then run from the activated venv - not `uv run`, which re-syncs the env
-and would drop them:
+To *run* a generated demo you also need its inference stack. In a clone,
+`uv sync` already brings a Daft with the LeRobot reader; install the extras into
+the venv, then run from the activated venv - not `uv run`, which re-syncs the
+env and would drop them:
 
 ```bash
 source .venv/bin/activate
@@ -110,9 +112,10 @@ uv pip install -U av mediapipe scipy opencv-python matplotlib jupyterlab
 jupyter lab hand-tracking-demo/demo.ipynb
 ```
 
-Once the LeRobot reader lands in a stable Daft release (> v0.7.17), the nightly
-pin in `pyproject.toml` goes away and this collapses to
-`pip install daft-physical-ai`.
+The demo's remote video decode is much faster with the batched decode
+([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)), which is not yet
+in a stable Daft release - a clone gets it via the nightly pin in
+`pyproject.toml`; pip users get it with the next stable Daft (> v0.7.17).
 
 ## Development
 
