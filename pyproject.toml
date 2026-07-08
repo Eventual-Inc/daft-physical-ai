@@ -5,10 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "daft-physical-ai"
 description = "Physical-AI data processing on Daft, starting with hand tracking."
-# daft floor: first nightly with daft.datasets.lerobot's batched video decode
-# (Daft#7184). Not in a stable release yet (latest is v0.7.17), so daft resolves
-# from the nightly index - see [[tool.uv.index]] below.
-dependencies = ["daft>=0.7.18.dev2", "numpy"]
+# daft floor: v0.7.17 is the first stable release with daft.datasets.lerobot, so
+# `pip install daft-physical-ai` works from PyPI alone. Development in this repo
+# still resolves daft from the nightly index (see [[tool.uv.index]] below) for
+# the batched video decode (Daft#7184); bump the floor once that ships stable.
+dependencies = ["daft>=0.7.17", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
