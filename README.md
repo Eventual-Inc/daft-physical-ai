@@ -71,7 +71,7 @@ keypoints, and score against EgoDex ground truth:
 
 Available in three equivalent forms:
 
-- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline, nothing to run.
+- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline.
 - **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
 - **[examples/demo.py](examples/demo.py)** - plain script.
 
