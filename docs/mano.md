@@ -24,7 +24,7 @@ df = df.with_column(
 )
 ```
 
-Or with the CLI: `daft-physical-ai --method wilor --mano-path /path/to/MANO_RIGHT.pkl ...`.
+Or with the CLI: `daft-physical-ai hands --method wilor --mano-path /path/to/MANO_RIGHT.pkl ...`.
 
 You only need to supply the single `MANO_RIGHT.pkl` file - the package's
 `ensure_assets` fetches the rest of the WiLoR repo and weights and places the
