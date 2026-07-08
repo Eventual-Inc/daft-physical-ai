@@ -39,13 +39,11 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 
 ## Later
 
-- [ ] **Publish to PyPI.** Tag a release (`v0.1.0`) to trigger
-  `.github/workflows/publish-package.yml` (trusted publishing). This also unblocks
-  generated Modal demos, which `pip install daft-physical-ai`.
-- [ ] Switch off the Daft nightly once the LeRobot reader (with
-  [Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)'s batched decode)
-  ships in a release (> v0.7.17): bump the `daft` floor in `pyproject.toml`,
-  drop the `daft-nightly` index and `tool.uv.sources` pin, and re-run `uv lock`.
+- [x] **Publish to PyPI.** Done: [v0.1.0 on PyPI](https://pypi.org/project/daft-physical-ai/)
+  (tag push triggers `.github/workflows/publish-package.yml`, trusted publishing).
+  This also unblocks generated Modal demos, which `pip install daft-physical-ai`.
+- [ ] Switch off the Daft nightly once 0.7.18 ships stable - tracked with full
+  steps in [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
 
 # Regenerating the examples demo
 
