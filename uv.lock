@@ -663,8 +663,8 @@ wheels = [
 
 [[package]]
 name = "daft"
-version = "0.7.18.dev2+g0a01463a2"
-source = { registry = "https://nightly.daft.ai/" }
+version = "0.7.17"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fsspec" },
     { name = "packaging" },
@@ -672,12 +672,13 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/05/3b/17d9f26fba520a4e2effbb7a87ca40cc506fa7f298cd4ff8c43ee0e32bb2/daft-0.7.17.tar.gz", hash = "sha256:7a916be3722f3618a15b3400425efdab94cfedeb549953356572733b45cf0b63", size = 3356209, upload-time = "2026-07-06T23:31:35.477Z" }
 wheels = [
-    { url = "https://nightly.daft.ai/builds/nightly/daft-0.7.18.dev2%2Bg0a01463a2-cp310-abi3-macosx_10_12_x86_64.whl" },
-    { url = "https://nightly.daft.ai/builds/nightly/daft-0.7.18.dev2%2Bg0a01463a2-cp310-abi3-macosx_11_0_arm64.whl" },
-    { url = "https://nightly.daft.ai/builds/nightly/daft-0.7.18.dev2%2Bg0a01463a2-cp310-abi3-manylinux_2_24_aarch64.whl" },
-    { url = "https://nightly.daft.ai/builds/nightly/daft-0.7.18.dev2%2Bg0a01463a2-cp310-abi3-manylinux_2_24_x86_64.whl" },
-    { url = "https://nightly.daft.ai/builds/nightly/daft-0.7.18.dev2%2Bg0a01463a2-cp310-abi3-win_amd64.whl" },
+    { url = "https://files.pythonhosted.org/packages/a7/bf/15dd083b7fdc34e3a3c3d5c09d3540b78d1df60b32fe2ab0991023523fe3/daft-0.7.17-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:e688c9c545f4e77ac01507f7e8054979a2ec8ba1baa15a55bfd7e0064e80a6c4", size = 55648953, upload-time = "2026-07-06T23:30:49.579Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/7d/af8184c6d3e1d580584dad4ccfdad8324d25c47024621c9c947642f63665/daft-0.7.17-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:29aaa63de59923e81b5eeae4a0154337abd1fd1f0af709165a119ec8c716864d", size = 51476006, upload-time = "2026-07-06T23:30:54.991Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/cb/bb947e4f4c22b20346b30543c088ad98b866a915586b075fa4d31a51845b/daft-0.7.17-cp310-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:858be5fd51fecbfc2db4cae940a1abef3dd4ccb3ee9dbee9b0c612e82e28b68a", size = 53815488, upload-time = "2026-07-06T23:31:00.773Z" },
+    { url = "https://files.pythonhosted.org/packages/d7/75/22ca4363d5cbbe09615c153c18388d25685d32b7beeef2bc2b82446d15d8/daft-0.7.17-cp310-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:b235596ba7429db94b5ff647106a9b1228d0eb837f8cae660e46c1f503ed56c5", size = 55988466, upload-time = "2026-07-06T23:31:06.531Z" },
+    { url = "https://files.pythonhosted.org/packages/eb/8c/61686fae74c0bed78b4badd9c591db03ccbe30124c69fef4c0172406c8ba/daft-0.7.17-cp310-abi3-win_amd64.whl", hash = "sha256:c00b1f3cf356edfbde64951bef2d09740ed3d8931e403cbcbd3ccac1e8f239f7", size = 55182416, upload-time = "2026-07-06T23:31:12.224Z" },
 ]
 
 [[package]]
@@ -748,7 +749,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "daft", specifier = ">=0.7.17", index = "https://nightly.daft.ai/" },
+    { name = "daft", specifier = ">=0.7.17" },
     { name = "einops", marker = "extra == 'all'" },
     { name = "einops", marker = "extra == 'wilor'" },
     { name = "hydra-colorlog", marker = "extra == 'all'" },

@@ -10,11 +10,11 @@
 1. Set up Python environment, install dependencies, and build dev package: `uv sync`
 2. Activate .venv: `source .venv/bin/activate`
 3. Run tests: `uv run pytest tests/ -v`
-4. The LeRobot reader (`daft.datasets.lerobot`, with the batched video decode
-   from [Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)) is not in
-   a stable Daft release yet (latest is v0.7.17), so `uv sync` resolves daft
-   from the nightly index (`daft-nightly` in `pyproject.toml`) - no manual
-   install step needed.
+4. The LeRobot reader (`daft.datasets.lerobot`) ships in stable Daft (>= v0.7.17),
+   so `uv sync` is all you need. Its batched video decode
+   ([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)) arrives with
+   the next Daft release - until then remote decode is slower; see
+   [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
 
 # Roadmap
 

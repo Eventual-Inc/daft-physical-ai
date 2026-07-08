@@ -42,11 +42,11 @@ Install the method you need as an extra: `pip install daft-physical-ai[mediapipe
 extra because PyPI metadata can't carry direct references), plus a user-supplied
 `MANO_RIGHT.pkl` ([research-gated](docs/mano.md)).
 
-> **Note:** the LeRobot reader with batched video decode
+> **Note:** the LeRobot reader's batched video decode
 > ([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)) is not yet in a
-> stable Daft release (latest is v0.7.17). Until it is, this repo resolves `daft`
-> from the nightly index - `uv sync` handles it via the `daft-nightly` index in
-> `pyproject.toml`.
+> stable Daft release (latest is v0.7.17), so remote video decode is slower until
+> the next Daft release
+> ([#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17)).
 
 ## Output schema
 
@@ -112,10 +112,9 @@ uv pip install -U av mediapipe scipy opencv-python matplotlib jupyterlab
 jupyter lab hand-tracking-demo/demo.ipynb
 ```
 
-The demo's remote video decode is much faster with the batched decode
-([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)), which is not yet
-in a stable Daft release - a clone gets it via the nightly pin in
-`pyproject.toml`; pip users get it with the next stable Daft (> v0.7.17).
+The demo's remote video decode gets much faster with the next stable Daft
+release (> v0.7.17), which includes the batched decode
+([Daft #7184](https://github.com/Eventual-Inc/Daft/pull/7184)).
 
 ## Development
 
