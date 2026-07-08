@@ -1,7 +1,7 @@
 # daft-physical-ai
 
-Physical-AI data annotation on [Daft](https://github.com/Eventual-Inc/Daft), starting with hand
-tracking. The annotation methods run as Daft UDFs, so they slot into any Daft
+Physical-AI data processing on [Daft](https://github.com/Eventual-Inc/Daft), starting with hand
+tracking. The methods run as Daft UDFs, so they slot into any Daft
 pipeline and execute lazily, batched, and distributed.
 
 ## API
