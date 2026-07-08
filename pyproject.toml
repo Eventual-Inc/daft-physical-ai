@@ -5,7 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "daft-physical-ai"
 description = "Physical-AI data annotation on Daft, starting with hand tracking."
-dependencies = ["daft>=0.7.5", "numpy"]
+# daft floor: first nightly with daft.datasets.lerobot's batched video decode
+# (Daft#7184). Not in a stable release yet (latest is v0.7.17), so daft resolves
+# from the nightly index - see [[tool.uv.index]] below.
+dependencies = ["daft>=0.7.18.dev2", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
@@ -66,6 +69,18 @@ warn_unused_configs = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+# Resolve daft from the nightly index until daft.datasets.lerobot (with the
+# batched video decode, Daft#7184) ships in a stable release. To switch off:
+# bump the daft floor to that release, delete this index + source, re-run
+# `uv lock`. (See also the roadmap item in CLAUDE.md.)
+[[tool.uv.index]]
+name = "daft-nightly"
+url = "https://nightly.daft.ai"
+explicit = true
+
+[tool.uv.sources]
+daft = { index = "daft-nightly" }
 
 [dependency-groups]
 dev = [
