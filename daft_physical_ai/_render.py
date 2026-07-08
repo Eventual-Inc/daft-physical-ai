@@ -102,7 +102,7 @@ def _modal_image_block(config: DemoConfig) -> str:
             '    .pip_install("torch==2.1.2", "torchvision==0.16.2",',
             '                 index_url="https://download.pytorch.org/whl/cu121")',
         ]
-    parts.append('    .pip_install("daft", extra_index_url="https://nightly.daft.ai", pre=True)')
+    parts.append('    .pip_install("daft")')
     if _uses(config.method, "wilor"):
         wilor_pip = (
             '"opencv-python-headless", "pytorch-lightning==2.1.3", "scikit-image", '

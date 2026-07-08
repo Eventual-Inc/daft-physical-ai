@@ -42,8 +42,9 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 - [x] **Publish to PyPI.** Done: [v0.1.0 on PyPI](https://pypi.org/project/daft-physical-ai/)
   (tag push triggers `.github/workflows/publish-package.yml`, trusted publishing).
   This also unblocks generated Modal demos, which `pip install daft-physical-ai`.
-- [ ] Switch off the Daft nightly once 0.7.18 ships stable - tracked with full
-  steps in [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
+- [ ] Bump the `daft` floor to `>=0.7.18` once it ships stable (brings the
+  batched video decode) - tracked with full steps in
+  [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
 
 # Regenerating the examples demo
 
@@ -61,8 +62,8 @@ The script renders the notebook (empty), executes it headless
 that one executed copy: the figure is written to `demo_keypoints.png`, printed
 output is fenced, and the `.show()` HTML table becomes a markdown table. The
 executing step needs the full inference env (a Daft with the LeRobot reader +
-mediapipe + scipy + opencv + matplotlib + nbconvert; see the nightly-Daft note
-above). `--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
+mediapipe + scipy + opencv + matplotlib + nbconvert; `uv sync` plus the demo
+extras covers it). `--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
 just the markdown/image (no inference env needed) - handy for tweaking the
 conversion.
 
