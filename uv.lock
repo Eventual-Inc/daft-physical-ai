@@ -748,7 +748,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "daft", specifier = ">=0.7.18.dev2", index = "https://nightly.daft.ai/" },
+    { name = "daft", specifier = ">=0.7.17", index = "https://nightly.daft.ai/" },
     { name = "einops", marker = "extra == 'all'" },
     { name = "einops", marker = "extra == 'wilor'" },
     { name = "hydra-colorlog", marker = "extra == 'all'" },
