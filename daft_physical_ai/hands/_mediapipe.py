@@ -54,6 +54,18 @@ class MediaPipeHands:
             min_hand_detection_confidence=min_confidence,
         )
         self.det = vision.HandLandmarker.create_from_options(opts)
+        # MediaPipe's __del__ closes the task at interpreter shutdown, after the
+        # dispatcher's thread pool and C bindings are gone, spraying an "Exception
+        # ignored" traceback (google-ai-edge/mediapipe: shutdown-order bug). There is
+        # no earlier hook to close from (Daft UDFs have no teardown; atexit already
+        # runs too late), so swallow errors from close instead.
+        _close = self.det.close
+        def _quiet_close():
+            try:
+                _close()
+            except Exception:
+                pass
+        self.det.close = _quiet_close
 
     @daft.method.batch(return_dtype=HANDS_DTYPE, batch_size=16)
     def track(self, images):
