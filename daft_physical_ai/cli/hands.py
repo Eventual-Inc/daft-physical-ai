@@ -197,8 +197,19 @@ def run(args: argparse.Namespace) -> int:
             print(f"  modal run {script_path}")
         if have_nb:
             print(f"  jupyter lab {nb_path}   # kernel needs Python 3.11 to match the image")
+    elif config.method == "mediapipe":
+        # CPU-only deps, so uvx/uv run can fetch everything - nothing to install.
+        withs = '--with "daft-physical-ai[mediapipe]" --with matplotlib'
+        if config.with_eval:
+            withs += " --with scipy"
+        print("\nRun it with (deps fetched on the fly, nothing to install):")
+        if have_script:
+            print(f"  uv run {withs} {script_path}")
+        if have_nb:
+            print(f"  uvx --from jupyterlab {withs} jupyter-lab {nb_path}")
     else:
-        print("\nRun it with:")
+        # wilor/both need a CUDA torch build + chumpy from git - a prepared env.
+        print("\nRun it with (from an env with the wilor extras installed):")
         if have_script:
             print(f"  python {script_path}")
         if have_nb:
