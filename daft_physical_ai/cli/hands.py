@@ -117,9 +117,10 @@ def _collect_config(args: argparse.Namespace, interactive: bool) -> DemoConfig:
         image_column = _prompt_text("Image column", d.image_column) if interactive else d.image_column
 
     # Evaluation is local-only and EgoDex-specific; only offered when not on Modal.
+    # Default yes on the default EgoDex dataset (GT is known to exist there), no otherwise.
     with_eval = bool(args.with_eval)
     if args.with_eval is None and runtime == "local" and interactive:
-        with_eval = _prompt_yes_no("Add EgoDex ground-truth evaluation (detect% + PCK)?", default=False)
+        with_eval = _prompt_yes_no("Add EgoDex ground-truth evaluation (detect% + PCK)?", default=dataset == d.dataset)
 
     return DemoConfig(
         method=method,
