@@ -10,7 +10,7 @@ uv sync && uv run pytest tests/ -v
 ```
 
 - MediaPipe facade + a real run asserting the output dtype equals `HANDS_DTYPE`.
-  The real run skips without the `[mediapipe]` extra (e.g. Python 3.13).
+  The real run skips without the `[mediapipe]` extra.
 - WiLoR facade: `mano_path` required; the expression's dtype equals `HANDS_DTYPE`
   (built without executing - `@daft.cls` is lazy, no GPU needed); `ensure_assets`
   places a provided MANO file. CLI: all method x runtime combos render to valid
@@ -81,13 +81,26 @@ login reminder (`modal setup`) printing for the modal runtime.
   apt list) - and exercises the same Modal image + pipeline the `both`/WiLoR modal
   demos use.
 
+**Published-package (PyPI) end to end** - verified on v0.1.2 (2026-07-09), all
+from PyPI installs, no repo code:
+
+- **Fresh local install** - `pip install daft-physical-ai[mediapipe]` into a
+  clean Python 3.13 venv, CLI scaffolds a demo, the demo's pipeline (remote
+  `lerobot.read` + decode + `track_hands` + `.show()`) runs in ~5s warm with real
+  hand detections. This flow is what caught the two v0.1.1 packaging bugs fixed
+  in v0.1.2 (missing av/pillow, now via `daft[video]`; a stale
+  `python_version < '3.13'` marker silently skipping mediapipe).
+- **Modal WiLoR script** - generated with `--method wilor --runtime modal`, run
+  with `modal run`: image builds from PyPI, WiLoR assets fetched, L4 inference,
+  `annotated 12 frames` / `got 12 frames back from Modal`.
+- **Modal WiLoR notebook** - the same demo's `.ipynb` executed headless
+  (`nbconvert --execute`) on a Python 3.11 kernel: the notebook's
+  `with app.run():` drives the full Modal roundtrip, same 12 annotated frames.
+
 **Known limitations (not bugs):**
 
 - Generated demos `pip install daft-physical-ai`, so they need the package
-  published to PyPI (for the test above, a locally-built wheel was injected
-  instead). Local-runtime demos just need it importable locally.
+  published to PyPI. Local-runtime demos just need it importable locally.
 - The Modal **notebook** path (`app.run()`) serializes the notebook-defined
-  function, so the kernel's Python must match the image (3.11).
-- The generated **WiLoR** demo isn't run end to end here (GPU cost); the WiLoR
-  pipeline itself is verified above, and the Modal run exercises the same
-  generated-script structure.
+  function, so the kernel's Python must match the image (3.11) - verified
+  working on a 3.11 kernel above; other kernel versions fail serialization.
