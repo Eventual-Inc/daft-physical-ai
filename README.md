@@ -7,7 +7,7 @@ pipeline and execute lazily, batched, and distributed.
 Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
 
 ```bash
-pip install daft-physical-ai[mediapipe]
+pip install "daft-physical-ai[mediapipe]"
 ```
 
 ## API
@@ -34,9 +34,9 @@ df = df.with_column("hands", track_hands(df["observation.image"], method="mediap
 df.write_parquet("annotated/")
 ```
 
-Install the method you need as an extra: `pip install daft-physical-ai[mediapipe]`
-(CPU, 2D), `pip install daft-physical-ai[wilor]` (GPU, 3D), or
-`pip install daft-physical-ai[all]` for both. WiLoR additionally needs a CUDA
+Install the method you need as an extra: `pip install "daft-physical-ai[mediapipe]"`
+(CPU, 2D), `pip install "daft-physical-ai[wilor]"` (GPU, 3D), or
+`pip install "daft-physical-ai[all]"` for both. WiLoR additionally needs a CUDA
 `torch` build and `chumpy` from git
 (`pip install 'chumpy @ git+https://github.com/mattloper/chumpy'`, omitted from the
 extra because PyPI metadata can't carry direct references), plus a user-supplied

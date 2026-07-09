@@ -84,7 +84,7 @@ login reminder (`modal setup`) printing for the modal runtime.
 **Published-package (PyPI) end to end** - verified on v0.1.2 (2026-07-09), all
 from PyPI installs, no repo code:
 
-- **Fresh local install** - `pip install daft-physical-ai[mediapipe]` into a
+- **Fresh local install** - `pip install "daft-physical-ai[mediapipe]"` into a
   clean Python 3.13 venv, CLI scaffolds a demo, the demo's pipeline (remote
   `lerobot.read` + decode + `track_hands` + `.show()`) runs in ~5s warm with real
   hand detections. This flow is what caught the two v0.1.1 packaging bugs fixed

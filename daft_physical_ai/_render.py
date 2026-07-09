@@ -440,7 +440,7 @@ def _unhash(line: str) -> str:
 
 def _install_hint(method: str) -> str:
     extra = {"mediapipe": "mediapipe", "wilor": "wilor", "both": "mediapipe,wilor"}[method]
-    return f"daft-physical-ai[{extra}] matplotlib"
+    return f'"daft-physical-ai[{extra}]" matplotlib'
 
 
 def render_notebook(config: DemoConfig) -> str:
