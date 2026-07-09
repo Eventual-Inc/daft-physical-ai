@@ -43,7 +43,7 @@ class MediaPipeHands:
             from mediapipe.tasks.python import vision
         except ImportError as err:
             raise ImportError(
-                "method='mediapipe' requires MediaPipe. Install with `pip install daft-physical-ai[mediapipe]`."
+                "method='mediapipe' requires MediaPipe. Install with `pip install \"daft-physical-ai[mediapipe]\"`."
             ) from err
 
         self.mp = mp

@@ -74,7 +74,7 @@ class WiLoRHands:
         except ImportError as err:
             raise ImportError(
                 "method='wilor' requires torch (a CUDA build for GPU). Install the WiLoR "
-                "extras with `pip install daft-physical-ai[wilor]`."
+                "extras with `pip install \"daft-physical-ai[wilor]\"`."
             ) from err
 
         root = ensure_assets(wilor_root, mano_path)

@@ -4,7 +4,7 @@ This demo reads a LeRobot dataset, runs hand tracking (MediaPipe) as a Daft UDF 
 
 ## Setup
 
-Install with `pip install daft-physical-ai[mediapipe] matplotlib`, then import.
+Install with `pip install "daft-physical-ai[mediapipe]" matplotlib`, then import.
 
 ```python
 from daft.datasets import lerobot
