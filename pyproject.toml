@@ -7,9 +7,9 @@ name = "daft-physical-ai"
 description = "Physical-AI data processing on Daft, starting with hand tracking."
 # daft floor: v0.7.18 has daft.datasets.lerobot with the batched video decode
 # (Daft#7184) the demo depends on for reasonable remote-read performance. The
-# [video] extra brings av + pillow, which decoding LeRobot MP4 shards needs at
-# runtime - without them a fresh install fails on the first lerobot.read().
-dependencies = ["daft[video]>=0.7.18", "numpy"]
+# [video] brings av + pillow for video decode; [hdf5] supports raw EgoDex
+# metadata and trajectory files. Both are part of the normal package surface.
+dependencies = ["daft[hdf5,video]>=0.7.18", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
