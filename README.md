@@ -96,10 +96,19 @@ works too; from a clone of this repo, `uv sync` installs it (`uv run daft-physic
 Hand tracking is the first capability; each new one will be its own subcommand
 (`daft-physical-ai <command>` lists what's available).
 
-To *run* a generated demo you also need its inference stack. In a clone,
-`uv sync` already brings a Daft with the LeRobot reader; install the extras into
-the venv, then run from the activated venv - not `uv run`, which re-syncs the
-env and would drop them:
+To *run* a generated demo you also need its inference stack. `uvx` covers that
+too - one line, nothing installed:
+
+```bash
+uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy \
+  jupyter-lab hand-tracking-demo/demo.ipynb
+```
+
+(`scipy` is only needed if the demo includes the ground-truth eval.)
+
+In a clone, `uv sync` already brings a Daft with the LeRobot reader; install the
+extras into the venv, then run from the activated venv - not `uv run`, which
+re-syncs the env and would drop them:
 
 ```bash
 source .venv/bin/activate
