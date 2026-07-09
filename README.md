@@ -81,21 +81,20 @@ walkthrough, or pass flags:
 
 ```bash
 # No flags - interactive walkthrough that asks a few questions
-daft-physical-ai hands
+uvx daft-physical-ai hands
 
 # --no-input skips all prompts; flags supply the answers, the rest use defaults
-daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
-daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
+uvx daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
+uvx daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
 ```
+
+`uvx` runs the CLI without installing anything (scaffolding needs no inference
+deps). If the [PyPI package](https://pypi.org/project/daft-physical-ai/) is
+already installed (`pip install daft-physical-ai`), plain `daft-physical-ai hands`
+works too; from a clone of this repo, `uv sync` installs it (`uv run daft-physical-ai`).
 
 Hand tracking is the first capability; each new one will be its own subcommand
 (`daft-physical-ai <command>` lists what's available).
-
-The bare `daft-physical-ai` command comes with the
-[PyPI package](https://pypi.org/project/daft-physical-ai/) (`pip install daft-physical-ai`),
-or run it without installing: `uvx daft-physical-ai hands` (scaffolding needs no
-inference deps). From a clone of this repo, `uv sync` installs it too
-(`uv run daft-physical-ai`).
 
 To *run* a generated demo you also need its inference stack. In a clone,
 `uv sync` already brings a Daft with the LeRobot reader; install the extras into
