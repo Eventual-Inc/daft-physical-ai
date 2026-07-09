@@ -6,8 +6,10 @@ build-backend = "hatchling.build"
 name = "daft-physical-ai"
 description = "Physical-AI data processing on Daft, starting with hand tracking."
 # daft floor: v0.7.18 has daft.datasets.lerobot with the batched video decode
-# (Daft#7184) the demo depends on for reasonable remote-read performance.
-dependencies = ["daft>=0.7.18", "numpy"]
+# (Daft#7184) the demo depends on for reasonable remote-read performance. The
+# [video] extra brings av + pillow, which decoding LeRobot MP4 shards needs at
+# runtime - without them a fresh install fails on the first lerobot.read().
+dependencies = ["daft[video]>=0.7.18", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
@@ -16,8 +18,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
-# MediaPipe wheels are not published for Python 3.13 yet.
-mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
+mediapipe = ["mediapipe>=0.10"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
 # ensure_assets). Install the matching torch/torchvision for your CUDA first.
 # Also needs chumpy from git (`pip install "chumpy @ git+https://github.com/mattloper/chumpy"`),
