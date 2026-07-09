@@ -17,8 +17,9 @@ Run them:
 ```bash
 # deps fetched on the fly, nothing to install
 uv run --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy examples/demo.py
-# or in JupyterLab:
-uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy jupyter-lab examples/demo.ipynb
+# or in JupyterLab (the ulimit is a temporary workaround for a Daft progress-bar
+# crash in Jupyter, see issue #24):
+ulimit -n 10240 && uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy jupyter-lab examples/demo.ipynb
 ```
 
 Want a different setup (WiLoR, both methods, a Modal GPU runtime, with/without
