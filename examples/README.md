@@ -15,9 +15,10 @@ Three equivalent forms:
 Run them:
 
 ```bash
-pip install "daft-physical-ai[mediapipe]" matplotlib scipy
-python examples/demo.py
-# or: jupyter lab examples/demo.ipynb
+# deps fetched on the fly, nothing to install
+uv run --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy examples/demo.py
+# or in JupyterLab:
+uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy jupyter-lab examples/demo.ipynb
 ```
 
 Want a different setup (WiLoR, both methods, a Modal GPU runtime, with/without
