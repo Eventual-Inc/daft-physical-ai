@@ -93,8 +93,8 @@ Hand tracking is the first capability; each new one will be its own subcommand
 
 The bare `daft-physical-ai` command comes with the
 [PyPI package](https://pypi.org/project/daft-physical-ai/) (`pip install daft-physical-ai`),
-or run it without installing: `uvx daft-physical-ai hands` (pipx works too - scaffolding
-needs no inference deps). From a clone of this repo, `uv sync` installs it too
+or run it without installing: `uvx daft-physical-ai hands` (scaffolding needs no
+inference deps). From a clone of this repo, `uv sync` installs it too
 (`uv run daft-physical-ai`).
 
 To *run* a generated demo you also need its inference stack. In a clone,
