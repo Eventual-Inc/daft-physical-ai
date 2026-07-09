@@ -100,13 +100,11 @@ To *run* a generated demo you also need its inference stack. `uvx` covers that
 too - one line, nothing installed:
 
 ```bash
-ulimit -n 10240 && uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy \
+uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy \
   jupyter-lab hand-tracking-demo/demo.ipynb
 ```
 
-(`scipy` is only needed if the demo includes the ground-truth eval. The `ulimit`
-is a temporary workaround for a Daft progress-bar crash in Jupyter, see
-[#24](https://github.com/Eventual-Inc/daft-physical-ai/issues/24).)
+(`scipy` is only needed if the demo includes the ground-truth eval.)
 
 In a clone, `uv sync` already brings a Daft with the LeRobot reader; install the
 extras into the venv, then run from the activated venv - not `uv run`, which
