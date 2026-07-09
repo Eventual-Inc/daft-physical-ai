@@ -24,8 +24,8 @@ Want a different setup (WiLoR, both methods, a Modal GPU runtime, with/without
 eval)? Generate your own:
 
 ```bash
-daft-physical-ai            # interactive
-daft-physical-ai --method wilor --runtime modal --mano-path MANO_RIGHT.pkl --no-input
+daft-physical-ai hands      # interactive
+daft-physical-ai hands --method wilor --runtime modal --mano-path MANO_RIGHT.pkl --no-input
 ```
 
 > The committed files here are *executed* (so outputs and the image show without
