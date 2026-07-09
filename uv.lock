@@ -663,7 +663,7 @@ wheels = [
 
 [[package]]
 name = "daft"
-version = "0.7.17"
+version = "0.7.18"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fsspec" },
@@ -672,13 +672,13 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/05/3b/17d9f26fba520a4e2effbb7a87ca40cc506fa7f298cd4ff8c43ee0e32bb2/daft-0.7.17.tar.gz", hash = "sha256:7a916be3722f3618a15b3400425efdab94cfedeb549953356572733b45cf0b63", size = 3356209, upload-time = "2026-07-06T23:31:35.477Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/36/85ffdc882972a88964056ea6856d51cba207443b4d143d54d986d1588017/daft-0.7.18.tar.gz", hash = "sha256:6dd53a16aaca9c16fccec7763e259b942ff00d2a96b9a382985cb56d57416ef3", size = 3359615, upload-time = "2026-07-09T01:01:23.908Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/bf/15dd083b7fdc34e3a3c3d5c09d3540b78d1df60b32fe2ab0991023523fe3/daft-0.7.17-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:e688c9c545f4e77ac01507f7e8054979a2ec8ba1baa15a55bfd7e0064e80a6c4", size = 55648953, upload-time = "2026-07-06T23:30:49.579Z" },
-    { url = "https://files.pythonhosted.org/packages/c4/7d/af8184c6d3e1d580584dad4ccfdad8324d25c47024621c9c947642f63665/daft-0.7.17-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:29aaa63de59923e81b5eeae4a0154337abd1fd1f0af709165a119ec8c716864d", size = 51476006, upload-time = "2026-07-06T23:30:54.991Z" },
-    { url = "https://files.pythonhosted.org/packages/b0/cb/bb947e4f4c22b20346b30543c088ad98b866a915586b075fa4d31a51845b/daft-0.7.17-cp310-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:858be5fd51fecbfc2db4cae940a1abef3dd4ccb3ee9dbee9b0c612e82e28b68a", size = 53815488, upload-time = "2026-07-06T23:31:00.773Z" },
-    { url = "https://files.pythonhosted.org/packages/d7/75/22ca4363d5cbbe09615c153c18388d25685d32b7beeef2bc2b82446d15d8/daft-0.7.17-cp310-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:b235596ba7429db94b5ff647106a9b1228d0eb837f8cae660e46c1f503ed56c5", size = 55988466, upload-time = "2026-07-06T23:31:06.531Z" },
-    { url = "https://files.pythonhosted.org/packages/eb/8c/61686fae74c0bed78b4badd9c591db03ccbe30124c69fef4c0172406c8ba/daft-0.7.17-cp310-abi3-win_amd64.whl", hash = "sha256:c00b1f3cf356edfbde64951bef2d09740ed3d8931e403cbcbd3ccac1e8f239f7", size = 55182416, upload-time = "2026-07-06T23:31:12.224Z" },
+    { url = "https://files.pythonhosted.org/packages/b8/e0/457e3e2285fc4d97d49838e2b377958a4f112062ce31e9a47af43b185222/daft-0.7.18-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:bd83c9f284bb62a09912628ed4d7273ad8aa16fd8e047311312efc6026ce1c10", size = 55648464, upload-time = "2026-07-09T01:00:58.024Z" },
+    { url = "https://files.pythonhosted.org/packages/81/58/18da1c58d606d15a09487019601933cbc69c4dde70e698a073ff6fae7e05/daft-0.7.18-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:511e4078c2655a931974340d1f90b6892a804558cfc97f2c85adf9d9e2e95226", size = 51486766, upload-time = "2026-07-09T01:01:01.307Z" },
+    { url = "https://files.pythonhosted.org/packages/f9/85/72676e760e8387c03b78e4eb27172810ec00ebb47aceef153ab835c22319/daft-0.7.18-cp310-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:0538578b7ff0c345f25310fb942eb9feafe5be07332d8d393fdd0a57b6d809d1", size = 53820711, upload-time = "2026-07-09T01:01:04.368Z" },
+    { url = "https://files.pythonhosted.org/packages/86/72/d38076455f832a40a9bf5d8eeae8e18794a255a9015ca8b6b59d7729ade7/daft-0.7.18-cp310-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:9f4d1591776804b0c9db32ed13d6dd1c9220c27a1603692519db5d1d669b38e9", size = 56017539, upload-time = "2026-07-09T01:01:07.304Z" },
+    { url = "https://files.pythonhosted.org/packages/a3/26/13973f5591d1dea4497ac860e22f38f711c4fffd6129278a2935ee1e0953/daft-0.7.18-cp310-abi3-win_amd64.whl", hash = "sha256:8733c4ae21e0a10075bf6e29d1bafd40b7b0a629f3e105fe5d7202e90c06396a", size = 55171843, upload-time = "2026-07-09T01:01:10.891Z" },
 ]
 
 [[package]]
@@ -749,7 +749,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "daft", specifier = ">=0.7.17" },
+    { name = "daft", specifier = ">=0.7.18" },
     { name = "einops", marker = "extra == 'all'" },
     { name = "einops", marker = "extra == 'wilor'" },
     { name = "hydra-colorlog", marker = "extra == 'all'" },
