@@ -214,16 +214,14 @@ def run(args: argparse.Namespace) -> int:
         if have_script:
             print(f"  uv run {withs} {script_path}")
         if have_nb:
-            print(f"  ulimit -n 10240 && uvx --from jupyterlab {withs} jupyter-lab {nb_path}")
-            print("  (the ulimit is a temporary workaround for a Daft progress-bar crash in Jupyter, see #24)")
+            print(f"  uvx --from jupyterlab {withs} jupyter-lab {nb_path}")
     else:
         # wilor/both need a CUDA torch build + chumpy from git - a prepared env.
         print("\nRun it with (from an env with the wilor extras installed):")
         if have_script:
             print(f"  python {script_path}")
         if have_nb:
-            print(f"  ulimit -n 10240 && jupyter lab {nb_path}")
-            print("  (the ulimit is a temporary workaround for a Daft progress-bar crash in Jupyter, see #24)")
+            print(f"  jupyter lab {nb_path}")
     if have_nb:
         print("  (or open demo.ipynb in your code editor, e.g. VS Code)")
     if have_md:
