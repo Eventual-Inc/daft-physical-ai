@@ -7,6 +7,14 @@ This demo reads a LeRobot dataset, runs hand tracking (MediaPipe) as a Daft UDF 
 #
 # Install with `pip install "daft-physical-ai[mediapipe]" matplotlib`, then import.
 
+import os
+import sys
+
+# Daft's progress bar leaks fds under Jupyter and can crash the kernel
+# (Eventual-Inc/daft-physical-ai#24); disable it there until fixed upstream.
+if "ipykernel" in sys.modules:
+    os.environ["DAFT_PROGRESS_BAR"] = "0"
+
 from daft.datasets import lerobot
 
 from daft_physical_ai.hands import track_hands
