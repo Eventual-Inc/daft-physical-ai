@@ -122,6 +122,15 @@ def test_eval_prompt_defaults_yes_on_default_dataset(monkeypatch) -> None:
     base = dict(method="mediapipe", runtime=None, mano_path=None, image_column=None, limit=None, with_eval=None)
     assert _collect_config(argparse.Namespace(dataset=None, **base), interactive=True).with_eval is True
     assert _collect_config(argparse.Namespace(dataset="someone/other", **base), interactive=True).with_eval is False
+    # same defaults apply non-interactively (--no-input)
+    assert _collect_config(argparse.Namespace(dataset=None, **base), interactive=False).with_eval is True
+    assert _collect_config(argparse.Namespace(dataset="someone/other", **base), interactive=False).with_eval is False
+
+
+def test_cli_no_with_eval_opts_out(tmp_path) -> None:
+    rc = main(["hands", "--method", "mediapipe", "--no-with-eval", "--output-dir", str(tmp_path / "d"), "--no-input"])
+    assert rc == 0
+    assert "def score(" not in (tmp_path / "d" / "demo.py").read_text()
 
 
 def test_method_calls_match_choice() -> None:

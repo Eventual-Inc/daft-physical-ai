@@ -47,9 +47,10 @@ def register(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--limit", type=int, help="number of frames to annotate")
     p.add_argument(
         "--with-eval",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
         default=None,
-        help="append EgoDex ground-truth scoring (detect%% + PCK) to the demo (local runtime only)",
+        help="append EgoDex ground-truth scoring (detect%% + PCK) to the demo (local runtime "
+        "only; defaults on for the default EgoDex dataset, --no-with-eval to opt out)",
     )
     p.add_argument(
         "--format",
@@ -116,11 +117,15 @@ def _collect_config(args: argparse.Namespace, interactive: bool) -> DemoConfig:
     if image_column is None:
         image_column = _prompt_text("Image column", d.image_column) if interactive else d.image_column
 
-    # Evaluation is local-only and EgoDex-specific; only offered when not on Modal.
-    # Default yes on the default EgoDex dataset (GT is known to exist there), no otherwise.
+    # Evaluation is local-only and EgoDex-specific. Default on for the default EgoDex
+    # dataset (GT is known to exist there), off otherwise - interactive or not.
     with_eval = bool(args.with_eval)
-    if args.with_eval is None and runtime == "local" and interactive:
-        with_eval = _prompt_yes_no("Add EgoDex ground-truth evaluation (detect% + PCK)?", default=dataset == d.dataset)
+    if args.with_eval is None and runtime == "local":
+        default_eval = dataset == d.dataset
+        if interactive:
+            with_eval = _prompt_yes_no("Add EgoDex ground-truth evaluation (detect% + PCK)?", default=default_eval)
+        else:
+            with_eval = default_eval
 
     return DemoConfig(
         method=method,
