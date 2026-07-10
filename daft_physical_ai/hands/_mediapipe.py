@@ -6,11 +6,13 @@ downloaded once to a local cache on first use.
 
 from __future__ import annotations
 
+import logging
 import os
 import urllib.request
-from contextlib import suppress
 
 import daft
+
+logger = logging.getLogger(__name__)
 
 from .schema import HANDS_DTYPE
 
@@ -63,8 +65,10 @@ class MediaPipeHands:
         _close = self.det.close
 
         def _quiet_close():
-            with suppress(Exception):
+            try:
                 _close()
+            except Exception:
+                logger.debug("MediaPipe detector close failed (known shutdown-order bug)", exc_info=True)
 
         self.det.close = _quiet_close
 
