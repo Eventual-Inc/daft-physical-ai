@@ -74,7 +74,7 @@ class WiLoRHands:
         except ImportError as err:
             raise ImportError(
                 "method='wilor' requires torch (a CUDA build for GPU). Install the WiLoR "
-                "extras with `pip install \"daft-physical-ai[wilor]\"`."
+                'extras with `pip install "daft-physical-ai[wilor]"`.'
             ) from err
 
         root = ensure_assets(wilor_root, mano_path)
@@ -104,7 +104,7 @@ class WiLoRHands:
 
         st = types.ModuleType("pyrender")
         st.__file__ = "/tmp/p.py"
-        st.__getattr__ = lambda n: (_ for _ in ()).throw(AttributeError(n)) if n.startswith("__") else _Any  # type: ignore[method-assign]
+        st.__getattr__ = lambda n: (_ for _ in ()).throw(AttributeError(n)) if n.startswith("__") else _Any  # ty: ignore[invalid-assignment]
         sys.modules["pyrender"] = st
 
         try:

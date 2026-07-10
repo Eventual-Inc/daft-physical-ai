@@ -6,10 +6,13 @@ downloaded once to a local cache on first use.
 
 from __future__ import annotations
 
+import logging
 import os
 import urllib.request
 
 import daft
+
+logger = logging.getLogger(__name__)
 
 from .schema import HANDS_DTYPE
 
@@ -60,11 +63,13 @@ class MediaPipeHands:
         # no earlier hook to close from (Daft UDFs have no teardown; atexit already
         # runs too late), so swallow errors from close instead.
         _close = self.det.close
+
         def _quiet_close():
             try:
                 _close()
             except Exception:
-                pass
+                logger.debug("MediaPipe detector close failed (known shutdown-order bug)", exc_info=True)
+
         self.det.close = _quiet_close
 
     @daft.method.batch(return_dtype=HANDS_DTYPE, batch_size=16)
