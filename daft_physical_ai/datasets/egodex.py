@@ -13,7 +13,14 @@ from typing import TYPE_CHECKING, Any, cast
 import daft
 from daft.datatype import DataType
 from daft.expressions import col, lit
-from daft.functions import file_exists, hdf5_file, regexp_replace, video_file, video_frames, when
+from daft.functions import (
+    file_exists,
+    hdf5_file,  # type: ignore[attr-defined]
+    regexp_replace,
+    video_file,
+    video_frames,
+    when,
+)
 
 if TYPE_CHECKING:
     from daft.dataframe import DataFrame
@@ -207,7 +214,7 @@ def raw(
             video_file(regexp_replace(col("path"), r"\.hdf5$", ".mp4"), io_config=io_config).alias("video"),
         )
         .with_column("video", when(file_exists(col("video")), col("video")).otherwise(lit(None)))
-        .with_column("metadata", read_egodex_metadata(col("trajectory")))
+        .with_column("metadata", cast("Any", read_egodex_metadata)(col("trajectory")))
         .select("task", "episode_id", "metadata", "trajectory", "video")
     )
 
@@ -222,7 +229,7 @@ def trajectory(episodes: DataFrame, fields: Sequence[str] = DEFAULT_TRAJECTORY_F
     optional in EgoDex, so they are not read by default; request them explicitly
     with ``fields`` when the selected files contain them.
     """
-    from daft.dependencies import h5py
+    from daft.dependencies import h5py  # type: ignore[attr-defined]
 
     if not h5py.module_available():  # ty:ignore[unresolved-attribute]
         raise ImportError("EgoDex trajectories require daft[hdf5].")
@@ -246,7 +253,7 @@ def trajectory(episodes: DataFrame, fields: Sequence[str] = DEFAULT_TRAJECTORY_F
             return {field: h5[field][()] for field in fields}
 
     return episodes.where(col("trajectory").not_null()).select(
-        "task", "episode_id", "metadata", read_egodex_trajectory(col("trajectory")), "video"
+        "task", "episode_id", "metadata", cast("Any", read_egodex_trajectory)(col("trajectory")), "video"
     )
 
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import urllib.request
+from contextlib import suppress
 
 import daft
 
@@ -60,11 +61,11 @@ class MediaPipeHands:
         # no earlier hook to close from (Daft UDFs have no teardown; atexit already
         # runs too late), so swallow errors from close instead.
         _close = self.det.close
+
         def _quiet_close():
-            try:
+            with suppress(Exception):
                 _close()
-            except Exception:
-                pass
+
         self.det.close = _quiet_close
 
     @daft.method.batch(return_dtype=HANDS_DTYPE, batch_size=16)

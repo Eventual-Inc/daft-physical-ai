@@ -74,7 +74,7 @@ def test_raw_catalogs_episodes_metadata_and_lazy_file_columns(tmp_path: Path) ->
     df = raw(str(tmp_path))
     assert [field.name for field in df.schema()] == ["task", "episode_id", "metadata", "trajectory", "video"]
     assert df.schema()["metadata"].dtype == egodex_module._METADATA_DTYPE
-    assert df.schema()["trajectory"].dtype == DataType.file(MediaType.hdf5())
+    assert df.schema()["trajectory"].dtype == DataType.file(MediaType.hdf5())  # type: ignore[attr-defined]
     assert df.schema()["video"].dtype == DataType.file(MediaType.video())
 
     result = (

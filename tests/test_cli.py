@@ -119,7 +119,14 @@ def test_eval_prompt_defaults_yes_on_default_dataset(monkeypatch) -> None:
     from daft_physical_ai.cli.hands import _collect_config
 
     monkeypatch.setattr("builtins.input", lambda prompt: "")  # accept every default
-    base = dict(method="mediapipe", runtime=None, mano_path=None, image_column=None, limit=None, with_eval=None)
+    base = {
+        "method": "mediapipe",
+        "runtime": None,
+        "mano_path": None,
+        "image_column": None,
+        "limit": None,
+        "with_eval": None,
+    }
     assert _collect_config(argparse.Namespace(dataset=None, **base), interactive=True).with_eval is True
     assert _collect_config(argparse.Namespace(dataset="someone/other", **base), interactive=True).with_eval is False
     # same defaults apply non-interactively (--no-input)
