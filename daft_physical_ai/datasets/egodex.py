@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING, Any, cast
 import daft
 from daft.datatype import DataType
 from daft.expressions import col, lit
-from daft.functions import (
+from daft.functions import (  # type: ignore[attr-defined]
     file_exists,
-    hdf5_file,  # type: ignore[attr-defined]
+    hdf5_file,
     regexp_replace,
     video_file,
     video_frames,
