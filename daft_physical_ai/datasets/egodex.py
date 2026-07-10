@@ -106,8 +106,6 @@ DEFAULT_TRAJECTORY_FIELDS: tuple[str, ...] = (
     "transforms/camera",
     "transforms/leftHand",
     "transforms/rightHand",
-    "confidences/leftHand",
-    "confidences/rightHand",
 )
 
 _METADATA_FIELD_DTYPES: dict[str, DataType] = {
@@ -220,7 +218,9 @@ def trajectory(episodes: DataFrame, fields: Sequence[str] = DEFAULT_TRAJECTORY_F
     Filter and limit ``episodes`` before calling this function. Each requested
     field is read lazily from the annotation file; output stays one row per
     episode. ``camera/intrinsic`` is ``(3, 3)``, transforms are ``(N, 4, 4)``,
-    and confidences are ``(N,)`` float32 tensors.
+    and confidences are ``(N,)`` float32 tensors. Confidence datasets are
+    optional in EgoDex, so they are not read by default; request them explicitly
+    with ``fields`` when the selected files contain them.
     """
     from daft.dependencies import h5py
 

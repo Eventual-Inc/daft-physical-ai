@@ -26,6 +26,7 @@ def _write_episode(
     task: str = "fold_towel",
     episode_id: int = 0,
     with_video: bool = True,
+    with_confidences: bool = True,
     attrs: dict[str, object] | None = None,
 ) -> Path:
     h5py = pytest.importorskip("h5py")
@@ -36,8 +37,9 @@ def _write_episode(
 
     with h5py.File(hdf5_path, "w") as h5:
         h5.create_dataset("camera/intrinsic", data=np.eye(3, dtype=np.float32) * 736.0)
-        for joint in JOINTS:
-            h5.create_dataset(f"confidences/{joint}", data=np.linspace(0, 1, NUM_FRAMES, dtype=np.float32))
+        if with_confidences:
+            for joint in JOINTS:
+                h5.create_dataset(f"confidences/{joint}", data=np.linspace(0, 1, NUM_FRAMES, dtype=np.float32))
         for joint in TRANSFORM_JOINTS:
             h5.create_dataset(f"transforms/{joint}", data=np.tile(np.eye(4, dtype=np.float32), (NUM_FRAMES, 1, 1)))
         for key, value in (attrs or {"llm_description": "Fold the towel.", "llm_verbs": ["fold"]}).items():
@@ -121,6 +123,22 @@ def test_trajectory_reads_only_requested_fields(tmp_path: Path) -> None:
     assert _as_list(values["camera/intrinsic"][0]) == [[736.0, 0.0, 0.0], [0.0, 736.0, 0.0], [0.0, 0.0, 736.0]]
     assert len(_as_list(values["transforms/leftHand"][0])) == NUM_FRAMES
     assert _as_list(values["confidences/leftHand"][0]) == pytest.approx([0.0, 1 / 3, 2 / 3, 1.0])
+
+
+def test_trajectory_defaults_work_without_optional_confidences(tmp_path: Path) -> None:
+    _write_episode(tmp_path, with_confidences=False)
+
+    result = trajectory(raw(str(tmp_path)))
+
+    assert [field.name for field in result.schema()] == [
+        "task",
+        "episode_id",
+        "metadata",
+        *DEFAULT_TRAJECTORY_FIELDS,
+        "video",
+    ]
+    values = result.collect().to_pydict()
+    assert len(_as_list(values["transforms/leftHand"][0])) == NUM_FRAMES
 
 
 def test_trajectory_validates_its_input(tmp_path: Path) -> None:

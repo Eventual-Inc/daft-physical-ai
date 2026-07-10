@@ -10,15 +10,22 @@ video frames requested below, after the task and episode filters have applied.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from daft_physical_ai.datasets import egodex
 
+FIELDS = ("camera/intrinsic", "transforms/leftHand", "transforms/rightHand")
 
-def main(path: str, *, task: str | None = None, limit: int = 2) -> None:
+
+def main(
+    path: str,
+    *,
+    task: str | None = None,
+    limit: int = 2,
+    fields: Sequence[str] = FIELDS,
+) -> None:
     episodes = egodex.raw(path, tasks=task).limit(limit)
-    trajectories = egodex.trajectory(
-        episodes,
-        fields=["camera/intrinsic", "transforms/leftHand", "transforms/rightHand"],
-    )
+    trajectories = egodex.trajectory(episodes, fields=fields)
     frames = egodex.camera_frames(trajectories, width=224, height=224, sample_interval_seconds=1.0)
     frames.select("task", "episode_id", "metadata", "camera/intrinsic", "video_frames").show()
 
@@ -30,5 +37,11 @@ if __name__ == "__main__":
     parser.add_argument("path", help="Root of an extracted EgoDex release")
     parser.add_argument("--task", help="Optional task directory to inspect")
     parser.add_argument("--episodes", type=int, default=2, help="Maximum episodes to inspect")
+    parser.add_argument(
+        "--field",
+        action="append",
+        dest="fields",
+        help="HDF5 trajectory field to read; repeat for multiple fields",
+    )
     args = parser.parse_args()
-    main(args.path, task=args.task, limit=args.episodes)
+    main(args.path, task=args.task, limit=args.episodes, fields=args.fields or FIELDS)
