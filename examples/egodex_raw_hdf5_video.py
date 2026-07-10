@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+import daft
+
 from daft_physical_ai.datasets import egodex
 
 FIELDS = ("camera/intrinsic", "transforms/leftHand", "transforms/rightHand")
@@ -23,11 +25,11 @@ def main(
     task: str | None = None,
     limit: int = 2,
     fields: Sequence[str] = FIELDS,
-) -> None:
+) -> daft.DataFrame:
     episodes = egodex.raw(path, tasks=task).limit(limit)
     trajectories = egodex.trajectory(episodes, fields=fields)
     frames = egodex.camera_frames(trajectories, width=224, height=224, sample_interval_seconds=1.0)
-    frames.select("task", "episode_id", "metadata", "camera/intrinsic", "video_frames").show()
+    return frames.select("task", "episode_id", "metadata", "camera/intrinsic", "video_frames")
 
 
 if __name__ == "__main__":
@@ -43,5 +45,16 @@ if __name__ == "__main__":
         dest="fields",
         help="HDF5 trajectory field to read; repeat for multiple fields",
     )
+    parser.add_argument("--limit", type=int, default=8, help="Limit the number of rows to display")
+    parser.add_argument(
+        "--select",
+        nargs="+",
+        metavar="COL",
+        help="Column names to display; defaults to all",
+    )
+    parser.add_argument("--show-rows", type=int, default=8, help="Number of rows to show in the printed table")
     args = parser.parse_args()
-    main(args.path, task=args.task, limit=args.episodes, fields=args.fields or FIELDS)
+    df = main(args.path, task=args.task, limit=args.episodes, fields=args.fields or FIELDS)
+
+    out = df.select(*args.select) if args.select else df
+    out.limit(args.limit).collect().show(args.show_rows)
