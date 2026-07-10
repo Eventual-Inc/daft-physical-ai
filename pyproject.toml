@@ -61,11 +61,8 @@ include = ["daft_physical_ai/**/*.py", "daft_physical_ai/templates/*.tmpl"]
 [tool.hatch.version]
 source = "vcs"
 
-[tool.mypy]
-files = ["daft_physical_ai/**/*.py", "tests/**/*.py"]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
+[tool.ty.rules]
+unresolved-import = "ignore"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -75,5 +72,5 @@ dev = [
   "pre-commit==4.6.0",
   "pytest==9.1.1",
   "ruff==0.15.20",
-  "mypy==2.1.0"
+  "ty==0.0.58"
 ]

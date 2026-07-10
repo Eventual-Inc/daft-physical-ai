@@ -231,7 +231,7 @@ def trajectory(episodes: DataFrame, fields: Sequence[str] = DEFAULT_TRAJECTORY_F
     """
     from daft.dependencies import h5py  # type: ignore[attr-defined]
 
-    if not h5py.module_available():  # ty:ignore[unresolved-attribute]
+    if not h5py.module_available():  # ty: ignore[unresolved-attribute]
         raise ImportError("EgoDex trajectories require daft[hdf5].")
     if "trajectory" not in episodes.schema().column_names():
         raise ValueError("Expected an episode DataFrame with a `trajectory` column.")
