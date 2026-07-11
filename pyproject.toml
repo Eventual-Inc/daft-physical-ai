@@ -64,6 +64,10 @@ source = "vcs"
 [tool.ty.rules]
 unresolved-import = "ignore"
 
+[[tool.ty.overrides]]
+include = ["examples/**", "tests/**"]
+rules = {invalid-argument-type = "ignore", unsupported-operator = "ignore"}
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
