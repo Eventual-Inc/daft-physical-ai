@@ -9,7 +9,7 @@ description = "Physical-AI data processing on Daft, starting with hand tracking.
 # (Daft#7184) the demo depends on for reasonable remote-read performance. The
 # [video] brings av + pillow for video decode; [hdf5] supports raw EgoDex
 # metadata and trajectory files. Both are part of the normal package surface.
-dependencies = ["daft[hdf5,video]>=0.7.18", "numpy"]
+dependencies = ["daft[hdf5,video]>=0.7.19", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
