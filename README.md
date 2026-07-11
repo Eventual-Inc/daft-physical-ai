@@ -81,13 +81,13 @@ list[list[float32]], kp3d: list[list[float32]] }]`, defined as `HANDS_DTYPE` in
 A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
 keypoints, and score against EgoDex ground truth:
 
-![track_hands keypoints](examples/demo_keypoints.png)
+![track_hands keypoints](examples/04_episode_operations/hand_tracking/demo_keypoints.png)
 
 Available in three equivalent forms:
 
-- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline.
-- **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
-- **[examples/demo.py](examples/demo.py)** - plain script.
+- **[examples/04_episode_operations/hand_tracking/demo.md](examples/04_episode_operations/hand_tracking/demo.md)** - read it start to finish; code and outputs inline.
+- **[examples/04_episode_operations/hand_tracking/demo.ipynb](examples/04_episode_operations/hand_tracking/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/04_episode_operations/hand_tracking/demo.py](examples/04_episode_operations/hand_tracking/demo.py)** - plain script.
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
 `daft-physical-ai hands` command - run it with no flags for an interactive

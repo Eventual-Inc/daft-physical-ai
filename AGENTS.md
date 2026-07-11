@@ -43,9 +43,10 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
   batched video decode) - tracked with full steps in
   [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
 
-# Regenerating the examples demo
+# Regenerating the hand-tracking demo
 
-`examples/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
+`examples/04_episode_operations/hand_tracking/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}`
+are **generated** -
 don't hand-edit them. They all render from one shared cell list in
 `daft_physical_ai/_render.py`, so editing the source keeps the three formats in
 sync. To rebuild them:

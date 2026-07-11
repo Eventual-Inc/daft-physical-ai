@@ -137,7 +137,11 @@ def _execute(nb_path: Path) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Regenerate the examples/ demo programmatically.")
-    p.add_argument("--output-dir", default="examples", help="where to write the demo (default: examples)")
+    p.add_argument(
+        "--output-dir",
+        default="examples/04_episode_operations/hand_tracking",
+        help="where to write the demo (default: the committed hand-tracking example)",
+    )
     p.add_argument("--skip-exec", action="store_true", help="reuse --source instead of executing a fresh notebook")
     p.add_argument("--source", help="executed notebook to reuse with --skip-exec (default: <output-dir>/demo.ipynb)")
     args = p.parse_args(argv)
