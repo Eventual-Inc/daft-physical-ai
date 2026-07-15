@@ -68,6 +68,11 @@ source = "vcs"
 [tool.ty.rules]
 unresolved-import = "ignore"
 
+[tool.ty.src]
+# examples/ holds CLI-generated demo code - don't impose package conventions
+# on it (same rationale as the ruff exclusion).
+exclude = ["examples"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
