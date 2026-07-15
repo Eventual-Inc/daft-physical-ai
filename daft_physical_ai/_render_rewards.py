@@ -118,18 +118,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         ),
         (
             "code",
-            "import os\n"
-            "import sys\n"
-            "\n"
-            "# Daft's progress bar leaks fds under Jupyter and can crash the kernel\n"
-            "# (Eventual-Inc/daft-physical-ai#24); disable it there until fixed upstream.\n"
-            'if "ipykernel" in sys.modules:\n'
-            '    os.environ["DAFT_PROGRESS_BAR"] = "0"\n'
-            "\n"
-            "import daft\n"
-            "from daft import col, lit\n"
-            "\n"
-            "from daft_physical_ai.rewards import score_rewards",
+            "import daft\nfrom daft import col, lit\n\nfrom daft_physical_ai.rewards import score_rewards",
         ),
         (
             "markdown",

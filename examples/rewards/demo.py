@@ -9,14 +9,6 @@ Scoring is a pure HTTP call - you bring a running Robometer eval server (`run_ro
 #
 # Install with `pip install daft-physical-ai huggingface_hub matplotlib`, then import.
 
-import os
-import sys
-
-# Daft's progress bar leaks fds under Jupyter and can crash the kernel
-# (Eventual-Inc/daft-physical-ai#24); disable it there until fixed upstream.
-if "ipykernel" in sys.modules:
-    os.environ["DAFT_PROGRESS_BAR"] = "0"
-
 import daft
 from daft import col, lit
 

@@ -9,14 +9,6 @@ Scoring is a pure HTTP call - you bring a running Robometer eval server (`run_ro
 Install with `pip install daft-physical-ai huggingface_hub matplotlib`, then import.
 
 ```python
-import os
-import sys
-
-# Daft's progress bar leaks fds under Jupyter and can crash the kernel
-# (Eventual-Inc/daft-physical-ai#24); disable it there until fixed upstream.
-if "ipykernel" in sys.modules:
-    os.environ["DAFT_PROGRESS_BAR"] = "0"
-
 import daft
 from daft import col, lit
 
@@ -63,6 +55,11 @@ from huggingface_hub import hf_hub_download
 
 meta_path = hf_hub_download(DATASET, f"{SPLIT}/meta/episodes/chunk-000/file-000.parquet", repo_type="dataset")
 video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/file-000.mp4", repo_type="dataset")
+```
+
+```
+/Users/yk/.cache/uv/archive-v0/vOpK9BypIQYJAz2hpSuJG/lib/python3.13/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
 ```
 
 ## Build the episode DataFrame
