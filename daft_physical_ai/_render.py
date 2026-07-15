@@ -511,9 +511,7 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
             ("markdown", f"## Setup\n\nInstall with `pip install {_install_hint(config.method)}`, then import."),
             (
                 "code",
-                "from daft.datasets import lerobot\n"
-                "\n"
-                "from daft_physical_ai.hands import track_hands",
+                "from daft.datasets import lerobot\n\nfrom daft_physical_ai.hands import track_hands",
             ),
             ("markdown", "## Configure\n\nThe dataset, the camera column to decode, and how many frames to run."),
             ("code", _config_block(config)),
