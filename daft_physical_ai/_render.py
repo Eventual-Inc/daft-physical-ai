@@ -511,14 +511,6 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
             ("markdown", f"## Setup\n\nInstall with `pip install {_install_hint(config.method)}`, then import."),
             (
                 "code",
-                "import os\n"
-                "import sys\n"
-                "\n"
-                "# Daft's progress bar leaks fds under Jupyter and can crash the kernel\n"
-                "# (Eventual-Inc/daft-physical-ai#24); disable it there until fixed upstream.\n"
-                'if "ipykernel" in sys.modules:\n'
-                '    os.environ["DAFT_PROGRESS_BAR"] = "0"\n'
-                "\n"
                 "from daft.datasets import lerobot\n"
                 "\n"
                 "from daft_physical_ai.hands import track_hands",

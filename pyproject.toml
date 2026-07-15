@@ -5,11 +5,13 @@ build-backend = "hatchling.build"
 [project]
 name = "daft-physical-ai"
 description = "Physical-AI data processing on Daft, starting with hand tracking."
-# daft floor: v0.7.18 has daft.datasets.lerobot with the batched video decode
-# (Daft#7184) the demo depends on for reasonable remote-read performance. The
-# [video] brings av + pillow for video decode; [hdf5] supports raw EgoDex
-# metadata and trajectory files. Both are part of the normal package surface.
-dependencies = ["daft[hdf5,video]>=0.7.18", "numpy"]
+# daft floor: v0.7.20 fixes the progress-bar fd/thread leak under Jupyter
+# (Daft#7262) that crashed demo notebooks (#24); v0.7.18 brought the batched
+# video decode (Daft#7184) the demo depends on for reasonable remote-read
+# performance. The [video] brings av + pillow for video decode; [hdf5] supports
+# raw EgoDex metadata and trajectory files. Both are part of the normal package
+# surface.
+dependencies = ["daft[hdf5,video]>=0.7.20", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
