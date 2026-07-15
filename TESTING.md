@@ -135,6 +135,12 @@ exit codes (0/1/2) and `--force`.
   (`nbconvert --execute`, 5 episodes): all cells run, the progress-curve
   figure renders to `demo_progress.png`, and the closing Daft filter flags
   ep1 + ep3 by final-frame success < 0.5.
+- **Numeric diff against the multibase baseline (2026-07-15)** - the committed
+  example's 5 episodes compared per-frame against the post-2 validated
+  results (multibase `GTM/content/post-2-open/open-results.json`): keep/drop
+  decisions identical on all 5, final success within 0.09, per-frame progress
+  within 0.02 on 3 of 5 (worst 0.125 on ep2) - cross-deployment model noise,
+  same band as the original 25-episode validation.
 
 **Known limitation (not a bug):** executing the rewards demo or its regen
 needs a live Robometer eval server (`ROBOMETER_URL`); CI exercises the
