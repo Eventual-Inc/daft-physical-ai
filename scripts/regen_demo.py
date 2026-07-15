@@ -1,24 +1,30 @@
 #!/usr/bin/env python3
-"""Regenerate the committed `examples/` demo (py + ipynb + md + image) programmatically.
+"""Regenerate a committed `examples/` demo (py + ipynb + md + image) programmatically.
 
-The three formats render from one shared cell list (`daft_physical_ai._render`),
-so they never drift. Outputs are populated by *executing* the notebook headless
-and then deriving everything else from the executed copy:
+`--demo hands` (default) rebuilds `examples/`; `--demo rewards` rebuilds
+`examples/rewards/` (plus verbatim copies of the two Robometer server scripts).
+The three formats render from one shared cell list (`daft_physical_ai._render`
+/ `_render_rewards`), so they never drift. Outputs are populated by *executing*
+the notebook headless and then deriving everything else from the executed copy:
 
   1. render the notebook (no outputs) and execute it (`nbconvert --execute`,
      `DAFT_PROGRESS_BAR=0` so Daft's progress bars don't pollute outputs);
   2. clean the executed notebook (drop run-specific `execution` timing metadata
      and the `text/plain` fallback strings that sit beside a rich image/HTML);
   3. walk it once to build the markdown's per-code-cell outputs - image cells are
-     written out as a separate `demo_keypoints.png` and linked, stream cells are
-     fenced as text, and the `.show()` HTML table is converted to a markdown table
-     (its long keypoint lists abbreviated to the first point);
-  4. write `demo.py`, `demo.ipynb`, `demo.md`, and `demo_keypoints.png`.
+     written out as a separate png and linked, stream cells are fenced as text,
+     and the `.show()` HTML table is converted to a markdown table (its long
+     keypoint lists abbreviated to the first point);
+  4. write `demo.py`, `demo.ipynb`, `demo.md`, and the png.
 
-Run from the repo root in the demo env (needs the inference stack: a Daft with the
-LeRobot reader, mediapipe, scipy, opencv, matplotlib, plus nbconvert):
+Run from the repo root in the demo env. The hands demo needs the inference
+stack (a Daft with the LeRobot reader, mediapipe, scipy, opencv, matplotlib,
+nbconvert); the rewards demo needs huggingface_hub + matplotlib + nbconvert and
+a running Robometer eval server (`ROBOMETER_URL`, plus `MODAL_KEY` /
+`MODAL_SECRET` for a Modal proxy-auth deployment):
 
     python scripts/regen_demo.py
+    ROBOMETER_URL=... python scripts/regen_demo.py --demo rewards
 
 `--skip-exec --source <nb>` reuses an already-executed notebook instead of running
 one, so steps 2-4 (the conversion logic) can run anywhere - this is how the script
@@ -40,18 +46,48 @@ from pathlib import Path
 
 # import the package's renderers (run from the repo root)
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from daft_physical_ai._render import (
-    DemoConfig,
-    render_markdown,
-    render_notebook,
-    render_script,
-)
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
-IMAGE_NAME = "demo_keypoints.png"
-IMAGE_ALT = "track_hands keypoints"
+from daft_physical_ai import _render, _render_rewards
 
-# The committed examples are the local MediaPipe demo with EgoDex evaluation.
-CONFIG = DemoConfig(method="mediapipe", runtime="local", with_eval=True)
+
+@dataclass
+class DemoSpec:
+    """One committed demo: its config, renderers, image, and output dir."""
+
+    config: Any
+    render_script: Callable[..., str]
+    render_notebook: Callable[..., str]
+    render_markdown: Callable[..., str]
+    image_name: str
+    image_alt: str
+    default_dir: str
+
+
+DEMOS = {
+    # the local MediaPipe demo with EgoDex evaluation
+    "hands": DemoSpec(
+        config=_render.DemoConfig(method="mediapipe", runtime="local", with_eval=True),
+        render_script=_render.render_script,
+        render_notebook=_render.render_notebook,
+        render_markdown=_render.render_markdown,
+        image_name="demo_keypoints.png",
+        image_alt="track_hands keypoints",
+        default_dir="examples",
+    ),
+    # the Robometer reward-scoring demo on LIBERO (needs ROBOMETER_URL to execute)
+    "rewards": DemoSpec(
+        config=_render_rewards.RewardsDemoConfig(),
+        render_script=_render_rewards.render_script,
+        render_notebook=_render_rewards.render_notebook,
+        render_markdown=_render_rewards.render_markdown,
+        image_name="demo_progress.png",
+        image_alt="Robometer per-frame task progress",
+        default_dir="examples/rewards",
+    ),
+}
 
 
 def _text(output: dict, mime: str) -> str:
@@ -107,7 +143,7 @@ def _clean_cell(cell: dict) -> dict:
     return cell
 
 
-def _markdown_output(cell: dict, image_dir: Path) -> str:
+def _markdown_output(cell: dict, image_dir: Path, image_name: str, image_alt: str) -> str:
     """The one markdown output slot for a code cell (image link, stream text, or table)."""
     image_link = ""
     stream_text = ""
@@ -115,8 +151,8 @@ def _markdown_output(cell: dict, image_dir: Path) -> str:
     for out in cell.get("outputs", []):
         png = out.get("data", {}).get("image/png")
         if png and not image_link:
-            (image_dir / IMAGE_NAME).write_bytes(base64.b64decode("".join(png) if isinstance(png, list) else png))
-            image_link = f"![{IMAGE_ALT}]({IMAGE_NAME})"
+            (image_dir / image_name).write_bytes(base64.b64decode("".join(png) if isinstance(png, list) else png))
+            image_link = f"![{image_alt}]({image_name})"
         if out.get("output_type") == "stream":
             stream_text += "".join(out.get("text", []))
         html_out = _text(out, "text/html")
@@ -136,13 +172,15 @@ def _execute(nb_path: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="Regenerate the examples/ demo programmatically.")
-    p.add_argument("--output-dir", default="examples", help="where to write the demo (default: examples)")
+    p = argparse.ArgumentParser(description="Regenerate a committed examples/ demo programmatically.")
+    p.add_argument("--demo", choices=tuple(DEMOS), default="hands", help="which demo to rebuild (default: hands)")
+    p.add_argument("--output-dir", help="where to write the demo (default: the demo's committed dir)")
     p.add_argument("--skip-exec", action="store_true", help="reuse --source instead of executing a fresh notebook")
     p.add_argument("--source", help="executed notebook to reuse with --skip-exec (default: <output-dir>/demo.ipynb)")
     args = p.parse_args(argv)
 
-    out_dir = Path(args.output_dir)
+    spec = DEMOS[args.demo]
+    out_dir = Path(args.output_dir or spec.default_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     nb_path = out_dir / "demo.ipynb"
 
@@ -152,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
         executed = json.loads(source.read_text(encoding="utf-8"))
         print(f"reusing executed notebook: {source}")
     else:
-        nb_path.write_text(render_notebook(CONFIG), encoding="utf-8")
+        nb_path.write_text(spec.render_notebook(spec.config), encoding="utf-8")
         print(f"executing {nb_path} (headless)...")
         _execute(nb_path)
         executed = json.loads(nb_path.read_text(encoding="utf-8"))
@@ -164,16 +202,23 @@ def main(argv: list[str] | None = None) -> int:
         if cell.get("cell_type") != "code":
             continue
         _clean_cell(cell)
-        md_outputs.append(_markdown_output(cell, out_dir))
+        md_outputs.append(_markdown_output(cell, out_dir, spec.image_name, spec.image_alt))
 
     # 4. write all formats
     nb_path.write_text(json.dumps(cleaned, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
-    (out_dir / "demo.py").write_text(render_script(CONFIG), encoding="utf-8")
-    (out_dir / "demo.md").write_text(render_markdown(CONFIG, outputs=md_outputs), encoding="utf-8")
+    (out_dir / "demo.py").write_text(spec.render_script(spec.config), encoding="utf-8")
+    (out_dir / "demo.md").write_text(spec.render_markdown(spec.config, outputs=md_outputs), encoding="utf-8")
 
     wrote = ["demo.py", "demo.ipynb", "demo.md"]
-    if (out_dir / IMAGE_NAME).exists():
-        wrote.append(IMAGE_NAME)
+    if (out_dir / spec.image_name).exists():
+        wrote.append(spec.image_name)
+
+    # the rewards demo tells readers the server scripts sit next to it - keep that true
+    if args.demo == "rewards":
+        for name in _render_rewards.SERVER_TEMPLATES:
+            (out_dir / name).write_text(_render_rewards.load_server_script(name), encoding="utf-8")
+            wrote.append(name)
+
     print("wrote:", ", ".join(str(out_dir / w) for w in wrote))
     return 0
 

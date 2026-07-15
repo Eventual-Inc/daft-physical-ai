@@ -104,3 +104,38 @@ from PyPI installs, no repo code:
 - The Modal **notebook** path (`app.run()`) serializes the notebook-defined
   function, so the kernel's Python must match the image (3.11) - verified
   working on a 3.11 kernel above; other kernel versions fail serialization.
+
+## Reward scoring (`rewards/` + `daft-physical-ai rewards`)
+
+**Unit tests** (`tests/test_rewards.py`, `tests/test_cli_rewards.py`, in CI):
+frame sampling asserted identical to Macrodata refiner's `_sample_indexes`
+(endpoints included, `max_frames` respected); request build/parse round-trips;
+`score_rewards` end to end against a synthetic mp4 + a fake local Robometer
+HTTP server (output dtype equals `REWARD_DTYPE`, sampled indexes and
+timestamps line up with the video's frame clock, `max_frames` reaches the
+UDF). CLI: rendered script/notebook `compile()`, markdown and notebook share
+content, the two server scripts land verbatim from the package templates,
+exit codes (0/1/2) and `--force`.
+
+**Real-data runs (2026-07-14, LIBERO `nvidia/LIBERO_LeRobot_v3`):**
+
+- **Modal serving from a fresh scaffold** - `daft-physical-ai rewards
+  --no-input` into an empty dir, then `modal deploy modal_eval_server.py`
+  straight from it: full image build (robometer install + model bake at the
+  pinned commit/revision) and deploy in ~11 min, health endpoint 200 behind
+  proxy auth.
+- **Generated script against Modal** - the scaffolded `demo.py` run as its
+  post-scaffold hint suggests (`uv run --with daft-physical-ai --with
+  huggingface_hub --with matplotlib`, `ROBOMETER_URL` + `MODAL_KEY`/
+  `MODAL_SECRET`): 3 episodes scored through the proxy-auth endpoint,
+  progress/success values consistent with the multibase-validated baseline
+  (e.g. ep0 climbs 0.10 -> 0.92, final success 0.97).
+- **Committed example** - `examples/rewards/` regenerated headless by
+  `ROBOMETER_URL=... python scripts/regen_demo.py --demo rewards`
+  (`nbconvert --execute`, 5 episodes): all cells run, the progress-curve
+  figure renders to `demo_progress.png`, and the closing Daft filter flags
+  ep1 + ep3 by final-frame success < 0.5.
+
+**Known limitation (not a bug):** executing the rewards demo or its regen
+needs a live Robometer eval server (`ROBOMETER_URL`); CI exercises the
+client against the fake in-process server only.
