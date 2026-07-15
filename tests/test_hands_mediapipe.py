@@ -27,7 +27,7 @@ def test_close_skips_dead_dispatcher() -> None:
     from daft_physical_ai.hands._mediapipe import MediaPipeHands
 
     # @daft.cls wraps the class; the undecorated original is its generic base arg.
-    inst = MediaPipeHands.__orig_bases__[0].__args__[0]()
+    inst = MediaPipeHands.__orig_bases__[0].__args__[0]()  # ty: ignore[unresolved-attribute]
 
     dead = threading.Thread(target=lambda: None)
     dead.start()
@@ -56,7 +56,7 @@ def test_close_abandons_a_blocked_close() -> None:
     pytest.importorskip("mediapipe")
     from daft_physical_ai.hands._mediapipe import MediaPipeHands
 
-    inst = MediaPipeHands.__orig_bases__[0].__args__[0]()
+    inst = MediaPipeHands.__orig_bases__[0].__args__[0]()  # ty: ignore[unresolved-attribute]
 
     release = threading.Event()
     inst.det._lib.MpHandLandmarkerClose = lambda *args: release.wait()
