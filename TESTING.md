@@ -141,6 +141,11 @@ exit codes (0/1/2) and `--force`.
   decisions identical on all 5, final success within 0.09, per-frame progress
   within 0.02 on 3 of 5 (worst 0.125 on ep2) - cross-deployment model noise,
   same band as the original 25-episode validation.
+- **Re-run after the guard removal (2026-07-15)** - post-rebase onto main
+  (daft >= 0.7.20, Jupyter guard dropped): fresh `modal deploy` from the
+  example's server script, the committed example regenerated against it
+  (scores identical to the 07-14 run), and a fresh scaffold's `demo.py` run
+  end to end (3 episodes, values identical, the closing filter flags ep1).
 
 **Known limitation (not a bug):** executing the rewards demo or its regen
 needs a live Robometer eval server (`ROBOMETER_URL`); CI exercises the
