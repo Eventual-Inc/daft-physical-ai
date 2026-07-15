@@ -662,7 +662,7 @@ wheels = [
 
 [[package]]
 name = "daft"
-version = "0.7.18"
+version = "0.7.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fsspec" },
@@ -671,13 +671,12 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/36/85ffdc882972a88964056ea6856d51cba207443b4d143d54d986d1588017/daft-0.7.18.tar.gz", hash = "sha256:6dd53a16aaca9c16fccec7763e259b942ff00d2a96b9a382985cb56d57416ef3", size = 3359615, upload-time = "2026-07-09T01:01:23.908Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b8/e0/457e3e2285fc4d97d49838e2b377958a4f112062ce31e9a47af43b185222/daft-0.7.18-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:bd83c9f284bb62a09912628ed4d7273ad8aa16fd8e047311312efc6026ce1c10", size = 55648464, upload-time = "2026-07-09T01:00:58.024Z" },
-    { url = "https://files.pythonhosted.org/packages/81/58/18da1c58d606d15a09487019601933cbc69c4dde70e698a073ff6fae7e05/daft-0.7.18-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:511e4078c2655a931974340d1f90b6892a804558cfc97f2c85adf9d9e2e95226", size = 51486766, upload-time = "2026-07-09T01:01:01.307Z" },
-    { url = "https://files.pythonhosted.org/packages/f9/85/72676e760e8387c03b78e4eb27172810ec00ebb47aceef153ab835c22319/daft-0.7.18-cp310-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:0538578b7ff0c345f25310fb942eb9feafe5be07332d8d393fdd0a57b6d809d1", size = 53820711, upload-time = "2026-07-09T01:01:04.368Z" },
-    { url = "https://files.pythonhosted.org/packages/86/72/d38076455f832a40a9bf5d8eeae8e18794a255a9015ca8b6b59d7729ade7/daft-0.7.18-cp310-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:9f4d1591776804b0c9db32ed13d6dd1c9220c27a1603692519db5d1d669b38e9", size = 56017539, upload-time = "2026-07-09T01:01:07.304Z" },
-    { url = "https://files.pythonhosted.org/packages/a3/26/13973f5591d1dea4497ac860e22f38f711c4fffd6129278a2935ee1e0953/daft-0.7.18-cp310-abi3-win_amd64.whl", hash = "sha256:8733c4ae21e0a10075bf6e29d1bafd40b7b0a629f3e105fe5d7202e90c06396a", size = 55171843, upload-time = "2026-07-09T01:01:10.891Z" },
+    { url = "https://files.pythonhosted.org/packages/4d/4c/35d2be17327d6e544d413f26529a67e55aeed26f09983d835b09933482b4/daft-0.7.20-cp310-abi3-macosx_10_12_x86_64.whl", hash = "sha256:3dba214a95228e28ff95978ed4ef060c24cd265a2cc7380656066f29ee0f3b97", size = 55724224, upload-time = "2026-07-15T01:33:54.428Z" },
+    { url = "https://files.pythonhosted.org/packages/09/b0/31dd86d4852bfcff810b033524c7694628fafcf8da681b54541656cc81de/daft-0.7.20-cp310-abi3-macosx_11_0_arm64.whl", hash = "sha256:f4b9c5f208ae15e073b4ec9a62b8c7cb8c9dae3d3177e6884c0339f984757b12", size = 51553818, upload-time = "2026-07-15T01:33:58.975Z" },
+    { url = "https://files.pythonhosted.org/packages/24/58/e9318e7da1634359223b00441d49ea548bb5ebf655873f586f94bf7fe54b/daft-0.7.20-cp310-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:b566077ce4a4a72d97ef02bc5dec1b6d5fa9fdd49e758525d9ec5ee64e18d766", size = 53879971, upload-time = "2026-07-15T01:34:03.416Z" },
+    { url = "https://files.pythonhosted.org/packages/42/79/70b5a68a32406956b8ee886ba3aa27cb587541925e65f641e0dba4f4eb17/daft-0.7.20-cp310-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:f7f8a73a00f96e66e3567bd0222f5e1bc38ed4f5dfc8c93eacd0109620f38a8c", size = 56081119, upload-time = "2026-07-15T01:34:08.449Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/4f/5934dad3528b8c2973710956de70ca463be0d1b9fbd45b02039722cf2a27/daft-0.7.20-cp310-abi3-win_amd64.whl", hash = "sha256:e4a62d11b2923141d128972f95be992db96b21360be9d07bfa75a6ced1daf1cb", size = 55214221, upload-time = "2026-07-15T01:34:13.264Z" },
 ]
 
 [package.optional-dependencies]
@@ -758,7 +757,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "daft", extras = ["hdf5", "video"], specifier = ">=0.7.18" },
+    { name = "daft", extras = ["hdf5", "video"], specifier = ">=0.7.20" },
     { name = "einops", marker = "extra == 'all'" },
     { name = "einops", marker = "extra == 'wilor'" },
     { name = "hydra-colorlog", marker = "extra == 'all'" },
