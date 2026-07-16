@@ -102,8 +102,7 @@ Scoring is a pure HTTP call: the package never imports the model - you bring a
 running [Robometer eval server](https://github.com/robometer/robometer) and
 pass its URL. `daft-physical-ai rewards` scaffolds a complete demo plus the two
 server scripts to run one yourself (`run_robometer_server.py` for any NVIDIA
-GPU, `modal_eval_server.py` for [Modal](https://modal.com)). The output type,
-defined as `REWARD_DTYPE` in `daft_physical_ai/rewards/schema.py`:
+GPU, `modal_eval_server.py` for [Modal](https://modal.com)). The output type:
 
 ```
 struct {
