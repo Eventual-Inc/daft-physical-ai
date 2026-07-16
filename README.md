@@ -1,8 +1,8 @@
 # daft-physical-ai
 
-Physical-AI data processing on [Daft](https://github.com/Eventual-Inc/Daft), starting with hand
-tracking. The methods run as Daft UDFs, so they slot into any Daft
-pipeline and execute lazily, batched, and distributed.
+Physical-AI data processing on [Daft](https://github.com/Eventual-Inc/Daft):
+hand tracking and reward scoring. The methods run as Daft UDFs, so they slot
+into any Daft pipeline and execute lazily, batched, and distributed.
 
 Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
 
@@ -76,6 +76,42 @@ The Daft type is `list[struct{ handedness: string, confidence: float32, kp2d:
 list[list[float32]], kp3d: list[list[float32]] }]`, defined as `HANDS_DTYPE` in
 `daft_physical_ai/hands/schema.py`.
 
+## Reward scoring
+
+Score episodes with a reward model
+([Robometer-4B](https://huggingface.co/robometer/Robometer-4B)) - per-frame
+task progress (0-1) plus success probability, written back as a dataset column.
+Use it to filter failed or stalled episodes before BC training, as dense reward
+for RL post-training, or to catch mislabeled tasks.
+
+```python
+from daft_physical_ai.rewards import score_rewards
+
+# one row per episode: task text, length, and where its frames live in the video
+df = df.with_column(
+    "rewards",
+    score_rewards(
+        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video_path"],
+        url="http://localhost:8001",   # any running Robometer eval server
+        max_frames=8,                  # frames sampled per episode
+    ),
+)
+```
+
+Scoring is a pure HTTP call: the package never imports the model - you bring a
+running [Robometer eval server](https://github.com/robometer/robometer) and
+pass its URL. `daft-physical-ai rewards` scaffolds a complete demo plus the two
+server scripts to run one yourself (`run_robometer_server.py` for any NVIDIA
+GPU, `modal_eval_server.py` for [Modal](https://modal.com)). The output type:
+
+```
+struct {
+    reward_score:       list[float64]                          # per-frame task progress, 0-1
+    robometer_success:  list[float64]                          # per-frame success probability
+    reward_frames:      list[struct{index, timestamp_s}]       # which frames were scored
+}
+```
+
 ## Example
 
 A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
@@ -107,8 +143,11 @@ deps). If the [PyPI package](https://pypi.org/project/daft-physical-ai/) is
 already installed (`pip install daft-physical-ai`), plain `daft-physical-ai hands`
 works too; from a clone of this repo, `uv sync` installs it (`uv run daft-physical-ai`).
 
-Hand tracking is the first capability; each new one will be its own subcommand
-(`daft-physical-ai <command>` lists what's available).
+Each capability is its own subcommand - `daft-physical-ai hands` and
+`daft-physical-ai rewards` so far (`daft-physical-ai` with no arguments lists
+what's available). The `rewards` scaffold also writes the Robometer server
+scripts next to the demo, so one directory holds everything: score the
+episodes, and serve the model locally or on Modal.
 
 To *run* a generated demo you also need its inference stack. `uvx` covers that
 too - one line, nothing installed:

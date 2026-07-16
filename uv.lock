@@ -693,6 +693,7 @@ video = [
 name = "daft-physical-ai"
 source = { editable = "." }
 dependencies = [
+    { name = "aiohttp" },
     { name = "daft", extra = ["hdf5", "video"] },
     { name = "numpy" },
 ]
@@ -757,6 +758,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "aiohttp" },
     { name = "daft", extras = ["hdf5", "video"], specifier = ">=0.7.20" },
     { name = "einops", marker = "extra == 'all'" },
     { name = "einops", marker = "extra == 'wilor'" },

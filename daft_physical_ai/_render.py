@@ -457,9 +457,13 @@ def render_markdown(config: DemoConfig, outputs: list[str] | None = None) -> str
     results without running anything.
     """
     config.validate()
+    return _cells_to_markdown(_demo_cells(config), outputs)
+
+
+def _cells_to_markdown(cells: list[tuple[str, str]], outputs: list[str] | None = None) -> str:
     out_iter = iter(outputs or [])
     parts = []
-    for kind, text in _demo_cells(config):
+    for kind, text in cells:
         if kind == "markdown":
             parts.append(text)
             continue

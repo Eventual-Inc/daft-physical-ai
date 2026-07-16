@@ -10,7 +10,7 @@ from __future__ import annotations
 import argparse
 from collections.abc import Callable
 
-from . import hands
+from . import hands, rewards
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -20,6 +20,7 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     subparsers = p.add_subparsers(dest="command", metavar="<command>")
     hands.register(subparsers)
+    rewards.register(subparsers)
     return p
 
 

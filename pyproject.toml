@@ -11,7 +11,9 @@ description = "Physical-AI data processing on Daft, starting with hand tracking.
 # performance. The [video] brings av + pillow for video decode; [hdf5] supports
 # raw EgoDex metadata and trajectory files. Both are part of the normal package
 # surface.
-dependencies = ["daft[hdf5,video]>=0.7.20", "numpy"]
+# aiohttp is the rewards module's HTTP client (the reward model is served
+# behind a URL, never imported).
+dependencies = ["aiohttp", "daft[hdf5,video]>=0.7.20", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
@@ -65,6 +67,11 @@ source = "vcs"
 
 [tool.ty.rules]
 unresolved-import = "ignore"
+
+[tool.ty.src]
+# examples/ holds CLI-generated demo code - don't impose package conventions
+# on it (same rationale as the ruff exclusion).
+exclude = ["examples"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
