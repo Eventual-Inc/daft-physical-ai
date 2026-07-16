@@ -108,7 +108,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         "(all-zero progress usually means the task text is wrong).\n\n"
         "Scoring is a pure HTTP call - you bring a running Robometer eval server "
         "(`run_robometer_server.py` on any NVIDIA GPU, or `modal deploy modal_eval_server.py`; "
-        "both were generated next to this demo) and point `ROBOMETER_URL` at it."
+        "both can be found next to this demo) and point `ROBOMETER_URL` at it."
     )
     cells: list[tuple[str, str]] = [
         ("markdown", intro),
@@ -129,8 +129,9 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         (
             "markdown",
             "## Point at your Robometer server\n\nThe pipeline takes a URL and doesn't care "
-            "what's behind it - a local GPU, Modal, or anything else that serves the eval "
-            "server's `/evaluate_batch_npy`.",
+            "what's behind it - a local GPU ([`run_robometer_server.py`](run_robometer_server.py)), "
+            "Modal ([`modal_eval_server.py`](modal_eval_server.py)), or anything else that "
+            "serves the eval server's `/evaluate_batch_npy`.",
         ),
         ("code", _SERVER_CELL),
         (
@@ -151,7 +152,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         (
             "markdown",
             "## Build the episode DataFrame\n\nOne row per episode: the task text (from the "
-            "episode's own LeRobot metadata - nothing hand-written), its length, and where its "
+            "episode's own LeRobot metadata), its length, and where its "
             "frames live in the video.",
         ),
         (

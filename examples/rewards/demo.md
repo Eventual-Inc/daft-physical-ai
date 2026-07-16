@@ -2,7 +2,7 @@
 
 This demo scores robot episodes with a reward model ([Robometer-4B](https://huggingface.co/robometer/Robometer-4B)) as a Daft pipeline: per-frame task progress (0-1) plus success probability, written back as a dataset column with `score_rewards`. Downstream uses: filter failed or stalled episodes before BC training, dense reward for RL post-training, and catching mislabeled tasks (all-zero progress usually means the task text is wrong).
 
-Scoring is a pure HTTP call - you bring a running Robometer eval server (`run_robometer_server.py` on any NVIDIA GPU, or `modal deploy modal_eval_server.py`; both were generated next to this demo) and point `ROBOMETER_URL` at it.
+Scoring is a pure HTTP call - you bring a running Robometer eval server (`run_robometer_server.py` on any NVIDIA GPU, or `modal deploy modal_eval_server.py`; both can be found next to this demo) and point `ROBOMETER_URL` at it.
 
 ## Setup
 
@@ -29,7 +29,7 @@ MAX_FRAMES = 8  # frames sampled per episode (first + last always included)
 
 ## Point at your Robometer server
 
-The pipeline takes a URL and doesn't care what's behind it - a local GPU, Modal, or anything else that serves the eval server's `/evaluate_batch_npy`.
+The pipeline takes a URL and doesn't care what's behind it - a local GPU ([`run_robometer_server.py`](run_robometer_server.py)), Modal ([`modal_eval_server.py`](modal_eval_server.py)), or anything else that serves the eval server's `/evaluate_batch_npy`.
 
 ```python
 import os
@@ -59,7 +59,7 @@ video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/fil
 
 ## Build the episode DataFrame
 
-One row per episode: the task text (from the episode's own LeRobot metadata - nothing hand-written), its length, and where its frames live in the video.
+One row per episode: the task text (from the episode's own LeRobot metadata), its length, and where its frames live in the video.
 
 ```python
 df = (
