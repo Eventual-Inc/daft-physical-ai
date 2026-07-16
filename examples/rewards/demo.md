@@ -57,11 +57,6 @@ meta_path = hf_hub_download(DATASET, f"{SPLIT}/meta/episodes/chunk-000/file-000.
 video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/file-000.mp4", repo_type="dataset")
 ```
 
-```
-/Users/yk/.cache/uv/archive-v0/vOpK9BypIQYJAz2hpSuJG/lib/python3.13/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-```
-
 ## Build the episode DataFrame
 
 One row per episode: the task text (from the episode's own LeRobot metadata - nothing hand-written), its length, and where its frames live in the video.

@@ -117,13 +117,13 @@ struct {
 A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
 keypoints, and score against EgoDex ground truth:
 
-![track_hands keypoints](examples/demo_keypoints.png)
+![track_hands keypoints](examples/hands/demo_keypoints.png)
 
 Available in three equivalent forms:
 
-- **[examples/demo.md](examples/demo.md)** - read it start to finish; code and outputs inline.
-- **[examples/demo.ipynb](examples/demo.ipynb)** - runnable notebook (outputs included).
-- **[examples/demo.py](examples/demo.py)** - plain script.
+- **[examples/hands/demo.md](examples/hands/demo.md)** - read it start to finish; code and outputs inline.
+- **[examples/hands/demo.ipynb](examples/hands/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/hands/demo.py](examples/hands/demo.py)** - plain script.
 
 Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
 `daft-physical-ai hands` command - run it with no flags for an interactive
