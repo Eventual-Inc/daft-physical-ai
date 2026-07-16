@@ -152,7 +152,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         (
             "markdown",
             "## Build the episode DataFrame\n\nOne row per episode: the task text (from the "
-            "episode's own LeRobot metadata - nothing hand-written), its length, and where its "
+            "episode's own LeRobot metadata), its length, and where its "
             "frames live in the video.",
         ),
         (

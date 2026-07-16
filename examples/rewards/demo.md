@@ -59,7 +59,7 @@ video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/fil
 
 ## Build the episode DataFrame
 
-One row per episode: the task text (from the episode's own LeRobot metadata - nothing hand-written), its length, and where its frames live in the video.
+One row per episode: the task text (from the episode's own LeRobot metadata), its length, and where its frames live in the video.
 
 ```python
 df = (
