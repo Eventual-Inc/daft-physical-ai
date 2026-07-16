@@ -108,7 +108,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         "(all-zero progress usually means the task text is wrong).\n\n"
         "Scoring is a pure HTTP call - you bring a running Robometer eval server "
         "(`run_robometer_server.py` on any NVIDIA GPU, or `modal deploy modal_eval_server.py`; "
-        "both were generated next to this demo) and point `ROBOMETER_URL` at it."
+        "both can be found next to this demo) and point `ROBOMETER_URL` at it."
     )
     cells: list[tuple[str, str]] = [
         ("markdown", intro),
