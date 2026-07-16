@@ -9,8 +9,9 @@ the notebook headless and then deriving everything else from the executed copy:
 
   1. render the notebook (no outputs) and execute it (`nbconvert --execute`,
      `DAFT_PROGRESS_BAR=0` so Daft's progress bars don't pollute outputs);
-  2. clean the executed notebook (drop run-specific `execution` timing metadata
-     and the `text/plain` fallback strings that sit beside a rich image/HTML);
+  2. clean the executed notebook (drop run-specific `execution` timing metadata,
+     tqdm's "IProgress not found" stderr noise, and the `text/plain` fallback
+     strings that sit beside a rich image/HTML);
   3. walk it once to build the markdown's per-code-cell outputs - image cells are
      written out as a separate png and linked, stream cells are fenced as text,
      and the `.show()` HTML table is converted to a markdown table (its long
@@ -133,13 +134,30 @@ def _show_table_to_markdown(html_text: str) -> str:
     return "\n".join(lines)
 
 
+# tqdm.auto's "IProgress not found" warning: nbconvert executes in a real Jupyter
+# kernel, so tqdm tries the ipywidgets bar and warns (with a local site-packages
+# path) when the exec env doesn't have it. Environment noise, not demo output.
+_TQDM_NOISE = re.compile(
+    r"^.*TqdmWarning: IProgress not found.*\n(?:\s*from \.autonotebook import.*\n?)?",
+    re.MULTILINE,
+)
+
+
 def _clean_cell(cell: dict) -> dict:
-    """Drop run-specific metadata and text/plain fallbacks that shadow a rich output."""
+    """Drop run-specific metadata, stderr noise, and text/plain fallbacks that shadow a rich output."""
     cell["metadata"] = {k: v for k, v in cell.get("metadata", {}).items() if k != "execution"}
+    outputs = []
     for out in cell.get("outputs", []):
+        if out.get("output_type") == "stream" and out.get("name") == "stderr":
+            text = _TQDM_NOISE.sub("", "".join(out.get("text", [])))
+            if not text:
+                continue
+            out["text"] = text
         data = out.get("data")
         if data and ("text/html" in data or any(k.startswith("image/") for k in data)):
             data.pop("text/plain", None)
+        outputs.append(out)
+    cell["outputs"] = outputs
     return cell
 
 
