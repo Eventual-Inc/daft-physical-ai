@@ -134,6 +134,35 @@ def test_score_rewards_end_to_end(tmp_path: Path, fake_server: str) -> None:
     assert rewards["reward_frames"][-1]["timestamp_s"] == pytest.approx((N_FRAMES - 1) / FPS)
 
 
+def test_score_rewards_accepts_file_handle(tmp_path: Path, fake_server: str) -> None:
+    """A Daft file handle (as from lerobot.read_episodes) works in place of a path string."""
+    from daft.functions import video_file
+
+    video = tmp_path / "episode.mp4"
+    _write_video(video)
+
+    df = daft.from_pydict(
+        {
+            "task": ["pick up the mug"],
+            "length": [N_FRAMES],
+            "from_ts": [0.0],
+            "to_ts": [N_FRAMES / FPS],
+            "video_path": [str(video)],
+        }
+    )
+    df = df.with_column("video", video_file(df["video_path"]))
+    df = df.with_column(
+        "rewards",
+        score_rewards(df["task"], df["length"], df["from_ts"], df["to_ts"], df["video"], url=fake_server),
+    )
+
+    rewards = df.to_pydict()["rewards"][0]
+    expected_idxs = sample_indexes(N_FRAMES, max_frames=8)
+    assert [f["index"] for f in rewards["reward_frames"]] == expected_idxs
+    assert rewards["reward_score"][0] == 0.0
+    assert rewards["reward_score"][-1] == 1.0
+
+
 def test_score_rewards_max_frames(tmp_path: Path, fake_server: str) -> None:
     video = tmp_path / "episode.mp4"
     _write_video(video)

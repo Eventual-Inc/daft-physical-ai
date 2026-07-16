@@ -146,6 +146,13 @@ exit codes (0/1/2) and `--force`.
   example's server script, the committed example regenerated against it
   (scores identical to the 07-14 run), and a fresh scaffold's `demo.py` run
   end to end (3 episodes, values identical, the closing filter flags ep1).
+- **read_episodes rewrite (2026-07-16)** - the demo rebuilt on
+  `daft.datasets.lerobot.read_episodes` (episode rows + video file handles
+  streamed from the Hub; no `hf_hub_download`, no hardcoded chunk paths) and
+  `score_rewards` extended to accept a Daft file handle: fresh `modal deploy`,
+  the committed example regenerated against it - all 5 episodes' per-frame
+  progress and success identical to the 07-15 run, closing filter still flags
+  ep1 + ep3.
 
 **Known limitation (not a bug):** executing the rewards demo or its regen
 needs a live Robometer eval server (`ROBOMETER_URL`); CI exercises the
