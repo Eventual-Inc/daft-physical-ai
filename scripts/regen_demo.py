@@ -20,7 +20,7 @@ the notebook headless and then deriving everything else from the executed copy:
 
 Run from the repo root in the demo env. The hands demo needs the inference
 stack (a Daft with the LeRobot reader, mediapipe, scipy, opencv, matplotlib,
-nbconvert); the rewards demo needs huggingface_hub + matplotlib + nbconvert and
+nbconvert); the rewards demo needs matplotlib + nbconvert and
 a running Robometer eval server (`ROBOMETER_URL`, plus `MODAL_KEY` /
 `MODAL_SECRET` for a Modal proxy-auth deployment):
 

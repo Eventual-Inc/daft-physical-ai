@@ -48,7 +48,7 @@ talks to a Robometer eval server you run - the committed
 ```bash
 # serve (pick one), then run against it:
 ROBOMETER_URL=http://localhost:8001 \
-uv run --with daft-physical-ai --with huggingface_hub --with matplotlib examples/rewards/demo.py
+uv run --with daft-physical-ai --with matplotlib examples/rewards/demo.py
 ```
 
 Generate your own (different dataset, episode count, frame budget):

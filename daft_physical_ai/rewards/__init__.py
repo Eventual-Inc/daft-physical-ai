@@ -25,7 +25,7 @@ def score_rewards(
     length: Expression,
     from_ts: Expression,
     to_ts: Expression,
-    video_path: Expression,
+    video: Expression,
     *,
     url: str,
     max_frames: int = 8,
@@ -46,7 +46,11 @@ def score_rewards(
         length: episode length column (frame count).
         from_ts: episode start timestamp column (seconds, in the video).
         to_ts: episode end timestamp column (seconds, in the video).
-        video_path: path column for the video file holding the episode.
+        video: video column for the file holding the episode - a local path
+            string or a Daft file handle (e.g. the ``videos/{key}/video``
+            column from ``daft.datasets.lerobot.read_episodes``; handles are
+            streamed through Daft's IO layer, so remote ``hf://`` datasets
+            work without downloading).
         url: base URL of a running Robometer eval server (local or remote);
             the pipeline doesn't care what's behind it.
         max_frames: how many frames to sample per episode (default 8, matching
@@ -62,13 +66,13 @@ def score_rewards(
     """
 
     @daft.func(return_dtype=REWARD_DTYPE)
-    async def _score(task: str, length: int, from_ts: float, to_ts: float, video_path: str) -> dict:
+    async def _score(task: str, length: int, from_ts: float, to_ts: float, video) -> dict:
         idxs = sample_indexes(int(length), max_frames)
         # av decode is blocking; keep it off the event loop so requests overlap.
-        frames, refs = await asyncio.to_thread(decode_frames, video_path, float(from_ts), float(to_ts), idxs)
+        frames, refs = await asyncio.to_thread(decode_frames, video, float(from_ts), float(to_ts), idxs)
         npy, sample_json = build_request(frames, task)
         out = await post_request(url, npy, sample_json, headers=headers, timeout_s=timeout_s)
         progress, success = parse_response(out)
         return {"reward_score": progress, "robometer_success": success, "reward_frames": refs}
 
-    return _score(task, length, from_ts, to_ts, video_path)
+    return _score(task, length, from_ts, to_ts, video)

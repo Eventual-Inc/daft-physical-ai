@@ -12,8 +12,13 @@ from __future__ import annotations
 
 import io
 import json
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 
 def sample_indexes(length: int, max_frames: int = 8) -> list[int]:
@@ -32,22 +37,39 @@ def sample_indexes(length: int, max_frames: int = 8) -> list[int]:
     return sorted({round(i * float(length - 1) / float(max_frames - 1)) for i in range(max_frames)})
 
 
-def decode_frames(video_path: str, from_ts: float, to_ts: float, want: list[int]) -> tuple[np.ndarray, list[dict]]:
-    """Decode an episode's segment of a concatenated LeRobot mp4 and pick the wanted frames.
+@contextmanager
+def _open_container(video: Any) -> Iterator[Any]:
+    """Yield an av container for a local path string or a Daft file handle.
 
-    ``want`` holds frame indexes relative to the episode start (``from_ts``).
-    Returns ``(frames [N, H, W, 3] uint8, refs)`` where each ref records the
-    frame's relative index and absolute timestamp in seconds.
+    A handle (e.g. ``VideoFile`` from ``lerobot.read_episodes``) is streamed
+    through Daft's IO layer via ``.open()``, so remote schemes like ``hf://``
+    work; PyAV alone can only open local paths and its own protocols.
     """
     import av
 
+    if isinstance(video, str):
+        with av.open(video) as container:
+            yield container
+    else:
+        with video.open() as f, av.open(f) as container:
+            yield container
+
+
+def decode_frames(video: Any, from_ts: float, to_ts: float, want: list[int]) -> tuple[np.ndarray, list[dict]]:
+    """Decode an episode's segment of a concatenated LeRobot mp4 and pick the wanted frames.
+
+    ``video`` is a local path string or a Daft file handle. ``want`` holds
+    frame indexes relative to the episode start (``from_ts``).
+    Returns ``(frames [N, H, W, 3] uint8, refs)`` where each ref records the
+    frame's relative index and absolute timestamp in seconds.
+    """
     want_set = set(want)
     frames, refs = [], []
-    with av.open(video_path) as container:
+    with _open_container(video) as container:
         stream = container.streams.video[0]
         time_base = stream.time_base
         if time_base is None:
-            raise ValueError(f"video stream in {video_path} has no time base")
+            raise ValueError(f"video stream in {getattr(video, 'path', video)} has no time base")
         container.seek(max(0, int((from_ts - 1.0) / time_base)), stream=stream)
         rel = None
         for frame in container.decode(stream):

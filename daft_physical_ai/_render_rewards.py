@@ -114,11 +114,11 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         ("markdown", intro),
         (
             "markdown",
-            "## Setup\n\nInstall with `pip install daft-physical-ai huggingface_hub matplotlib`, then import.",
+            "## Setup\n\nInstall with `pip install daft-physical-ai matplotlib`, then import.",
         ),
         (
             "code",
-            "import daft\nfrom daft import col, lit\n\nfrom daft_physical_ai.rewards import score_rewards",
+            "from daft import col\nfrom daft.datasets import lerobot\n\nfrom daft_physical_ai.rewards import score_rewards",
         ),
         (
             "markdown",
@@ -136,29 +136,16 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
         ("code", _SERVER_CELL),
         (
             "markdown",
-            "## Fetch the episode metadata and video\n\nLeRobot v3 stores episode metadata as "
-            "parquet and concatenates episodes into shared mp4 files. The first metadata and "
-            "video files cover the first episodes, which is all this demo scores.",
-        ),
-        (
-            "code",
-            "from huggingface_hub import hf_hub_download\n"
-            "\n"
-            'meta_path = hf_hub_download(DATASET, f"{SPLIT}/meta/episodes/chunk-000/file-000.parquet", '
-            'repo_type="dataset")\n'
-            'video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/file-000.mp4", '
-            'repo_type="dataset")',
-        ),
-        (
-            "markdown",
-            "## Build the episode DataFrame\n\nOne row per episode: the task text (from the "
-            "episode's own LeRobot metadata), its length, and where its "
-            "frames live in the video.",
+            "## Build the episode DataFrame\n\nOne row per episode, straight from Daft's LeRobot "
+            "reader: `read_episodes` reads the episode metadata and resolves which shared mp4 "
+            "holds each episode's footage; `include_video_metadata=True` keeps where in that "
+            "file the episode lives (`from_timestamp`/`to_timestamp`). Everything streams from "
+            "the Hub - nothing to download first.",
         ),
         (
             "code",
             "df = (\n"
-            "    daft.read_parquet(meta_path)\n"
+            '    lerobot.read_episodes(f"hf://datasets/{DATASET}/{SPLIT}", include_video_metadata=True)\n'
             '    .sort("episode_index")\n'
             "    .limit(EPISODES)\n"
             "    .select(\n"
@@ -167,7 +154,7 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
             '        "length",\n'
             '        col(f"videos/{VIDEO_KEY}/from_timestamp").alias("from_ts"),\n'
             '        col(f"videos/{VIDEO_KEY}/to_timestamp").alias("to_ts"),\n'
-            '        lit(video_path).alias("video_path"),\n'
+            '        col(f"videos/{VIDEO_KEY}/video").alias("video"),\n'
             "    )\n"
             ")",
         ),
@@ -175,16 +162,16 @@ def _demo_cells(config: RewardsDemoConfig) -> list[tuple[str, str]]:
             "markdown",
             "## Score the episodes\n\n`score_rewards` returns a reward column: it samples "
             "`MAX_FRAMES` frames per episode, decodes them from the episode's segment of the "
-            "video, and asks the server for per-frame progress + success. It's a lazy async "
-            "Daft UDF, so nothing runs until we materialize below - and episodes score "
-            "concurrently when they do.",
+            "video (streamed through the file handle), and asks the server for per-frame "
+            "progress + success. It's a lazy async Daft UDF, so nothing runs until we "
+            "materialize below - and episodes score concurrently when they do.",
         ),
         (
             "code",
             "df = df.with_column(\n"
             '    "rewards",\n'
             "    score_rewards(\n"
-            '        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video_path"],\n'
+            '        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video"],\n'
             "        url=ROBOMETER_URL, max_frames=MAX_FRAMES, headers=HEADERS,\n"
             "    ),\n"
             ")",

@@ -171,7 +171,7 @@ def run(args: argparse.Namespace) -> int:
         print(f"  python {out_dir / 'run_robometer_server.py'}   # any NVIDIA GPU (A10G/L4 fits the 4B bf16)")
         print(f"  uvx modal deploy {out_dir / 'modal_eval_server.py'}   # Modal (uvx modal setup first)")
     print("\nThen run the demo against it (deps fetched on the fly, nothing to install):")
-    withs = "--with daft-physical-ai --with huggingface_hub --with matplotlib"
+    withs = "--with daft-physical-ai --with matplotlib"
     if have_script:
         print(f"  ROBOMETER_URL=http://... uv run {withs} {script_path}")
     if have_nb:

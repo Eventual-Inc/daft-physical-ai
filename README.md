@@ -88,10 +88,12 @@ for RL post-training, or to catch mislabeled tasks.
 from daft_physical_ai.rewards import score_rewards
 
 # one row per episode: task text, length, and where its frames live in the video
+# (e.g. from daft.datasets.lerobot.read_episodes - the video column can be a
+# Daft file handle or a local path string)
 df = df.with_column(
     "rewards",
     score_rewards(
-        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video_path"],
+        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video"],
         url="http://localhost:8001",   # any running Robometer eval server
         max_frames=8,                  # frames sampled per episode
     ),

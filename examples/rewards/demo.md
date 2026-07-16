@@ -6,11 +6,11 @@ Scoring is a pure HTTP call - you bring a running Robometer eval server (`run_ro
 
 ## Setup
 
-Install with `pip install daft-physical-ai huggingface_hub matplotlib`, then import.
+Install with `pip install daft-physical-ai matplotlib`, then import.
 
 ```python
-import daft
-from daft import col, lit
+from daft import col
+from daft.datasets import lerobot
 
 from daft_physical_ai.rewards import score_rewards
 ```
@@ -46,24 +46,13 @@ HEADERS = (
 )
 ```
 
-## Fetch the episode metadata and video
-
-LeRobot v3 stores episode metadata as parquet and concatenates episodes into shared mp4 files. The first metadata and video files cover the first episodes, which is all this demo scores.
-
-```python
-from huggingface_hub import hf_hub_download
-
-meta_path = hf_hub_download(DATASET, f"{SPLIT}/meta/episodes/chunk-000/file-000.parquet", repo_type="dataset")
-video_path = hf_hub_download(DATASET, f"{SPLIT}/videos/{VIDEO_KEY}/chunk-000/file-000.mp4", repo_type="dataset")
-```
-
 ## Build the episode DataFrame
 
-One row per episode: the task text (from the episode's own LeRobot metadata), its length, and where its frames live in the video.
+One row per episode, straight from Daft's LeRobot reader: `read_episodes` reads the episode metadata and resolves which shared mp4 holds each episode's footage; `include_video_metadata=True` keeps where in that file the episode lives (`from_timestamp`/`to_timestamp`). Everything streams from the Hub - nothing to download first.
 
 ```python
 df = (
-    daft.read_parquet(meta_path)
+    lerobot.read_episodes(f"hf://datasets/{DATASET}/{SPLIT}", include_video_metadata=True)
     .sort("episode_index")
     .limit(EPISODES)
     .select(
@@ -72,20 +61,20 @@ df = (
         "length",
         col(f"videos/{VIDEO_KEY}/from_timestamp").alias("from_ts"),
         col(f"videos/{VIDEO_KEY}/to_timestamp").alias("to_ts"),
-        lit(video_path).alias("video_path"),
+        col(f"videos/{VIDEO_KEY}/video").alias("video"),
     )
 )
 ```
 
 ## Score the episodes
 
-`score_rewards` returns a reward column: it samples `MAX_FRAMES` frames per episode, decodes them from the episode's segment of the video, and asks the server for per-frame progress + success. It's a lazy async Daft UDF, so nothing runs until we materialize below - and episodes score concurrently when they do.
+`score_rewards` returns a reward column: it samples `MAX_FRAMES` frames per episode, decodes them from the episode's segment of the video (streamed through the file handle), and asks the server for per-frame progress + success. It's a lazy async Daft UDF, so nothing runs until we materialize below - and episodes score concurrently when they do.
 
 ```python
 df = df.with_column(
     "rewards",
     score_rewards(
-        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video_path"],
+        df["task"], df["length"], df["from_ts"], df["to_ts"], df["video"],
         url=ROBOMETER_URL, max_frames=MAX_FRAMES, headers=HEADERS,
     ),
 )
