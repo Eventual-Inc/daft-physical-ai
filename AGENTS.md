@@ -45,7 +45,7 @@ Working implementations to port from: multibase `src/post7_hand_tracking/egodex_
 
 # Regenerating the examples demo
 
-`examples/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
+`examples/hands/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
 don't hand-edit them. They all render from one shared cell list in
 `daft_physical_ai/_render.py`, so editing the source keeps the three formats in
 sync. To rebuild them:

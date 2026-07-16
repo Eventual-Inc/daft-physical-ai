@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regenerate a committed `examples/` demo (py + ipynb + md + image) programmatically.
 
-`--demo hands` (default) rebuilds `examples/`; `--demo rewards` rebuilds
+`--demo hands` (default) rebuilds `examples/hands/`; `--demo rewards` rebuilds
 `examples/rewards/` (plus verbatim copies of the two Robometer server scripts).
 The three formats render from one shared cell list (`daft_physical_ai._render`
 / `_render_rewards`), so they never drift. Outputs are populated by *executing*
@@ -76,7 +76,7 @@ DEMOS = {
         render_markdown=_render.render_markdown,
         image_name="demo_keypoints.png",
         image_alt="track_hands keypoints",
-        default_dir="examples",
+        default_dir="examples/hands",
     ),
     # the Robometer reward-scoring demo on LIBERO (needs ROBOMETER_URL to execute)
     "rewards": DemoSpec(
