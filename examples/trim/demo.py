@@ -63,30 +63,32 @@ frames = (
 windows = trim_windows(frames, fps=FPS)
 windows.sort("trim_fraction", desc=True).show(5)
 
-# See one episode
+# See the spread
 #
-# The motion-energy curve for the most-trimmed episode, with the kept window shaded. The flat stretch outside the window is the operator not yet doing anything.
+# Motion-energy curves with the kept window shaded: the most-trimmed episode, the median, and the least. The flat stretches outside a window are the operator not yet doing anything; an already-clean episode keeps nearly everything.
 
 import matplotlib.pyplot as plt
 
-worst = windows.where(~col("never_active")).sort("trim_fraction", desc=True).limit(1).to_pylist()[0]
-ep = worst["episode_index"]
-curve = (
-    frames.where(col("episode_index") == ep)
-    .sort("frame_index")
-    .select("frame_index", "motion_energy")
-    .to_pydict()
-)
+ranked = windows.where(~col("never_active")).sort("trim_fraction", desc=True).to_pylist()
+picks = [ranked[0], ranked[len(ranked) // 2], ranked[-1]]  # most trimmed, median, least
 
-fig, ax = plt.subplots(figsize=(9, 3.2))
-ax.plot(curve["frame_index"], curve["motion_energy"], lw=1.2)
-ax.axhline(0.1, ls="--", lw=1, color="tab:red", label="threshold")
-ax.axvspan(worst["start_frame"], worst["end_frame"], color="tab:green", alpha=0.15, label="kept window")
-ax.set_yscale("log")
-ax.set_xlabel("frame")
-ax.set_ylabel("motion energy")
-ax.set_title(f"episode {ep}: {worst['trim_fraction']:.0%} trimmed")
-ax.legend(loc="lower right", fontsize=8)
+fig, axes = plt.subplots(len(picks), 1, figsize=(9, 7.5))
+for ax, w in zip(axes, picks):
+    ep = w["episode_index"]
+    curve = (
+        frames.where(col("episode_index") == ep)
+        .sort("frame_index")
+        .select("frame_index", "motion_energy")
+        .to_pydict()
+    )
+    ax.plot(curve["frame_index"], curve["motion_energy"], lw=1.2)
+    ax.axhline(0.1, ls="--", lw=1, color="tab:red", label="threshold")
+    ax.axvspan(w["start_frame"], w["end_frame"], color="tab:green", alpha=0.15, label="kept window")
+    ax.set_yscale("log")
+    ax.set_ylabel("motion energy")
+    ax.set_title(f"episode {ep}: {w['trim_fraction']:.0%} trimmed", fontsize=10)
+axes[0].legend(loc="lower right", fontsize=8)
+axes[-1].set_xlabel("frame")
 plt.tight_layout()
 plt.show()
 
