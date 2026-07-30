@@ -52,11 +52,7 @@ def _config_block(config: TrimDemoConfig) -> str:
 
 
 _BUILD_CELL = """root = f"hf://datasets/{DATASET}"
-episodes = lerobot.read_episodes(root).select(
-    "episode_index",
-    col("tasks").list_join("; ").alias("task"),
-    "dataset_from_index",
-)
+episodes = lerobot.read_episodes(root).select("episode_index", "dataset_from_index")
 shards = [f"{root}/data/chunk-000/file-{i:03d}.parquet" for i in range(SHARDS)]
 frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 
@@ -64,7 +60,7 @@ frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 # same episode_index. A canonical row sits exactly at dataset_from_index +
 # frame_index; orphans never do, so one filter drops them.
 frames = frames.where(col("index") == col("dataset_from_index") + col("frame_index"))
-frames = frames.select("episode_index", "task", "frame_index", STATE)
+frames = frames.select("episode_index", "frame_index", STATE)
 frames.show(5)"""
 
 _MOTION_CELL = """scale = motion_scale(frames, STATE, dims=DIMS)  # one pass: the typical per-dim step
@@ -185,8 +181,7 @@ def _demo_cells(config: TrimDemoConfig) -> list[tuple[str, str]]:
             "## What it saves\n\nBoth views over everything scanned. To trim the "
             "video itself, pass `from_ts=` (the episode's "
             "`videos/{key}/from_timestamp`) to `trim_windows` and the window comes "
-            "back as absolute timestamps a decoder - or "
-            "`daft_physical_ai.rewards.score_rewards` - can seek to.",
+            "back as absolute timestamps a decoder can seek to.",
         ),
         ("code", _TOTALS_CELL),
     ]

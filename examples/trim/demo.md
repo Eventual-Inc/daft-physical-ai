@@ -35,11 +35,7 @@ One row per frame: episode metadata from Daft's LeRobot reader joined to the per
 
 ```python
 root = f"hf://datasets/{DATASET}"
-episodes = lerobot.read_episodes(root).select(
-    "episode_index",
-    col("tasks").list_join("; ").alias("task"),
-    "dataset_from_index",
-)
+episodes = lerobot.read_episodes(root).select("episode_index", "dataset_from_index")
 shards = [f"{root}/data/chunk-000/file-{i:03d}.parquet" for i in range(SHARDS)]
 frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 
@@ -47,17 +43,17 @@ frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 # same episode_index. A canonical row sits exactly at dataset_from_index +
 # frame_index; orphans never do, so one filter drops them.
 frames = frames.where(col("index") == col("dataset_from_index") + col("frame_index"))
-frames = frames.select("episode_index", "task", "frame_index", STATE)
+frames = frames.select("episode_index", "frame_index", STATE)
 frames.show(5)
 ```
 
-| episode_index | task | frame_index | observation.state.joint_position |
-| --- | --- | --- | --- |
-| 0 |  | 0 | `[-0.22476004, -0.42106023, -0.12811285, -2.3547568, -0.19623408, 2.2180023, 0.026388178]` |
-| 0 |  | 1 | `[-0.2259924, -0.42104504, -0.12894471, -2.354736, -0.19623478, 2.2179976, 0.026409931]` |
-| 0 |  | 2 | `[-0.2264528, -0.42108214, -0.13033146, -2.3547308, -0.19622967, 2.2180026, 0.026413884]` |
-| 0 |  | 3 | `[-0.22645342, -0.4210798, -0.13150918, -2.3547342, -0.19623081, 2.2180016, 0.026413696]` |
-| 0 |  | 4 | `[-0.22645289, -0.4210563, -0.13189712, -2.354731, -0.19623081, 2.218003, 0.026413696]` |
+| episode_index | frame_index | observation.state.joint_position |
+| --- | --- | --- |
+| 0 | 0 | `[-0.22476004, -0.42106023, -0.12811285, -2.3547568, -0.19623408, 2.2180023, 0.026388178]` |
+| 0 | 1 | `[-0.2259924, -0.42104504, -0.12894471, -2.354736, -0.19623478, 2.2179976, 0.026409931]` |
+| 0 | 2 | `[-0.2264528, -0.42108214, -0.13033146, -2.3547308, -0.19622967, 2.2180026, 0.026413884]` |
+| 0 | 3 | `[-0.22645342, -0.4210798, -0.13150918, -2.3547342, -0.19623081, 2.2180016, 0.026413696]` |
+| 0 | 4 | `[-0.22645289, -0.4210563, -0.13189712, -2.354731, -0.19623081, 2.218003, 0.026413696]` |
 
 ## Score the motion
 
@@ -124,7 +120,7 @@ plt.show()
 
 ## What it saves
 
-Both views over everything scanned. To trim the video itself, pass `from_ts=` (the episode's `videos/{key}/from_timestamp`) to `trim_windows` and the window comes back as absolute timestamps a decoder - or `daft_physical_ai.rewards.score_rewards` - can seek to.
+Both views over everything scanned. To trim the video itself, pass `from_ts=` (the episode's `videos/{key}/from_timestamp`) to `trim_windows` and the window comes back as absolute timestamps a decoder can seek to.
 
 ```python
 totals = frames.agg(
