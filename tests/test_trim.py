@@ -4,6 +4,7 @@ from typing import Any
 
 import daft
 import pytest
+from daft import col
 
 from daft_physical_ai.trim import TRIM_FIELDS, trim_windows
 
@@ -26,7 +27,7 @@ def _frames(active: dict[int, list[bool]], from_ts: dict[int, float] | None = No
 
 
 def _one(df: daft.DataFrame, episode: int = 0) -> dict:
-    rows = df.where(df["episode_index"] == episode).to_pylist()
+    rows = df.where(col("episode_index").is_in([episode])).to_pylist()
     assert len(rows) == 1
     return rows[0]
 
