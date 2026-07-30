@@ -136,7 +136,7 @@ def _show_table_to_markdown(html_text: str) -> str:
         cells = [_cell_text(td) for td in re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.DOTALL)]
         if cells:
             # wrap structured values (lists/structs) in backticks so they read as code
-            rows.append([f"`{c}`" if c[:1] in "[{" else c for c in cells])
+            rows.append([f"`{c}`" if c[:1] in ("[", "{") else c for c in cells])
     if not headers or not rows:
         return ""
     lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
