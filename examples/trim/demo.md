@@ -48,7 +48,16 @@ frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 # frame_index; orphans never do, so one filter drops them.
 frames = frames.where(col("index") == col("dataset_from_index") + col("frame_index"))
 frames = frames.select("episode_index", "task", "frame_index", STATE)
+frames.show(5)
 ```
+
+| episode_index | task | frame_index | observation.state.joint_position |
+| --- | --- | --- | --- |
+| 0 |  | 0 | `[-0.22476004, -0.42106023, -0.12811285, -2.3547568, -0.19623408, 2.2180023, 0.026388178]` |
+| 0 |  | 1 | `[-0.2259924, -0.42104504, -0.12894471, -2.354736, -0.19623478, 2.2179976, 0.026409931]` |
+| 0 |  | 2 | `[-0.2264528, -0.42108214, -0.13033146, -2.3547308, -0.19622967, 2.2180026, 0.026413884]` |
+| 0 |  | 3 | `[-0.22645342, -0.4210798, -0.13150918, -2.3547342, -0.19623081, 2.2180016, 0.026413696]` |
+| 0 |  | 4 | `[-0.22645289, -0.4210563, -0.13189712, -2.354731, -0.19623081, 2.218003, 0.026413696]` |
 
 ## Score the motion
 

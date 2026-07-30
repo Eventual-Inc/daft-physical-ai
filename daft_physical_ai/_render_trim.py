@@ -64,7 +64,8 @@ frames = episodes.join(daft.read_parquet(shards), on="episode_index")
 # same episode_index. A canonical row sits exactly at dataset_from_index +
 # frame_index; orphans never do, so one filter drops them.
 frames = frames.where(col("index") == col("dataset_from_index") + col("frame_index"))
-frames = frames.select("episode_index", "task", "frame_index", STATE)"""
+frames = frames.select("episode_index", "task", "frame_index", STATE)
+frames.show(5)"""
 
 _MOTION_CELL = """scale = motion_scale(frames, STATE, dims=DIMS)  # one pass: the typical per-dim step
 frames = (
