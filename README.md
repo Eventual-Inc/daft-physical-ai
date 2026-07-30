@@ -122,6 +122,7 @@ own joint positions sit in parquet next to the mp4, so a still arm is a columnar
 scan away. On DROID that is 12 GB of proprioception against 400 GB of video.
 
 ```python
+from daft import col
 from daft.datasets import lerobot
 from daft_physical_ai.proprio import motion_scale, motion_energy, is_active
 from daft_physical_ai.trim import trim_windows
