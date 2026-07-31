@@ -10,7 +10,7 @@ Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
 pip install "daft-physical-ai[mediapipe]"
 ```
 
-## API
+## Hand tracking
 
 The package operates on a Daft image column and returns a hand-pose column. A
 LeRobot dataset is a natural source: Daft's native reader
@@ -34,20 +34,6 @@ df = df.with_column("hands", track_hands(df["observation.image"], method="mediap
 df.write_parquet("annotated/")
 ```
 
-## Raw EgoDex releases
-
-For Apple's original EgoDex HDF5+MP4 release, use the extension's lazy reader:
-
-```python
-from daft_physical_ai.datasets import egodex
-
-episodes = egodex.raw("/data/egodex", tasks="fold_towel").limit(2)
-poses = egodex.trajectory(episodes, fields=["transforms/leftHand", "transforms/rightHand"])
-frames = egodex.camera_frames(poses, width=224, height=224, sample_interval_seconds=1.0)
-```
-
-EgoDex is CC-BY-NC-ND, so the package does not download, extract, or redistribute it. Download and extract the archives from the [official EgoDex repository](https://github.com/apple/ml-egodex), then point `raw()` at your copy. See [the runnable example](examples/egodex_raw_hdf5_video.py).
-
 Install the method you need as an extra: `pip install "daft-physical-ai[mediapipe]"`
 (CPU, 2D), `pip install "daft-physical-ai[wilor]"` (GPU, 3D), or
 `pip install "daft-physical-ai[all]"` for both. WiLoR additionally needs a CUDA
@@ -56,7 +42,7 @@ Install the method you need as an extra: `pip install "daft-physical-ai[mediapip
 extra because PyPI metadata can't carry direct references), plus a user-supplied
 `MANO_RIGHT.pkl` ([research-gated](docs/mano.md)).
 
-## Output schema
+### Output schema
 
 One unified output schema regardless of method: each frame yields a list of
 0-2 detected hands. A single hand value (MediaPipe):
@@ -75,6 +61,46 @@ One unified output schema regardless of method: each frame yields a list of
 The Daft type is `list[struct{ handedness: string, confidence: float32, kp2d:
 list[list[float32]], kp3d: list[list[float32]] }]`, defined as `HANDS_DTYPE` in
 `daft_physical_ai/hands/schema.py`.
+
+### Raw EgoDex releases
+
+For Apple's original EgoDex HDF5+MP4 release, use the extension's lazy reader:
+
+```python
+from daft_physical_ai.datasets import egodex
+
+episodes = egodex.raw("/data/egodex", tasks="fold_towel").limit(2)
+poses = egodex.trajectory(episodes, fields=["transforms/leftHand", "transforms/rightHand"])
+frames = egodex.camera_frames(poses, width=224, height=224, sample_interval_seconds=1.0)
+```
+
+EgoDex is CC-BY-NC-ND, so the package does not download, extract, or redistribute it. Download and extract the archives from the [official EgoDex repository](https://github.com/apple/ml-egodex), then point `raw()` at your copy. See [the runnable example](examples/egodex_raw_hdf5_video.py).
+
+### Example
+
+A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
+keypoints, and score against EgoDex ground truth:
+
+![track_hands keypoints](examples/hands/demo_keypoints.png)
+
+Available in three equivalent forms:
+
+- **[examples/hands/demo.md](examples/hands/demo.md)** - read it start to finish; code and outputs inline.
+- **[examples/hands/demo.ipynb](examples/hands/demo.ipynb)** - runnable notebook (outputs included).
+- **[examples/hands/demo.py](examples/hands/demo.py)** - plain script.
+
+Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
+`daft-physical-ai hands` command - run it with no flags for an interactive
+walkthrough, or pass flags:
+
+```bash
+# No flags - interactive walkthrough that asks a few questions
+uvx daft-physical-ai hands
+
+# --no-input skips all prompts; flags supply the answers, the rest use defaults
+uvx daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
+uvx daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
+```
 
 ## Reward scoring
 
@@ -161,31 +187,7 @@ returns a DataFrame: a window is an aggregation across an episode's rows, not a
 value each row can carry. `motion_energy` and `is_active` are ordinary
 expressions.
 
-## Example
-
-A complete walkthrough - read a dataset, run `track_hands` (MediaPipe), draw the
-keypoints, and score against EgoDex ground truth:
-
-![track_hands keypoints](examples/hands/demo_keypoints.png)
-
-Available in three equivalent forms:
-
-- **[examples/hands/demo.md](examples/hands/demo.md)** - read it start to finish; code and outputs inline.
-- **[examples/hands/demo.ipynb](examples/hands/demo.ipynb)** - runnable notebook (outputs included).
-- **[examples/hands/demo.py](examples/hands/demo.py)** - plain script.
-
-Generate your own (other methods, a Modal GPU runtime, with/without eval) with the
-`daft-physical-ai hands` command - run it with no flags for an interactive
-walkthrough, or pass flags:
-
-```bash
-# No flags - interactive walkthrough that asks a few questions
-uvx daft-physical-ai hands
-
-# --no-input skips all prompts; flags supply the answers, the rest use defaults
-uvx daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
-uvx daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
-```
+## The CLI
 
 `uvx` runs the CLI without installing anything (scaffolding needs no inference
 deps). If the [PyPI package](https://pypi.org/project/daft-physical-ai/) is
