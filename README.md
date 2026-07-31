@@ -258,14 +258,4 @@ uv run pre-commit install    # install lint/format hooks
 uv run pytest tests/ -v      # run the test suite
 ```
 
-## Versioning
-
-Versions are derived from git tags via `hatch-vcs`. Tag releases as `v0.1.0`,
-`v0.2.0`, etc.
-
-## Publishing
-
-Publishing a GitHub release triggers `.github/workflows/publish-package.yml`,
-which builds a wheel and sdist with `uv build` and uploads both to PyPI via
-[trusted publishing](https://docs.pypi.org/trusted-publishers/). Configure the
-trusted publisher on PyPI for this repository before the first release.
+Versioning and publishing notes live in [AGENTS.md](AGENTS.md).
