@@ -257,5 +257,3 @@ uv sync                      # set up env + install deps
 uv run pre-commit install    # install lint/format hooks
 uv run pytest tests/ -v      # run the test suite
 ```
-
-Versioning and publishing notes live in [AGENTS.md](AGENTS.md).
