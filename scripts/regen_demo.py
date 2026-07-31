@@ -51,7 +51,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from daft_physical_ai import _render, _render_rewards
+from daft_physical_ai import _render, _render_rewards, _render_trim
 
 
 @dataclass
@@ -77,6 +77,16 @@ DEMOS = {
         image_name="demo_keypoints.png",
         image_alt="track_hands keypoints",
         default_dir="examples/hands",
+    ),
+    # the motion-trimming demo on DROID (no server needed; streams from Hugging Face)
+    "trim": DemoSpec(
+        config=_render_trim.TrimDemoConfig(),
+        render_script=_render_trim.render_script,
+        render_notebook=_render_trim.render_notebook,
+        render_markdown=_render_trim.render_markdown,
+        image_name="demo_energy.png",
+        image_alt="motion energy and kept window",
+        default_dir="examples/trim",
     ),
     # the Robometer reward-scoring demo on LIBERO (needs ROBOMETER_URL to execute)
     "rewards": DemoSpec(
@@ -126,7 +136,7 @@ def _show_table_to_markdown(html_text: str) -> str:
         cells = [_cell_text(td) for td in re.findall(r"<td[^>]*>(.*?)</td>", tr, flags=re.DOTALL)]
         if cells:
             # wrap structured values (lists/structs) in backticks so they read as code
-            rows.append([f"`{c}`" if c[:1] in "[{" else c for c in cells])
+            rows.append([f"`{c}`" if c[:1] in ("[", "{") else c for c in cells])
     if not headers or not rows:
         return ""
     lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
