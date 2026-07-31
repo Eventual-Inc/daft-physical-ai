@@ -1,8 +1,9 @@
 # daft-physical-ai
 
 Physical-AI data processing on [Daft](https://github.com/Eventual-Inc/Daft):
-hand tracking and reward scoring. The methods run as Daft UDFs, so they slot
-into any Daft pipeline and execute lazily, batched, and distributed.
+hand tracking, reward scoring, and motion trimming. The methods run as Daft
+UDFs and expressions, so they slot into any Daft pipeline and execute lazily,
+batched, and distributed.
 
 Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
 
@@ -12,7 +13,7 @@ pip install "daft-physical-ai[mediapipe]"
 
 ## Hand tracking
 
-The package operates on a Daft image column and returns a hand-pose column. A
+`track_hands` takes a Daft image column and returns a hand-pose column. A
 LeRobot dataset is a natural source: Daft's native reader
 `daft.datasets.lerobot` (added in [Daft #7090](https://github.com/Eventual-Inc/Daft/pull/7090))
 decodes each camera into an image column with `load_video_frames`.
@@ -140,6 +141,20 @@ struct {
 }
 ```
 
+### Example
+
+[examples/rewards/](examples/rewards/) is the executed walkthrough - read
+LIBERO episode metadata, score each episode with `score_rewards`, plot the
+progress curves, and filter low-progress episodes with a Daft query. The
+Robometer server scripts it talks to are committed next to it.
+
+Generate your own (different dataset, episode count, frame budget):
+
+```bash
+daft-physical-ai rewards    # interactive
+daft-physical-ai rewards --episodes 10 --max-frames 8 --no-input
+```
+
 ## Motion trimming
 
 Find the dead frames in an episode - the operator setting up before anything
@@ -187,18 +202,33 @@ returns a DataFrame: a window is an aggregation across an episode's rows, not a
 value each row can carry. `motion_energy` and `is_active` are ordinary
 expressions.
 
+### Example
+
+[examples/trim/](examples/trim/) is the executed walkthrough - one DROID shard
+streamed from Hugging Face, scored per frame, reduced to trim windows, and
+plotted. No GPU, no server.
+
+Generate your own (different dataset, state column, shard count):
+
+```bash
+daft-physical-ai trim     # interactive
+daft-physical-ai trim --dataset my/dataset --dims 6 --no-input
+```
+
 ## The CLI
 
-`uvx` runs the CLI without installing anything (scaffolding needs no inference
-deps). If the [PyPI package](https://pypi.org/project/daft-physical-ai/) is
-already installed (`pip install daft-physical-ai`), plain `daft-physical-ai hands`
-works too; from a clone of this repo, `uv sync` installs it (`uv run daft-physical-ai`).
-
-Each capability is its own subcommand - `daft-physical-ai hands` and
-`daft-physical-ai rewards` so far (`daft-physical-ai` with no arguments lists
-what's available). The `rewards` scaffold also writes the Robometer server
+Each capability is its own subcommand - `daft-physical-ai hands`,
+`daft-physical-ai rewards`, and `daft-physical-ai trim` (`daft-physical-ai`
+with no arguments lists what's available). Each scaffolds a personalized,
+runnable demo; the `rewards` scaffold also writes the Robometer server
 scripts next to the demo, so one directory holds everything: score the
 episodes, and serve the model locally or on Modal.
+
+`uvx daft-physical-ai <subcommand>` runs the CLI without installing anything
+(scaffolding needs no inference deps). If the
+[PyPI package](https://pypi.org/project/daft-physical-ai/) is already installed
+(`pip install daft-physical-ai`), the plain command works too; from a clone of
+this repo, `uv sync` installs it (`uv run daft-physical-ai`).
 
 To *run* a generated demo you also need its inference stack. `uvx` covers that
 too - one line, nothing installed:
