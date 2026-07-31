@@ -8,7 +8,7 @@ batched, and distributed.
 Available on [PyPI](https://pypi.org/project/daft-physical-ai/):
 
 ```bash
-pip install "daft-physical-ai[mediapipe]"
+pip install daft-physical-ai
 ```
 
 ## Hand tracking
@@ -230,8 +230,8 @@ episodes, and serve the model locally or on Modal.
 (`pip install daft-physical-ai`), the plain command works too; from a clone of
 this repo, `uv sync` installs it (`uv run daft-physical-ai`).
 
-To *run* a generated demo you also need its inference stack. `uvx` covers that
-too - one line, nothing installed:
+To *run* a generated demo you also need its runtime deps (inference libraries,
+plotting). `uvx` covers that too - one line, nothing installed:
 
 ```bash
 uvx --from jupyterlab --with "daft-physical-ai[mediapipe]" --with matplotlib --with scipy \
