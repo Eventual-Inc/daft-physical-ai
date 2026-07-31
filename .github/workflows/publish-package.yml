@@ -18,6 +18,8 @@ jobs:
     environment: ${{ github.event_name == 'workflow_dispatch' && inputs.test-pypi && 'testpypi' || 'pypi' }}
     permissions:
       id-token: write
+      # to create the GitHub release for the tag
+      contents: write
     steps:
     - uses: actions/checkout@v4
       with:
@@ -35,3 +37,9 @@ jobs:
     - name: Publish to PyPI
       if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && !inputs.test-pypi)
       uses: pypa/gh-action-pypi-publish@release/v1
+
+    - name: Create GitHub release with generated notes
+      if: github.event_name == 'push'
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
