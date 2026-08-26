@@ -103,6 +103,40 @@ uvx daft-physical-ai hands --method mediapipe --output-dir my-demo --no-input
 uvx daft-physical-ai hands --method wilor --runtime modal --mano-path ./MANO_RIGHT.pkl --no-input
 ```
 
+## PX OmniSharing (force + tactile)
+
+[PX OmniSharing DB](https://huggingface.co/datasets/paxini/Omnisharing_DB_SampleData)
+is PaXini's omnimodal dataset, and unusual in recording **force and tactile
+sensing** alongside vision: an instrumented exoskeleton glove with 15 tactile
+pads per hand, a dozen synchronized RGB cameras, stereo RGBD, hand
+proprioception, optional object poses, audio and a language instruction - all in
+one self-describing HDF5 file per episode.
+
+```python
+from daft_physical_ai.datasets import omnisharing
+
+# One row per episode, parsed from filenames - no file bytes read yet.
+episodes = omnisharing.raw("paxini/Omnisharing_DB_SampleData").limit(1)
+
+omnisharing.episode_metadata(episodes).select("instruction", "task_labels").show()
+omnisharing.tactile(episodes, sides="lefthand", split_by_sensor=True).show()
+omnisharing.trajectory(episodes, fields=["observation.lefthand.joints"]).show()
+omnisharing.camera_frames(episodes, ["RGB_Camera0"], max_frames=1).show()
+```
+
+Episodes are 0.4-3.2 GB each, so filter first: only the modalities you ask for
+are streamed. Beyond the above there is `describe()` for the HDF5 layout an
+episode actually has, `audio()`, `objects()`, `cameras()`, `depth_frames()`,
+`stereo_extrinsics()`, and `frames()` for one row per frame with the dataset's
+action offset applied and cameras aligned by timestamp rather than frame index.
+Full guide: [docs/omnisharing.md](docs/omnisharing.md); runnable example:
+[examples/omnisharing_raw_hdf5_tactile.py](examples/omnisharing_raw_hdf5_tactile.py).
+
+The published data is CC-BY-NC-SA 4.0 (non-commercial), so this package neither
+downloads nor redistributes it - `raw()` reads a repo or directory you point it
+at. The DF-3 stage is plain LeRobot v2.1; read that with Daft's own
+`daft.datasets.lerobot` instead.
+
 ## Reward scoring
 
 Score episodes with a reward model
