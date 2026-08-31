@@ -34,12 +34,10 @@ repos:
     name: Python code Formatting
 
   # Python type checking
-- repo: https://github.com/pre-commit/mirrors-mypy
-  rev: v2.1.0
+- repo: https://github.com/astral-sh/ty-pre-commit
+  rev: v0.0.58
   hooks:
-  - id: mypy                           # Static type checker for Python
-    additional_dependencies: [daft>=0.7.5]
-    exclude: ^examples/                # generated demo code (uses the nightly-only lerobot reader)
+  - id: ty
 
   # Check that uv.lock is up to date with pyproject.toml
 - repo: https://github.com/astral-sh/uv-pre-commit

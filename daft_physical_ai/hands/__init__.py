@@ -62,7 +62,7 @@ def track_hands(
             import torch
         except ImportError as err:
             raise ImportError(
-                "method='wilor' requires the WiLoR extras: `pip install daft-physical-ai[wilor]`."
+                "method='wilor' requires the WiLoR extras: `pip install \"daft-physical-ai[wilor]\"`."
             ) from err
         from ._wilor import WiLoRHands
 

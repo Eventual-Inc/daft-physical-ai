@@ -102,7 +102,7 @@ def _modal_image_block(config: DemoConfig) -> str:
             '    .pip_install("torch==2.1.2", "torchvision==0.16.2",',
             '                 index_url="https://download.pytorch.org/whl/cu121")',
         ]
-    parts.append('    .pip_install("daft>=0.7.17")  # carries daft.datasets.lerobot')
+    parts.append('    .pip_install("daft")')
     if _uses(config.method, "wilor"):
         wilor_pip = (
             '"opencv-python-headless", "pytorch-lightning==2.1.3", "scikit-image", '
@@ -440,7 +440,7 @@ def _unhash(line: str) -> str:
 
 def _install_hint(method: str) -> str:
     extra = {"mediapipe": "mediapipe", "wilor": "wilor", "both": "mediapipe,wilor"}[method]
-    return f"daft-physical-ai[{extra}] matplotlib"
+    return f'"daft-physical-ai[{extra}]" matplotlib'
 
 
 def render_notebook(config: DemoConfig) -> str:
@@ -457,9 +457,13 @@ def render_markdown(config: DemoConfig, outputs: list[str] | None = None) -> str
     results without running anything.
     """
     config.validate()
+    return _cells_to_markdown(_demo_cells(config), outputs)
+
+
+def _cells_to_markdown(cells: list[tuple[str, str]], outputs: list[str] | None = None) -> str:
     out_iter = iter(outputs or [])
     parts = []
-    for kind, text in _demo_cells(config):
+    for kind, text in cells:
         if kind == "markdown":
             parts.append(text)
             continue
@@ -509,7 +513,10 @@ def _demo_cells(config: DemoConfig) -> list[tuple[str, str]]:
     else:
         cells += [
             ("markdown", f"## Setup\n\nInstall with `pip install {_install_hint(config.method)}`, then import."),
-            ("code", "from daft.datasets import lerobot\n\nfrom daft_physical_ai.hands import track_hands"),
+            (
+                "code",
+                "from daft.datasets import lerobot\n\nfrom daft_physical_ai.hands import track_hands",
+            ),
             ("markdown", "## Configure\n\nThe dataset, the camera column to decode, and how many frames to run."),
             ("code", _config_block(config)),
             (

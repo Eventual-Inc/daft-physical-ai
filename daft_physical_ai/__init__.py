@@ -1,21 +1,23 @@
-"""Physical-AI data annotation, episode analysis, and policy evals on Daft.
+"""Physical-AI dataset access, hand tracking, reward scoring, and motion trimming for Daft DataFrames.
 
 `track_hands(images, method=...)` takes an image column (a Daft expression) and
 returns a hand-pose column, so it composes with any Daft pipeline. Every method
 returns the same output schema - see `HANDS_DTYPE`.
 
-`Episode` and `Step` provide a canonical one-row-per-step table contract for
-robot episodes and rollouts, so datasets and evaluations land in one
-Daft-readable parquet layout.
+`score_rewards(...)` takes episode-metadata columns and returns a reward column
+(per-frame task progress + success probability) scored against a Robometer eval
+server you run - see `REWARD_DTYPE`.
 
-`daft_physical_ai.evals` is the analysis half of the eval loop over that
-contract: success rates, per-spec policy comparison, failure labeling, and
-benchmark-protocol validation.
+`motion_energy(...)` / `is_active(...)` (in `daft_physical_ai.proprio`) score
+per-frame motion from the robot's own state columns, and `trim_windows(...)`
+(in `daft_physical_ai.trim`) reduces the flags to one trim window per episode -
+see `TRIM_FIELDS`. Nothing decodes video.
 """
 
 from __future__ import annotations
 
-from .episodes import Episode, ROLLOUT_SCHEMA, Step
+from . import datasets
 from .hands import HAND_DTYPE, HANDS_DTYPE
+from .rewards import REWARD_DTYPE, REWARD_FRAME_DTYPE
 
-__all__ = ["HANDS_DTYPE", "HAND_DTYPE", "ROLLOUT_SCHEMA", "Episode", "Step"]
+__all__ = ["HANDS_DTYPE", "HAND_DTYPE", "REWARD_DTYPE", "REWARD_FRAME_DTYPE", "datasets"]

@@ -6,10 +6,14 @@ downloaded once to a local cache on first use.
 
 from __future__ import annotations
 
+import logging
 import os
+import threading
 import urllib.request
 
 import daft
+
+logger = logging.getLogger(__name__)
 
 from .schema import HANDS_DTYPE
 
@@ -43,7 +47,7 @@ class MediaPipeHands:
             from mediapipe.tasks.python import vision
         except ImportError as err:
             raise ImportError(
-                "method='mediapipe' requires MediaPipe. Install with `pip install daft-physical-ai[mediapipe]`."
+                "method='mediapipe' requires MediaPipe. Install with `pip install \"daft-physical-ai[mediapipe]\"`."
             ) from err
 
         self.mp = mp
@@ -54,6 +58,51 @@ class MediaPipeHands:
             min_hand_detection_confidence=min_confidence,
         )
         self.det = vision.HandLandmarker.create_from_options(opts)
+        # MediaPipe's __del__ closes the task at interpreter shutdown, after the
+        # dispatcher's thread pool and C bindings are gone, spraying an "Exception
+        # ignored" traceback (google-ai-edge/mediapipe: shutdown-order bug). There is
+        # no earlier hook to close from (Daft UDFs have no teardown; atexit already
+        # runs too late), so swallow errors from close instead.
+        #
+        # Worse, when __del__ runs at GC time before interpreter shutdown (e.g.
+        # pytest's teardown forces a collection), the SerialDispatcher's single
+        # worker thread can be dead or dying: GC clears the executor's weakref, the
+        # worker exits, and close() then submits the C teardown to an executor that
+        # will never run it and blocks forever on the result (ThreadPoolExecutor
+        # never respawns a dead worker). Skip the close when the worker is already
+        # dead, and bound the wait otherwise - the worker can also die between the
+        # check and the submit, so aliveness alone can't be trusted. An abandoned
+        # close only leaks task resources into a process that is tearing down.
+        _close = self.det.close
+        _det = self.det
+
+        def _dispatcher_dead() -> bool:
+            try:
+                threads = _det._lib._executor._threads  # _lib is the SerialDispatcher
+                return bool(threads) and not any(t.is_alive() for t in threads)
+            except AttributeError:  # private API moved; assume alive and let close try
+                return False
+
+        def _run_close():
+            try:
+                _close()
+            except Exception:
+                logger.debug("MediaPipe detector close failed (known shutdown-order bug)", exc_info=True)
+
+        def _quiet_close():
+            if _dispatcher_dead():
+                logger.debug("MediaPipe dispatcher thread already dead; skipping close to avoid a deadlock")
+                return
+            try:
+                closer = threading.Thread(target=_run_close, name="mediapipe-close", daemon=True)
+                closer.start()
+            except RuntimeError:  # interpreter shutting down; can't spawn threads
+                return
+            closer.join(timeout=5.0)
+            if closer.is_alive():
+                logger.debug("MediaPipe close did not finish in 5s; abandoning (dispatcher worker died)")
+
+        self.det.close = _quiet_close
 
     @daft.method.batch(return_dtype=HANDS_DTYPE, batch_size=16)
     def track(self, images):

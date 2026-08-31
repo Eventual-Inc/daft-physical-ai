@@ -4,9 +4,16 @@ build-backend = "hatchling.build"
 
 [project]
 name = "daft-physical-ai"
-description = "Physical-AI data annotation and episode analysis on Daft."
-# daft floor: 0.7.17 ships daft.datasets.lerobot (the reader the examples use).
-dependencies = ["daft>=0.7.17", "numpy", "pyarrow>=15"]
+description = "Physical-AI data processing on Daft, starting with hand tracking."
+# daft floor: v0.7.20 fixes the progress-bar fd/thread leak under Jupyter
+# (Daft#7262) that crashed demo notebooks (#24); v0.7.18 brought the batched
+# video decode (Daft#7184) the demo depends on for reasonable remote-read
+# performance. The [video] brings av + pillow for video decode; [hdf5] supports
+# raw EgoDex metadata and trajectory files. Both are part of the normal package
+# surface.
+# aiohttp is the rewards module's HTTP client (the reward model is served
+# behind a URL, never imported).
+dependencies = ["aiohttp", "daft[hdf5,video]>=0.7.20", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
 authors = [{name = "Eventual"}]
@@ -15,10 +22,7 @@ readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
-# robomimic/LIBERO HDF5 demo ingest (daft_physical_ai.ingest.Hdf5Ingestor).
-hdf5 = ["h5py>=3.10"]
-# MediaPipe wheels are not published for Python 3.13 yet.
-mediapipe = ["mediapipe>=0.10; python_version < '3.13'"]
+mediapipe = ["mediapipe>=0.10"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
 # ensure_assets). Install the matching torch/torchvision for your CUDA first.
 # Also needs chumpy from git (`pip install "chumpy @ git+https://github.com/mattloper/chumpy"`),
@@ -61,11 +65,13 @@ include = ["daft_physical_ai/**/*.py", "daft_physical_ai/templates/*.tmpl"]
 [tool.hatch.version]
 source = "vcs"
 
-[tool.mypy]
-files = ["daft_physical_ai/**/*.py", "tests/**/*.py"]
-python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
+[tool.ty.rules]
+unresolved-import = "ignore"
+
+[tool.ty.src]
+# examples/ holds CLI-generated demo code - don't impose package conventions
+# on it (same rationale as the ruff exclusion).
+exclude = ["examples"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -75,6 +81,5 @@ dev = [
   "pre-commit==4.6.0",
   "pytest==9.1.1",
   "ruff==0.15.20",
-  "mypy==2.1.0",
-  "h5py>=3.10"  # exercises the hdf5 ingest tests in CI
+  "ty==0.0.58"
 ]
