@@ -75,7 +75,7 @@ exclude = ["examples"]
 
 [[tool.ty.overrides]]
 include = ["tests/**"]
-rules = {invalid-argument-type = "ignore", unsupported-operator = "ignore"}
+rules = { invalid-argument-type = "ignore", unsupported-operator = "ignore" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
