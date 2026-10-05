@@ -16,8 +16,8 @@ description = "Physical-AI data processing on Daft, starting with hand tracking.
 dependencies = ["aiohttp", "daft[hdf5,video]>=0.7.20", "numpy"]
 dynamic = ["version"]
 license = "Apache-2.0"
-authors = [{name = "Eventual"}]
-maintainers = [{name = "Eventual"}]
+authors = [{ name = "Eventual" }]
+maintainers = [{ name = "Eventual" }]
 readme = "README.md"
 requires-python = ">=3.10,<3.14"
 
