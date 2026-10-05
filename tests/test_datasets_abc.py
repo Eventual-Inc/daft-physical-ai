@@ -62,7 +62,7 @@ def _encode_frames(codec: str) -> list[bytes]:
     np = pytest.importorskip("numpy")
     try:
         context = av.CodecContext.create(codec, "w")
-    except Exception:
+    except ValueError:  # UnknownCodecError
         pytest.skip(f"PyAV build has no {codec} encoder")
     context.width, context.height, context.pix_fmt = 64, 48, "yuv420p"
     context.time_base = Fraction(1, 30)
@@ -563,9 +563,7 @@ requires_hf_token = pytest.mark.skipif(not os.environ.get("HF_TOKEN"), reason="A
 
 
 def _pinned_episode() -> daft.DataFrame:
-    return (
-        abc.raw(PINNED_ROOT, split="train", tasks=PINNED_TASK).where(col("episode_id") == PINNED_EPISODE).limit(1)
-    )
+    return abc.raw(PINNED_ROOT, split="train", tasks=PINNED_TASK).where(col("episode_id") == PINNED_EPISODE).limit(1)
 
 
 @pytest.mark.integration
