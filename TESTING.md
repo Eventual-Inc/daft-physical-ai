@@ -38,6 +38,22 @@ Modal dependency and runs on any CUDA GPU. The env needs a CUDA `torch` build, t
 > caller's process first. A Daft+torch interaction, not Modal- or
 > concurrency-specific.
 
+**ABC-130k (gated Hugging Face, MCAP)** - the unit suite covers every
+`daft_physical_ai.datasets.abc` function against synthetic MCAPs, including
+real H.264/H.265 streams encoded with PyAV. The two real-data tests are marked
+`integration` and skip without `HF_TOKEN`; they pin
+`XDOF/ABC-130k@29136bc9` episode `5b33995f-ba4a-49f8-bfb7-c6c034df0865`
+(`clip_the_socks_to_the_hanger`, 9,849 messages, 18 chunks, 9 annotations):
+
+```bash
+HF_TOKEN=hf_... uv run --extra abc pytest tests/test_datasets_abc.py -v -m integration
+HF_TOKEN=hf_... uv run --extra abc python examples/abc_episode_messages.py \
+  --task clip_the_socks_to_the_hanger --frames
+```
+
+Not yet run from this package: the expected counts come from the earlier
+Daft#7248 smoke run of the same pinned episode.
+
 ## CLI scaffolder (`daft-physical-ai`)
 
 **Unit tests** (`tests/test_cli.py`, in CI): all 6 method x runtime combos render

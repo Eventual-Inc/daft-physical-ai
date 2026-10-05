@@ -23,6 +23,9 @@ requires-python = ">=3.10,<3.14"
 
 [project.optional-dependencies]
 mediapipe = ["mediapipe>=0.10"]
+# ABC-130k (daft_physical_ai.datasets.abc): the mcap reader for messages and
+# summaries, plus the Hub client for the recursive-tree catalog listing.
+abc = ["daft[mcap]>=0.7.20", "huggingface-hub>=0.23"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
 # ensure_assets). Install the matching torch/torchvision for your CUDA first.
 # Also needs chumpy from git (`pip install "chumpy @ git+https://github.com/mattloper/chumpy"`),
@@ -79,9 +82,12 @@ rules = { invalid-argument-type = "ignore", unsupported-operator = "ignore" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["integration: reads real remote data and needs credentials (e.g. HF_TOKEN); skipped otherwise"]
 
 [dependency-groups]
 dev = [
+  "huggingface-hub>=0.23",
+  "mcap>=1.1.0,<2",
   "pre-commit==4.6.0",
   "pytest==9.1.1",
   "ruff==0.15.20",
