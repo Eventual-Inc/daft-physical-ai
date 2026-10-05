@@ -53,8 +53,87 @@ HF_TOKEN=hf_... uv run --extra abc python examples/abc_episode_messages.py \
   --task clip_the_socks_to_the_hanger --frames
 ```
 
-Not yet run from this package: the expected counts come from the earlier
-Daft#7248 smoke run of the same pinned episode.
+Real-data run (2026-10-04, with `HF_TOKEN`): both integration tests pass in
+15s, and the example runs end to end in 13s.
+
+## PX OmniSharing reader (`datasets/omnisharing/`)
+
+The default suite uses synthetic HDF5 episodes from
+`tests/omnisharing_datagen.py`. It covers DF-1/DF-2/DF-2R catalog identity,
+zero-content-read planning, exact schemas, strict trajectory validation,
+per-stage `joint_names`, heterogeneous tactile/object layouts, bounded audio
+(truncation, downmix, missing/zero-length/no-samplerate), camera inventory with
+exact `checked_cam_name` matching (`Camera1` vs `RGB_Camera10`-`12`), payload
+sessions, requested-index depth reads in lenient and `strict=True` modes,
+strict stereo calibration (six malformed-JSON cases), the Daft video-frame
+struct, the `max_frames` cap, action lead, and per-eye nearest-clock alignment.
+Every materializer is checked to fail on DF-1 with the reader's own message
+rather than Daft's `Need at least 1 series to perform concat`, and
+`tests/test_datasets_omnisharing_docs.py` executes every Python block in
+`docs/omnisharing.md` against a generated release. No licensed dataset bytes
+are committed or needed in CI.
+
+Run only this reader's hermetic tests:
+
+```bash
+uv run pytest tests/test_datasets_omnisharing_*.py -m "not integration" -v
+```
+
+Actual locally encoded HEVC Annex-B and Matroska decoding is opt-in:
+
+```bash
+OMNISHARING_RUN_INTEGRATION=1 uv run pytest tests/test_datasets_omnisharing_video.py -v
+```
+
+**Real-data run (2026-08-26, `paxini/Omnisharing_DB_SampleData` over `hf://`):**
+
+- **Catalog** - `raw()` lists all 1000 episodes in 2.6s (filenames only, no
+  bytes): all DF-2, 292 MB - 4.12 GB each. 191 `episode_index` values are
+  duplicated across capture groups, confirming the hazard the guide warns about
+  is real at release scale, not hypothetical.
+- **Metadata** - the pinned smallest episode of `part_01`
+  (`episode_1203_213135_115_110092_glove.hdf5`, ~440 MB): 207 frames, 8 kHz /
+  60416 audio samples, `vendor=paxini`, the Chinese instruction and six
+  free-form task-label keys, 14 cameras with non-contiguous RGB ids
+  (`RGB_Camera{0,1,2,3,4,6,8,9,10,11,12}` plus `RGBD_{0,1,2}`), no `obj*` groups.
+  55s, metadata-only reads.
+- **Values** - `handpose` is (207, 7) and the trailing four elements are unit
+  norm (max deviation 6e-8), which is independent evidence for the documented
+  qw-first layout; `joints` is (207, 29) named `J1J...`; tactile is 15 pads
+  summing to exactly 3465 with per-sensor widths matching the declared
+  `sensor_lengths`. ~3 min, dominated by per-request latency.
+- **Depth, calibration and decode** - `RGBD_0/aligned_depth` frames 0 and 100
+  read as (2, 720, 1280) `uint16`, 93% non-zero; `RGBD_1` has no depth at all
+  and reports an empty tensor with an empty index list, so a mixed request still
+  reads cleanly. `inner_extrinsic` parses to a rigid 4x4 whose x translation is
+  -59.2 mm - a plausible physical stereo baseline, not just a well-shaped
+  matrix. Both codecs decode from memory to their declared resolutions:
+  `RGB_Camera0` (HEVC Annex-B, no container) to 1200x1920 and `RGBD_0.color`
+  (Matroska) to 720x1280, both with real image variance. ~3 min.
+
+**Re-run after the review fixes (2026-10-04, same pinned episode over `hf://`):**
+all 5 public tests plus 10 local-codec decode tests pass in 6m22s, including a
+new inventory test. The episode has `RGB_Camera1` and `RGB_Camera10`-`12`;
+exactly one stream, `RGB_Camera4`, is flagged for `checked_cam_name="Camera4"`.
+`observation/lefthand/joint_names` has 29 names starting `J1J`. Lenient depth
+for indices `[0, 100, 500]` returns `[0, 100]` from `RGBD_0` and an empty list
+for `RGBD_1`. `camera_frames()` with the default `max_frames=1` decodes one
+frame per stream. The 20 camera payloads are 1.39-3.45 MB, and observation
+frame 0 aligns to `RGB_Camera0` frame 10 (residual -11 us). `cameras()` is the
+slowest call at ~3.5 min, because it opens 20 streams' metadata and payload
+heads through per-request range reads.
+
+Re-run the pinned public episode suite, which covers metadata, signals, tactile,
+objects, the camera inventory, depth, calibration, both video families, and
+frame alignment:
+
+```bash
+OMNISHARING_RUN_INTEGRATION=1 \
+  uv run pytest tests/test_datasets_omnisharing_integration.py -v
+```
+
+Reads over `hf://` are latency-bound. Prefer local or same-region storage for
+large scans; public-data tests are intentionally excluded from CI.
 
 **REASSEMBLE (TU Wien HDF5 + Hugging Face LeRobot port)** - the unit suite
 covers every `daft_physical_ai.datasets.reassemble` function against synthetic
@@ -88,52 +167,6 @@ actions, peak force 28.5 N during "Pick square peg 3." (14,381 F/T samples),
 HDF5 holds 23240 force/torque samples (33x more)". A wider manual check on
 `2025-01-10-15-39-56` and `2025-01-10-16-17-40` (no hand camera: 0 hand rows,
 387 event-camera frames) also passed.
-
-## PX OmniSharing reader (`datasets/omnisharing.py`)
-
-**Unit tests** (`tests/test_datasets_omnisharing.py` +
-`tests/test_datasets_omnisharing_docs.py`, in CI): 160 tests against synthetic
-DF-2 episodes written by `tests/omnisharing_datagen.py`, whose shapes, dtypes and
-attribute names mirror a real 440 MB episode - so the 1.08 TB CC-BY-NC-SA release
-is never needed and none of its bytes live in this repo. Camera payloads are
-encoded locally (HEVC Annex-B for RGB, Matroska for RGBD) so decoding is
-exercised for real. Covered: filename/stage parsing including the non-unique
-`episode_index`, layout discovery, metadata with Chinese task-label keys, DF-2
-and DF-2R tensor widths, per-sensor tactile slicing, audio truncation and
-downmix, object-slot padding, codec sniffing, depth bounds per episode, stereo
-calibration including malformed JSON, and frame expansion (action offset +
-nearest-timestamp camera alignment). The docs file re-runs every snippet in
-`docs/omnisharing.md` so a renamed column can't leave the guide silently wrong.
-
-**Real-data run (2026-08-26, `paxini/Omnisharing_DB_SampleData` over `hf://`):**
-
-- **Catalog** - `raw()` lists all 1000 episodes in 2.6s (filenames only, no
-  bytes): all DF-2, 292 MB - 4.12 GB each. 191 `episode_index` values are
-  duplicated across capture groups, confirming the hazard the guide warns about
-  is real at release scale, not hypothetical.
-- **Metadata** - the pinned smallest episode of `part_01`
-  (`episode_1203_213135_115_110092_glove.hdf5`, ~440 MB): 207 frames, 8 kHz /
-  60416 audio samples, `vendor=paxini`, the Chinese instruction and six
-  free-form task-label keys, 14 cameras with non-contiguous RGB ids
-  (`RGB_Camera{0,1,2,3,4,6,8,9,10,11,12}` plus `RGBD_{0,1,2}`), no `obj*` groups.
-  55s, metadata-only reads.
-- **Values** - `handpose` is (207, 7) and the trailing four elements are unit
-  norm (max deviation 6e-8), which is independent evidence for the documented
-  qw-first layout; `joints` is (207, 29) named `J1J...`; tactile is 15 pads
-  summing to exactly 3465 with per-sensor widths matching the declared
-  `sensor_lengths`. ~3 min, dominated by per-request latency.
-- **Depth, calibration and decode** - `RGBD_0/aligned_depth` frames 0 and 100
-  read as (2, 720, 1280) `uint16`, 93% non-zero; `RGBD_1` has no depth at all
-  and reports an empty tensor with an empty index list, so a mixed request still
-  reads cleanly. `inner_extrinsic` parses to a rigid 4x4 whose x translation is
-  -59.2 mm - a plausible physical stereo baseline, not just a well-shaped
-  matrix. Both codecs decode from memory to their declared resolutions:
-  `RGB_Camera0` (HEVC Annex-B, no container) to 1200x1920 and `RGBD_0.color`
-  (Matroska) to 720x1280, both with real image variance. ~3 min.
-
-**Known limitation (not a bug):** reads over `hf://` are latency-bound, so a
-whole-release scan is impractical - prefer local or same-region storage. This is
-why nothing here runs in CI.
 
 ## CLI scaffolder (`daft-physical-ai`)
 

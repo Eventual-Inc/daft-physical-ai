@@ -85,7 +85,7 @@ rules = { invalid-argument-type = "ignore", unsupported-operator = "ignore" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["integration: reads real remote data and needs credentials (e.g. HF_TOKEN); skipped otherwise"]
+markers = ["integration: opt-in tests that read real remote data or need codecs, GPUs, or credentials (e.g. HF_TOKEN)"]
 
 [dependency-groups]
 dev = [
