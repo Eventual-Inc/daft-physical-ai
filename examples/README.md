@@ -20,6 +20,12 @@ format - no extra package surface:
   episodes through `daft_physical_ai.datasets.abc`: catalog, summaries, bounded
   state/action messages, subtask annotations, optional camera frames (gated;
   needs `HF_TOKEN` and the `[abc]` extra, see [docs/abc.md](../docs/abc.md))
+- [`reassemble_contact_segments.py`](reassemble_contact_segments.py) - the
+  original REASSEMBLE HDF5 release through
+  `daft_physical_ai.datasets.reassemble`: action segments, 1 kHz force/torque
+  per action, audio, events, and frames; extracts the smallest recording (24 MB)
+  from the TU Wien archive if the directory is empty (see
+  [docs/reassemble.md](../docs/reassemble.md))
 - [`pose_features_numpy.py`](pose_features_numpy.py) - per-episode hand pose
   tracks (curl, pinch, palm orientation) in one NumPy pass, via
   `daft_physical_ai.datasets.common.ego_centric`
