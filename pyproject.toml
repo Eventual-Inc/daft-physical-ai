@@ -73,6 +73,10 @@ unresolved-import = "ignore"
 # on it (same rationale as the ruff exclusion).
 exclude = ["examples"]
 
+[[tool.ty.overrides]]
+include = ["tests/**"]
+rules = { invalid-argument-type = "ignore", unsupported-operator = "ignore" }
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
