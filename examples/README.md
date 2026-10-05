@@ -20,6 +20,11 @@ format - no extra package surface:
   episodes through `daft_physical_ai.datasets.abc`: catalog, summaries, bounded
   state/action messages, subtask annotations, optional camera frames (gated;
   needs `HF_TOKEN` and the `[abc]` extra, see [docs/abc.md](../docs/abc.md))
+- [`hiw500_episode_messages.py`](hiw500_episode_messages.py) - HIW-500 humanoid
+  ROS 2 MCAP episodes through `daft_physical_ai.datasets.hiw500`: catalog,
+  info.json subtasks, camera calibration, decoded 29-DoF joint states and
+  whole-body-controller states, optional JPEG camera frames (public; needs the
+  `[hiw500]` extra, see [docs/hiw500.md](../docs/hiw500.md))
 - [`reassemble_contact_segments.py`](reassemble_contact_segments.py) - the
   original REASSEMBLE HDF5 release through
   `daft_physical_ai.datasets.reassemble`: action segments, 1 kHz force/torque

@@ -26,6 +26,9 @@ mediapipe = ["mediapipe>=0.10"]
 # ABC-130k (daft_physical_ai.datasets.abc): the mcap reader for messages and
 # summaries, plus the Hub client for the recursive-tree catalog listing.
 abc = ["daft[mcap]>=0.7.20", "huggingface-hub>=0.23"]
+# HIW-500 (daft_physical_ai.datasets.hiw500): the same MCAP + Hub stack, plus
+# PyYAML for the head-camera stereo calibration files.
+hiw500 = ["daft[mcap]>=0.7.20", "huggingface-hub>=0.23", "pyyaml>=6"]
 # WiLoR needs a CUDA torch build and the WiLoR repo (cloned at runtime via
 # ensure_assets). Install the matching torch/torchvision for your CUDA first.
 # Also needs chumpy from git (`pip install "chumpy @ git+https://github.com/mattloper/chumpy"`),

@@ -746,10 +746,10 @@ def lerobot_sidecars(dataset_uri: str = HF_LEROBOT_PORT, io_config: IOConfig | N
     :func:`audio` or :func:`events`, or join it to :func:`raw` on
     ``recording``.
     """
-    from .abc import _resolve_hf_io_config
+    from ._mcap import resolve_hf_io_config
 
     root = dataset_uri.rstrip("/")
-    io_config = _resolve_hf_io_config(io_config, [root])
+    io_config = resolve_hf_io_config(io_config, [root])
 
     @daft.func(return_dtype=DataType.list(_SIDECAR_DTYPE), use_process=False)
     def read_splits(handle: daft.File) -> list[dict[str, object]]:
