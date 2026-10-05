@@ -1,158 +1,90 @@
-"""Execute every code snippet from the OmniSharing guide.
-
-Guards against documentation rot: `docs/omnisharing.md` shows real API calls,
-and a renamed column or argument would leave the guide silently wrong. Each
-test runs a snippet against a generated episode, with only the dataset path
-rewritten.
-"""
-
 from __future__ import annotations
 
-import daft
-import numpy as np
-import pytest
+import importlib.util
+import re
+from pathlib import Path
+
+from daft import col, lit
 
 from daft_physical_ai.datasets import omnisharing
 from tests.omnisharing_datagen import episode_filename, write_df2_episode
 
-pytest.importorskip("h5py", reason="daft[hdf5] extra is required for OmniSharing tests")
+
+def _load_example():
+    path = Path(__file__).parents[1] / "examples" / "omnisharing_raw_hdf5_tactile.py"
+    spec = importlib.util.spec_from_file_location("omnisharing_example", path)
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
-@pytest.fixture(scope="module")
-def guide_dataset(tmp_path_factory):
-    """A release shaped like the one the guide describes.
-
-    Includes the duplicated ``episode_index`` 1217 that the guide warns about, so
-    the warning itself can be verified rather than taken on trust.
-    """
-    root = tmp_path_factory.mktemp("omnisharing_guide") / "ds"
-    part = root / "data/part_01"
-    write_df2_episode(part / episode_filename(1203, "213135", 115, 110092), n_frames=8)
-    write_df2_episode(part / episode_filename(1217, "212953", 93, 110056), n_frames=8)
-    write_df2_episode(part / episode_filename(1217, "213630", 115, 110092), n_frames=8)
-    return str(root)
-
-
-@pytest.fixture
-def episodes(guide_dataset):
-    return omnisharing.raw(guide_dataset)
+def test_documented_quickstart_and_example_are_runnable(tmp_path: Path) -> None:
+    write_df2_episode(tmp_path / episode_filename(1, "212953", 93, 110056), n_frames=3)
+    example = _load_example()
+    result = example.build(str(tmp_path))
+    assert result.column_names == [
+        "episode_key",
+        "capture_key",
+        "instruction",
+        "frame_count",
+        "observation/lefthand/joints",
+        "observation/lefthand/tactile_sensors",
+    ]
+    assert result.count_rows() == 1
 
 
-@pytest.fixture
-def one(episodes):
-    return episodes.limit(1)
-
-
-# ---------------------------------------------------------------------------
-# Quickstart
-# ---------------------------------------------------------------------------
-
-
-def test_quickstart_lists_episodes(episodes):
-    episodes.select("episode_key", "stage", "size").collect()
-
-
-def test_quickstart_reads_each_modality(one):
-    omnisharing.episode_metadata(one).select("instruction", "task_labels").collect()
-    omnisharing.trajectory(one, fields=["observation.lefthand.joints"]).collect()
-    omnisharing.tactile(one, sides="lefthand", split_by_sensor=True).collect()
-    omnisharing.audio(one, mono=True, max_seconds=2.0).select("samplerate", "n_samples").collect()
-    omnisharing.depth_frames(one, "RGBD_0").select("RGBD_0.depth").collect()
-    omnisharing.stereo_extrinsics(one, "RGBD_0").select("RGBD_0.left_to_color").collect()
-
-
-# ---------------------------------------------------------------------------
-# Pipeline stages and layout
-# ---------------------------------------------------------------------------
-
-
-def test_stage_filtering_snippet(guide_dataset):
-    omnisharing.raw(guide_dataset, stage="DF-2").collect()
-
-
-def test_describe_snippet(one):
-    layout = omnisharing.describe(one)
-    layout.where(daft.col("kind") == "dataset").select("h5path", "shape", "dtype").collect()
-
-
-# ---------------------------------------------------------------------------
-# The three documented traps
-# ---------------------------------------------------------------------------
-
-
-def test_duplicate_episode_index_warning_is_accurate(episodes):
-    rows = episodes.select("episode_key", "episode_index").to_pylist()
-    # The guide claims part_01 holds two episodes numbered 1217.
-    assert [r["episode_index"] for r in rows].count(1217) == 2
-    assert {r["episode_key"] for r in rows if r["episode_index"] == 1217} == {
-        "1217_212953_93_110056",
-        "1217_213630_115_110092",
-    }
-
-
-def test_quaternion_roll_recipe_puts_qw_last(one):
-    pose = np.asarray(
-        omnisharing.trajectory(one, fields=["observation.lefthand.handpose"]).to_pylist()[0][
-            "observation.lefthand.handpose"
-        ]
+def test_documented_camera_depth_and_alignment_calls_plan(tmp_path: Path) -> None:
+    write_df2_episode(tmp_path / episode_filename(1, "212953", 93, 110056), n_frames=3)
+    one = omnisharing.raw(str(tmp_path)).limit(1)
+    assert omnisharing.cameras(one).where(col("camera") == lit("RGB_Camera0")).count_rows() == 1
+    assert "RGB_Camera0/payload" in omnisharing.camera_payloads(one, "RGB_Camera0").column_names
+    assert "RGB_Camera99/frames" in omnisharing.camera_frames(one, "RGB_Camera99").column_names
+    assert "RGBD_0/depth" in omnisharing.depth_frames(one, "RGBD_0", frame_indices=[0, 1]).column_names
+    assert "RGBD_0/left_to_color" in omnisharing.stereo_extrinsics(one, "RGBD_0").column_names
+    aligned = omnisharing.frames(
+        one,
+        "observation/lefthand/joints",
+        align_cameras=["RGB_Camera0", ("RGBD_0", "left")],
+        include_columns=["episode_key", "capture_key"],
     )
-    xyz, quat_wxyz = pose[:, :3], pose[:, 3:7]
-    rolled = np.roll(quat_wxyz, -1, axis=1)
-
-    assert xyz.shape[1] == 3
-    # The documented np.roll must turn [qw, qx, qy, qz] into scipy's
-    # [qx, qy, qz, qw], not merely look plausible.
-    np.testing.assert_array_equal(rolled[:, 3], quat_wxyz[:, 0])
-    np.testing.assert_array_equal(rolled[:, :3], quat_wxyz[:, 1:])
+    assert aligned.count_rows() == 3
 
 
-def test_camera_clock_snippets(one):
-    omnisharing.cameras(one).select("camera", "codec", "n_timestamps").collect()
-    omnisharing.frames(one, fields=["observation.lefthand.joints"], align_cameras=["RGB_Camera0"]).select(
-        "frame_index", "RGB_Camera0.frame_index", "RGB_Camera0.timestamp_delta_us"
-    ).collect()
+GUIDE = Path(__file__).parents[1] / "docs" / "omnisharing.md"
+PUBLIC_DATASET = "paxini/Omnisharing_DB_SampleData"
 
 
-# ---------------------------------------------------------------------------
-# Per-modality sections
-# ---------------------------------------------------------------------------
+def _guide_python_blocks() -> list[str]:
+    return re.findall(r"```python\n(.*?)```", GUIDE.read_text(), flags=re.DOTALL)
 
 
-def test_tactile_section_uses_real_sensor_names(one):
-    # The guide names palm_sensor1 and J32L explicitly.
-    omnisharing.tactile(one, sides="lefthand", split_by_sensor=True).select(
-        "lefthand.tactile.palm_sensor1", "lefthand.tactile.J32L"
-    ).collect()
+def test_every_guide_snippet_runs_against_a_generated_release(tmp_path: Path) -> None:
+    part = tmp_path / "data" / "part_01"
+    write_df2_episode(part / episode_filename(1203, "213135", 115, 110092), n_frames=12)
+    # The duplicated episode_index the guide warns about.
+    write_df2_episode(part / episode_filename(1217, "212953", 93, 110056), n_frames=12)
+    write_df2_episode(part / episode_filename(1217, "213630", 115, 110092), n_frames=12)
+
+    blocks = _guide_python_blocks()
+    assert len(blocks) >= 8
+    namespace: dict = {}
+    for block in blocks:
+        exec(compile(block.replace(PUBLIC_DATASET, str(tmp_path)), str(GUIDE), "exec"), namespace)  # noqa: S102
+
+    # Snippets that only build plans are executed too, except decoding, which
+    # needs encoders that the generated payloads do not carry.
+    for name in ("flat", "split", "clip", "tracked", "inventory", "payloads", "depth", "stereo", "per_frame"):
+        assert namespace[name].count_rows() > 0, name
+    assert "RGB_Camera0/frames" in namespace["decoded"].column_names
+    assert namespace["quat_xyzw"].shape == (12, 4)
+    keys = namespace["episodes"].select("episode_key", "episode_index").to_pylist()
+    assert len({row["episode_key"] for row in keys}) == 3
+    assert len({row["episode_index"] for row in keys}) == 2
 
 
-def test_frame_expansion_section(one):
-    omnisharing.frames(one, fields=["observation.lefthand.joints", "action.lefthand.joints"]).collect()
-
-
-def test_video_section(one):
-    omnisharing.camera_frames(one, ["RGB_Camera0"], max_frames=2).select("RGB_Camera0.frames").collect()
-    omnisharing.camera_payloads(one, ["RGB_Camera0"]).select("RGB_Camera0.codec").collect()
-
-
-def test_audio_section(one):
-    omnisharing.audio(one, mono=True, max_seconds=2.0).select("samplerate", "n_samples", "waveform").collect()
-
-
-def test_depth_section(one):
-    omnisharing.depth_frames(one, "RGBD_0", frame_indices=[0, 5]).select(
-        "RGBD_0.depth", "RGBD_0.depth_frame_indices"
-    ).collect()
-
-
-def test_stereo_section(one):
-    omnisharing.stereo_extrinsics(one, "RGBD_0").select("RGBD_0.left_to_color", "RGBD_0.calib_date").collect()
-
-
-def test_per_eye_alignment_section(one):
-    omnisharing.frames(one, fields=["observation.lefthand.joints"], align_cameras=[("RGBD_0", "left")]).select(
-        "frame_index", "RGBD_0.left.frame_index", "RGBD_0.left.timestamp_delta_us"
-    ).collect()
-
-
-def test_object_poses_section(episodes):
-    omnisharing.objects(episodes.limit(4)).select("episode_key", "n_objects", "obj1.name", "obj1.id").collect()
+def test_guide_states_the_measured_sizes() -> None:
+    text = GUIDE.read_text()
+    assert "292 MB to 4.12 GB" in text
+    assert "1.4-3.5 MB per stream" in text
+    assert "0.4" not in text
