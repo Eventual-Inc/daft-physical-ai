@@ -1,5 +1,9 @@
 """Physical-AI dataset access, hand tracking, reward scoring, and motion trimming for Daft DataFrames.
 
+`daft_physical_ai.datasets` reads datasets Daft has no native reader for
+(EgoDex, ABC-130k, HIW-500, REASSEMBLE, PX OmniSharing). Each starts with a lazy
+`raw()` catalog and returns ordinary Daft DataFrames.
+
 `track_hands(images, method=...)` takes an image column (a Daft expression) and
 returns a hand-pose column, so it composes with any Daft pipeline. Every method
 returns the same output schema - see `HANDS_DTYPE`.

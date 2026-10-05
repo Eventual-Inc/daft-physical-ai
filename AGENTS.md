@@ -2,79 +2,71 @@
 
 - https://docs.daft.ai for the user-facing API docs for Daft
 - https://docs.daft.ai/en/stable/extensions/authoring/ for writing Daft extensions
-- - https://docs.daft.ai/en/stable/api/udf/ for `@daft.func`, `@daft.cls`, and `@daft.udaf`
-
+- https://docs.daft.ai/en/stable/api/udf/ for `@daft.func`, `@daft.cls`, and `@daft.udaf`
 
 # Dev Workflow
 
 1. Set up Python environment, install dependencies, and build dev package: `uv sync`
 2. Activate .venv: `source .venv/bin/activate`
 3. Run tests: `uv run pytest tests/ -v`
-4. The LeRobot reader (`daft.datasets.lerobot`) ships in stable Daft (>= v0.7.17),
-   so `uv sync` is all you need.
+4. Lint, format, and type-check: `uv run pre-commit run --all-files` (ruff, ty,
+   TOML/YAML formatting, uv-lock). CI runs the same hooks.
 
-# Roadmap
+# Layout
 
-Working implementations to port from: multibase `src/post7_hand_tracking/egodex_daft/`
-(`mediapipe_egodex_daft.py`, `wilor_egodex_daft.py`), already on the native
-`daft.datasets.lerobot` reader.
+- `daft_physical_ai/datasets/` - readers for datasets Daft has no native reader
+  for (`egodex`, `abc`, `hiw500`, `reassemble`, `omnisharing`). Each starts with a
+  lazy `raw()` catalog that opens no files; `_mcap.py` holds the MCAP and Hugging
+  Face helpers shared by `abc` and `hiw500`. Prefer Daft's native readers
+  (`daft.datasets.lerobot`, `daft.datasets.droid`, `daft.read_mcap`) when they
+  cover a dataset. Datasets that aren't common enough for `daft.datasets` belong
+  here.
+- `daft_physical_ai/datasets/common/ego_centric/` - model-free hand-pose geometry,
+  features, and scenario queries.
+- `daft_physical_ai/{hands,rewards,proprio,trim}/` - operations: hand tracking,
+  reward scoring, motion scoring, and trim windows.
+- `daft_physical_ai/cli/` + `_render*.py` + `templates/` - the `daft-physical-ai`
+  CLI, which scaffolds a personalized demo per operation. `_render.py`,
+  `_render_rewards.py`, and `_render_trim.py` hold each demo's cell list, rendered
+  to `.py`, `.ipynb`, and `.md`. `templates/*.tmpl` are the non-Python files the
+  CLI writes out: the Modal runtime script for `hands --runtime modal`, and the two
+  Robometer server scripts for `rewards`.
+- `docs/` - one guide per dataset and operation; `README.md` links them.
 
-## Now
+# Regenerating the examples demos
 
-- [ ] **Implement `hands/` - MediaPipe first** (easiest: CPU, permissive license,
-  no weights to supply). `_mediapipe.py` `@daft.cls` + the `track_hands(method="mediapipe")`
-  facade, returning the shared output schema.
-- [ ] **Implement WiLoR** (`method="wilor"`): GPU, 3D MANO keypoints, user-supplied
-  `mano_path`. Port the `@daft.cls` from multibase.
-- [ ] **Test both thoroughly and document how** (a `TESTING.md`): capture the
-  commands + observed hand counts. MediaPipe locally on CPU; WiLoR on Modal (see
-  Testing & GPU below).
-- [ ] **Add tests + align with the template**: real `tests/` (replace the
-  placeholder `greet`), confirm `track_hands` returns a Daft expression, lock the
-  output schema.
-- [ ] **CLI + demo**: the `daft-physical-ai` console script + demo notebook/script.
-
-## Later
-
-- [x] **Publish to PyPI.** Done: [v0.1.0 on PyPI](https://pypi.org/project/daft-physical-ai/)
-  (tag push triggers `.github/workflows/publish-package.yml`, trusted publishing).
-  This also unblocks generated Modal demos, which `pip install daft-physical-ai`.
-- [ ] Bump the `daft` floor to `>=0.7.18` once it ships stable (brings the
-  batched video decode) - tracked with full steps in
-  [#17](https://github.com/Eventual-Inc/daft-physical-ai/issues/17).
-
-# Regenerating the examples demo
-
-`examples/hands/{demo.py,demo.ipynb,demo.md,demo_keypoints.png}` are **generated** -
-don't hand-edit them. They all render from one shared cell list in
-`daft_physical_ai/_render.py`, so editing the source keeps the three formats in
-sync. To rebuild them:
+`examples/{hands,rewards,trim}/` are **generated** - don't hand-edit them. Each
+renders from its `_render*.py` cell list, so the `.py`, `.ipynb`, and `.md`
+forms stay in sync. `examples/rewards/{run_robometer_server,modal_eval_server}.py`
+are verbatim copies of the templates. To rebuild:
 
 ```bash
-python scripts/regen_demo.py          # render -> execute the notebook -> derive md + image
+python scripts/regen_demo.py                                   # hands (default)
+ROBOMETER_URL=... python scripts/regen_demo.py --demo rewards  # needs a Robometer server
+python scripts/regen_demo.py --demo trim
 ```
 
-The script renders the notebook (empty), executes it headless
-(`nbconvert --execute`, `DAFT_PROGRESS_BAR=0`), then derives everything else from
-that one executed copy: the figure is written to `demo_keypoints.png`, printed
-output is fenced, and the `.show()` HTML table becomes a markdown table. The
-executing step needs the full inference env (a Daft with the LeRobot reader +
-mediapipe + scipy + opencv + matplotlib + nbconvert; `uv sync` plus the demo
-extras covers it). `--skip-exec --source <nb>` reuses an already-executed notebook to rebuild
-just the markdown/image (no inference env needed) - handy for tweaking the
-conversion.
+The script renders the notebook, executes it headless (`nbconvert --execute`,
+`DAFT_PROGRESS_BAR=0`), then derives the markdown, figure, and script from that one
+executed copy. Executing needs each demo's runtime deps (e.g. mediapipe, scipy,
+opencv, matplotlib, nbconvert for hands). `--skip-exec --source <nb>` reuses an
+already-executed notebook to rebuild just the markdown and image.
 
-# Testing & GPU
+# Testing
 
-- **MediaPipe runs on CPU** - testable locally and in CI.
-- **WiLoR requires CUDA.** There is no local NVIDIA GPU (dev box is Apple Silicon /
-  Metal only), so test WiLoR on **Modal**. CI can't run it - mark WiLoR tests as
-  integration / Modal-gated, not part of the default CPU test run.
+- The default suite runs on CPU with synthetic fixtures and is what CI runs.
+- Tests that read real remote data are marked `integration` and skip without
+  credentials. `HF_TOKEN` (needed for gated datasets such as ABC-130k) lives in the
+  workspace `.env`, not the shell; REASSEMBLE also needs `REASSEMBLE_ROOT` set to a
+  scratch directory. See `TESTING.md` for the pinned episodes and expected counts.
+- **WiLoR requires CUDA.** There is no local NVIDIA GPU (dev box is Apple Silicon),
+  so test WiLoR on **Modal**. Its tests are Modal-gated, not part of the CPU run.
 
 # PR Conventions
 
-- Titles: Conventional Commits format; enforced by `.github/workflows/pr-labeller.yml`.
-- Descriptions: follow `.github/pull_request_template.md`.
+- Titles: Conventional Commits format (`feat(datasets): ...`, `fix: ...`).
+- Descriptions: a summary, what changed and why, and validation (commands run and
+  their results, including real-data runs where relevant).
 
 # Versioning & Publishing
 

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "daft-physical-ai"
-description = "Physical-AI data processing on Daft, starting with hand tracking."
+description = "Robotics and physical-AI dataset readers and operations for Daft."
 # daft floor: v0.7.20 fixes the progress-bar fd/thread leak under Jupyter
 # (Daft#7262) that crashed demo notebooks (#24); v0.7.18 brought the batched
 # video decode (Daft#7184) the demo depends on for reasonable remote-read
