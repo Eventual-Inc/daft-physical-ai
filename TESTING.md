@@ -40,6 +40,55 @@ Modal dependency and runs on any CUDA GPU. The env needs a CUDA `torch` build, t
 > caller's process first. A Daft+torch interaction, not Modal- or
 > concurrency-specific.
 
+**ABC-130k (gated Hugging Face, MCAP)** - the unit suite covers every
+`daft_physical_ai.datasets.abc` function against synthetic MCAPs, including
+real H.264/H.265 streams encoded with PyAV. The two real-data tests are marked
+`integration` and skip without `HF_TOKEN`; they pin
+`XDOF/ABC-130k@29136bc9` episode `5b33995f-ba4a-49f8-bfb7-c6c034df0865`
+(`clip_the_socks_to_the_hanger`, 9,849 messages, 18 chunks, 9 annotations):
+
+```bash
+HF_TOKEN=hf_... uv run --extra abc pytest tests/test_datasets_abc.py -v -m integration
+HF_TOKEN=hf_... uv run --extra abc python examples/abc_episode_messages.py \
+  --task clip_the_socks_to_the_hanger --frames
+```
+
+Not yet run from this package: the expected counts come from the earlier
+Daft#7248 smoke run of the same pinned episode.
+
+**REASSEMBLE (TU Wien HDF5 + Hugging Face LeRobot port)** - the unit suite
+covers every `daft_physical_ai.datasets.reassemble` function against synthetic
+HDF5 files laid out like the release: MP4 blobs as `|V` scalars, MP3 bytes as
+int64 arrays, a recording with no `hand` camera. It also covers a local
+stand-in for the port's side folders and a served zip for `download()`. Two
+real-data tests are marked `integration`:
+
+- `test_reassemble_tuwien_smoke` runs when `REASSEMBLE_ROOT` is set. It
+  extracts `2025-01-11-14-43-37` there with `download()` if it is missing, then
+  checks 4 actions, 2 skills (Grasp ok, Lift failed), `measured_force`
+  (23,240, 3), audio at 16/16/48 kHz with 372,096/372,096/1,123,200 samples,
+  2,551,295 events, and 642 hand + 136 event-camera frames.
+- `test_reassemble_lerobot_port_sidecars_smoke` runs when `HF_TOKEN` is set.
+  It pins `robot-lev/reassemble@37d242d3` and checks 149 episodes
+  (111 train / 37 test / 1 unassigned), episode 21 hand audio recovered at
+  48 kHz with 1,123,200 samples, and 2,551,295 events.
+
+```bash
+REASSEMBLE_ROOT=/data/reassemble HF_TOKEN=hf_... \
+  uv run pytest tests/test_datasets_reassemble.py -v -m integration
+HF_TOKEN=hf_... uv run python examples/reassemble_contact_segments.py /data/reassemble --compare-port
+```
+
+**Real-data run (2026-10-04, macOS arm64, daft 0.7.20):** both integration
+tests passed in 12 s from an empty `REASSEMBLE_ROOT`, which included the live
+24 MB extraction. The example ran end to end from an empty directory: 4
+actions, peak force 28.5 N during "Pick square peg 3." (14,381 F/T samples),
+2,020,836 events in that 14.4 s window, and hand frames 60+ at 224x168. With
+`--compare-port` it reported "LeRobot port episode 21: 696 frames at 30 fps; the
+HDF5 holds 23240 force/torque samples (33x more)". A wider manual check on
+`2025-01-10-15-39-56` and `2025-01-10-16-17-40` (no hand camera: 0 hand rows,
+387 event-camera frames) also passed.
+
 ## PX OmniSharing reader (`datasets/omnisharing.py`)
 
 **Unit tests** (`tests/test_datasets_omnisharing.py` +

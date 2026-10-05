@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from . import egodex, omnisharing
+from . import abc, egodex, hiw500, omnisharing, reassemble
 
-__all__ = ["egodex", "omnisharing"]
+__all__ = ["abc", "egodex", "hiw500", "omnisharing", "reassemble"]
