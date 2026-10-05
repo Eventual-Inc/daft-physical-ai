@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from . import egodex
+from . import abc, egodex
 
-__all__ = ["egodex"]
+__all__ = ["abc", "egodex"]

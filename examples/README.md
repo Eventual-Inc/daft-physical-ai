@@ -16,6 +16,10 @@ format - no extra package surface:
   index: successful episodes, projected columns, plan only
 - [`egodex_raw_hdf5_video.py`](egodex_raw_hdf5_video.py) - raw EgoDex HDF5 +
   video through `daft_physical_ai.datasets.egodex`
+- [`abc_episode_messages.py`](abc_episode_messages.py) - ABC-130k MCAP
+  episodes through `daft_physical_ai.datasets.abc`: catalog, summaries, bounded
+  state/action messages, subtask annotations, optional camera frames (gated;
+  needs `HF_TOKEN` and the `[abc]` extra, see [docs/abc.md](../docs/abc.md))
 - [`pose_features_numpy.py`](pose_features_numpy.py) - per-episode hand pose
   tracks (curl, pinch, palm orientation) in one NumPy pass, via
   `daft_physical_ai.datasets.common.ego_centric`
