@@ -72,10 +72,7 @@ def test_stage_filtering_snippet(guide_dataset):
 
 def test_describe_snippet(one):
     layout = omnisharing.describe(one)
-    # Comparing an Expression to a bare literal is typed as returning bool.
-    layout.where(daft.col("kind") == "dataset").select(  # ty: ignore[invalid-argument-type]
-        "h5path", "shape", "dtype"
-    ).collect()
+    layout.where(daft.col("kind") == "dataset").select("h5path", "shape", "dtype").collect()
 
 
 # ---------------------------------------------------------------------------
