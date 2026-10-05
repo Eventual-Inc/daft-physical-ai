@@ -16,11 +16,18 @@ format - no extra package surface:
   index: successful episodes, projected columns, plan only
 - [`egodex_raw_hdf5_video.py`](egodex_raw_hdf5_video.py) - raw EgoDex HDF5 +
   video through `daft_physical_ai.datasets.egodex`
+- [`pose_features_numpy.py`](pose_features_numpy.py) - per-episode hand pose
+  tracks (curl, pinch, palm orientation) in one NumPy pass, via
+  `daft_physical_ai.datasets.common.ego_centric`
+- [`pose_rates_in_dag.py`](pose_rates_in_dag.py) - the same rates as Daft window
+  expressions, lazy until one final collect
 
 ```bash
 uv run python examples/lerobot_episode_index.py
 uv run python examples/merge_lerobot_datasets.py
 uv run python examples/droid_episode_index.py
+uv run python examples/pose_features_numpy.py
+uv run python examples/pose_rates_in_dag.py
 ```
 
 ## Hand tracking

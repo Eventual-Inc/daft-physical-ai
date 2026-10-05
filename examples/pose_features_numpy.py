@@ -60,7 +60,7 @@ def main(dataset: str = "pepijn223/egodex-test") -> None:
 
     print(
         "\nEach row is one pass of pure NumPy over the whole episode; the same tracks"
-        "\nfeed the scenario queries in examples/04_episode_operations/pose_query_segments.py."
+        "\nfeed the scenario predicates in daft_physical_ai.datasets.common.ego_centric.query."
     )
 
 
