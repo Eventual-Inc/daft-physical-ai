@@ -20,10 +20,7 @@ the ``mcap`` reader and ``huggingface_hub`` for catalog listing.
 
 from __future__ import annotations
 
-import ast
-import io
 import json
-import os
 from collections.abc import Iterator, Sequence
 from typing import TYPE_CHECKING, Any, Literal, cast
 
@@ -31,6 +28,8 @@ import daft
 from daft.datatype import DataType
 from daft.expressions import col, lit
 from daft.functions import file, regexp_extract, regexp_replace, when
+
+from daft_physical_ai.datasets import _mcap
 
 if TYPE_CHECKING:
     from daft.dataframe import DataFrame
@@ -133,56 +132,19 @@ _FRAME_DTYPE = DataType.struct(
 
 
 def _require_mcap() -> Any:
-    try:
-        import mcap.reader
-    except ImportError as error:
-        raise ImportError(
-            "ABC-130k needs the mcap reader. Install it with: pip install 'daft-physical-ai[abc]'"
-        ) from error
-    return mcap.reader
+    return _mcap.require_mcap("ABC-130k", "abc")
+
+
+# Shared MCAP helpers (see _mcap.py), kept under their original private names.
+_normalize_names = _mcap.normalize_names
+_normalize_messages = _mcap.normalize_messages
+_open_mcap = _mcap.open_mcap
+_resolve_hf_io_config = _mcap.resolve_hf_io_config
 
 
 # --------------------------------------------------------------------------- #
 # Catalog
 # --------------------------------------------------------------------------- #
-
-
-def _normalize_names(value: str | Sequence[str] | None, *, name: str) -> tuple[str, ...] | None:
-    if value is None:
-        return None
-    values = (value,) if isinstance(value, str) else tuple(value)
-    if not values:
-        raise ValueError(f"{name} must contain at least one value")
-    if any(not isinstance(item, str) or not item for item in values):
-        raise ValueError(f"{name} values must be non-empty strings")
-    return tuple(dict.fromkeys(values))
-
-
-def _resolve_hf_io_config(io_config: IOConfig | None, paths: Sequence[str]) -> IOConfig | None:
-    """Fill in a Hugging Face token from ``HF_TOKEN`` or the Hub login for ``hf://`` paths."""
-    if not any(path.startswith("hf://") for path in paths):
-        return io_config
-    if io_config is not None and (io_config.hf.anonymous or io_config.hf.token is not None):
-        return io_config
-    token = os.environ.get("HF_TOKEN")
-    if token is None:
-        try:
-            from huggingface_hub import get_token
-
-            token = get_token()
-        except ImportError:
-            pass
-    if token is None:
-        return io_config
-    from daft.io import HuggingFaceConfig, IOConfig
-
-    if io_config is not None:
-        return io_config.replace(hf=io_config.hf.replace(token=token))
-    return IOConfig(hf=HuggingFaceConfig(token=token, use_xet=True))
-
-
-def _empty_listing() -> DataFrame:
-    return daft.from_pydict({"path": [""], "size": [0]}).where(lit(False))
 
 
 def _hf_listing(
@@ -198,27 +160,13 @@ def _hf_listing(
     The generic ``hf://`` glob walks each episode directory separately, which is
     slow and hits Hub rate limits on ABC's deep layout.
     """
-    try:
-        from huggingface_hub import HfApi
-        from huggingface_hub.hf_api import RepoFile
-        from huggingface_hub.utils import EntryNotFoundError
-    except ImportError as error:
-        raise ImportError(
-            "Listing ABC-130k on Hugging Face needs huggingface_hub. "
-            "Install it with: pip install 'daft-physical-ai[abc]'"
-        ) from error
+    _mcap.require_hf_hub("ABC-130k", "abc")
+    from huggingface_hub import HfApi
+    from huggingface_hub.hf_api import RepoFile
+    from huggingface_hub.utils import EntryNotFoundError
 
-    prefix = "hf://datasets/"
-    parts = root.removeprefix(prefix).split("/")
-    if not root.startswith(prefix) or len(parts) != 2:
-        raise ValueError("ABC Hugging Face path must be a dataset root such as hf://datasets/XDOF/ABC-130k")
-    namespace, name_revision = parts
-    name, _, revision = name_revision.partition("@")
-
-    token: str | bool | None = None
-    if io_config is not None:
-        token = False if io_config.hf.anonymous else io_config.hf.token
-    api = HfApi(token=token, library_name="daft-physical-ai")
+    repo_id, revision = _mcap.parse_hf_root(root, example=HF_DATASET)
+    api = HfApi(token=_mcap.hf_token(io_config), library_name=_mcap.LIBRARY_NAME)
 
     if tasks is None:
         root_groups = [(f"data/{split}" if split is not None else "data",)]
@@ -234,10 +182,10 @@ def _hf_listing(
             matched = False
             try:
                 for entry in api.list_repo_tree(
-                    f"{namespace}/{name}",
+                    repo_id,
                     path_in_repo=search_root,
                     recursive=True,
-                    revision=revision or None,
+                    revision=revision,
                     repo_type="dataset",
                 ):
                     if isinstance(entry, RepoFile) and entry.path.rsplit("/", 1)[-1] in wanted:
@@ -250,7 +198,7 @@ def _hf_listing(
                 break
 
     if not paths:
-        return _empty_listing()
+        return _mcap.empty_listing()
     return daft.from_pydict({"path": paths, "size": sizes})
 
 
@@ -356,48 +304,12 @@ def raw(
 
 
 def _require_columns(episodes: DataFrame, *columns: str) -> None:
-    missing = [name for name in columns if name not in episodes.schema().column_names()]
-    if missing:
-        raise ValueError(f"Expected an ABC episode DataFrame from abc.raw() with columns: {missing}")
+    _mcap.require_columns(episodes, *columns, source="abc.raw()")
 
 
 # --------------------------------------------------------------------------- #
 # MCAP summaries
 # --------------------------------------------------------------------------- #
-
-
-class _SeekableFile(io.RawIOBase):
-    """Expose a ``daft.File`` as a seekable stream, so ``mcap`` range-reads the footer and summary."""
-
-    def __init__(self, handle: Any) -> None:
-        self._handle = handle
-        self._handle.__enter__()
-
-    def readinto(self, buffer: Any) -> int:
-        data = self._handle.read(len(buffer))
-        buffer[: len(data)] = data
-        return len(data)
-
-    def seek(self, offset: int, whence: int = io.SEEK_SET) -> int:
-        return self._handle.seek(offset, whence)
-
-    def tell(self) -> int:
-        return self._handle.tell()
-
-    def readable(self) -> bool:
-        return True
-
-    def seekable(self) -> bool:
-        return True
-
-    def close(self) -> None:
-        if not self.closed:
-            self._handle.__exit__(None, None, None)
-        super().close()
-
-
-def _open_mcap(handle: daft.File) -> io.BufferedReader:
-    return io.BufferedReader(_SeekableFile(handle.open()), buffer_size=1 << 16)
 
 
 def _first_value(values: dict[str, str], *keys: str) -> str | None:
@@ -408,65 +320,9 @@ def _first_value(values: dict[str, str], *keys: str) -> str | None:
     return None
 
 
-def _scan_summary(stream: io.BufferedReader) -> tuple[dict[str, Any], list[Any]]:
-    """Collect channels, statistics, and metadata in one pass for MCAPs without a summary section."""
-    from mcap.records import Channel, Message, Metadata, Schema
-    from mcap.stream_reader import StreamReader
-
-    stream.seek(0)
-    schemas: dict[int, str] = {}
-    channels: dict[int, tuple[str, int]] = {}
-    metadata: list[Any] = []
-    count, start, end = 0, None, None
-    for record in StreamReader(stream).records:
-        if isinstance(record, Schema):
-            schemas[record.id] = record.name
-        elif isinstance(record, Channel):
-            channels[record.id] = (record.topic, record.schema_id)
-        elif isinstance(record, Metadata):
-            metadata.append(record)
-        elif isinstance(record, Message):
-            count += 1
-            start = record.log_time if start is None else min(start, record.log_time)
-            end = record.log_time if end is None else max(end, record.log_time)
-    info = {
-        "channels": [(topic, schemas.get(schema_id, "")) for topic, schema_id in channels.values()],
-        "message_count": count,
-        "message_start_time": start,
-        "message_end_time": end,
-        "chunk_count": None,
-        "indexed": False,
-    }
-    return info, metadata
-
-
 @daft.func(return_dtype=_METADATA_DTYPE, use_process=False, unnest=True)
 def _read_abc_metadata(handle: daft.File) -> dict[str, object]:
-    reader_module = _require_mcap()
-    with _open_mcap(handle) as stream:
-        reader = reader_module.make_reader(stream)
-        summary = reader.get_summary()
-        info: dict[str, Any]
-        records: list[Any]
-        if summary is None:
-            info, records = _scan_summary(stream)
-        else:
-            stats = summary.statistics
-            info = {
-                "channels": [
-                    (
-                        channel.topic,
-                        summary.schemas[channel.schema_id].name if channel.schema_id in summary.schemas else "",
-                    )
-                    for channel in summary.channels.values()
-                ],
-                "message_count": None if stats is None else stats.message_count,
-                "message_start_time": None if stats is None else stats.message_start_time,
-                "message_end_time": None if stats is None else stats.message_end_time,
-                "chunk_count": None if stats is None else stats.chunk_count,
-                "indexed": bool(summary.chunk_indexes),
-            }
-            records = list(reader.iter_metadata())
+    info, records = _mcap.read_summary(handle, dataset="ABC-130k", extra="abc")
 
     # ABC releases have used both an "episode-metadata" and a legacy "session-metadata" record.
     by_name = {record.name: record for record in records}
@@ -529,62 +385,6 @@ def metadata(episodes: DataFrame) -> DataFrame:
 # --------------------------------------------------------------------------- #
 
 
-def _decode_payload(value: str | None) -> bytes | None:
-    """Recover the payload bytes from the released reader's ``str(bytes)`` rendering."""
-    if value is None:
-        return None
-    if value[:2] in ("b'", 'b"'):
-        decoded = ast.literal_eval(value)
-        if isinstance(decoded, bytes):
-            return decoded
-    return value.encode("utf-8", "surrogateescape")
-
-
-_decode_payload_udf = daft.func(_decode_payload, return_dtype=DataType.binary(), use_process=False)
-
-
-def _normalize_messages(dataframe: DataFrame, path: str) -> DataFrame:
-    """Give every ``read_mcap`` release the same columns and types.
-
-    Released Daft (<= v0.7.25) uses a Python reader with no ``source_path``,
-    ``int64``/``int32`` times and sequence, and ``data`` rendered as
-    ``str(bytes)``. Daft main's native reader adds ``source_path`` and uses
-    ``uint64``/``uint32`` with binary ``data``. Both normalize to ``int64``
-    times and sequence and binary ``data``.
-    """
-    schema = dataframe.schema()
-    data = col("data")
-    if schema["data"].dtype == DataType.string():
-        data = _decode_payload_udf(data)
-    elif schema["data"].dtype != DataType.binary():
-        data = data.cast(DataType.binary())
-    source = col("source_path") if "source_path" in schema.column_names() else lit(path)
-    return dataframe.select(
-        source.alias("source_path"),
-        col("topic"),
-        col("log_time").cast(DataType.int64()),
-        col("publish_time").cast(DataType.int64()),
-        col("sequence").cast(DataType.int64()),
-        data.alias("data"),
-    )
-
-
-def _empty_messages() -> DataFrame:
-    import pyarrow as pa
-
-    schema = pa.schema(
-        [
-            ("source_path", pa.string()),
-            ("topic", pa.string()),
-            ("log_time", pa.int64()),
-            ("publish_time", pa.int64()),
-            ("sequence", pa.int64()),
-            ("data", pa.binary()),
-        ]
-    )
-    return daft.from_arrow(schema.empty_table())
-
-
 def _with_identity(dataframe: DataFrame) -> DataFrame:
     source = col("source_path")
     return dataframe.with_columns(
@@ -599,10 +399,7 @@ def _with_identity(dataframe: DataFrame) -> DataFrame:
 
 
 def _collect_paths(episodes: DataFrame, columns: Sequence[str]) -> list[str]:
-    _require_columns(episodes, *columns)
-    selected = episodes.select(*columns).to_pydict()
-    paths = [value for name in columns for value in selected[name] if value is not None]
-    return list(dict.fromkeys(paths))
+    return _mcap.collect_paths(episodes, columns, source="abc.raw()")
 
 
 def messages(
@@ -646,24 +443,18 @@ def messages(
     )
     paths = _collect_paths(episodes, columns)
     if not paths:
-        return _with_identity(_empty_messages())
+        return _with_identity(_mcap.empty_messages())
     _require_mcap()
     io_config = _resolve_hf_io_config(io_config, paths)
-    frames = [
-        _normalize_messages(
-            daft.read_mcap(
-                path,
-                io_config=io_config,
-                start_time=start_time,
-                end_time=end_time,
-                topics=None if selected_topics is None else list(selected_topics),
-                batch_size=batch_size,
-            ),
-            path,
-        )
-        for path in paths
-    ]
-    return _with_identity(frames[0] if len(frames) == 1 else daft.concat(frames))
+    frames = _mcap.read_messages(
+        paths,
+        topics=selected_topics,
+        start_time=start_time,
+        end_time=end_time,
+        batch_size=batch_size,
+        io_config=io_config,
+    )
+    return _with_identity(frames)
 
 
 def _read_varint(data: bytes, offset: int) -> tuple[int, int]:
